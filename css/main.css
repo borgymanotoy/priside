@@ -1,0 +1,458 @@
+@CHARSET "ISO-8859-1";
+
+/* START: Tabs */
+ol#toc {
+	height: 2em;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	padding-left:45px;
+	background:#ccc;
+}
+
+ol#toc a {
+	background: #bdf url('../img/tabs.png');
+	color: #705a8c;
+	display: block;
+	float: left;
+	height: 2em;
+	padding-left: 10px;
+	text-decoration: none;
+	position:relative;
+	top:2px;
+	font-weight:bold;
+}
+
+ol#toc a:hover {
+	background-color: #3af;
+	background-position: 0 -120px;
+}
+
+ol#toc a:hover span {
+	background-position: 100% -120px;
+}
+
+ol#toc li {
+	float: left;
+	margin: 0 2px 0 0;
+}
+
+ol#toc li.current a {
+	background-color: #48f;
+	background-position: 0 -60px;
+	color: #e66313;
+	font-weight: bold;
+	top:2px;
+}
+
+ol#toc li.current span {
+	background-position: 100% -60px;
+}
+
+ol#toc span {
+	background: url('../img/tabs.png') 100% 0;
+	display: block;
+	line-height: 2em;
+	padding-right: 10px;
+}
+
+.tab_content {
+	display: none;
+	padding: 15px 20px 15px 25px;
+}
+/* END: Tabs */
+
+
+/*=footer*/
+ul#company-info { 
+	list-style-type : none;
+	width : 980px;
+	padding : 1em;	
+	margin-left:2em;
+}
+
+ul#company-info:after { 
+	content : ".";
+	display : block;
+	height : 0;
+	clear : both;
+	visibility : hidden; 
+}
+
+ul#company-info li { 
+	float : left; 
+	width : 240px; 
+}
+
+ul#company-info ul { 
+	list-style-type : none; 
+	margin : 0; 
+	padding : 0; 
+}	/*background : url(../images/ul.png) no-repeat 0 100%; */
+
+#company-info h3 {
+	color:#f7c001;
+	margin : 0;
+	padding : 0;
+	font-size : 100%;
+}
+#main-content-footer p {
+	text-align:center;
+}
+
+/*=link*/
+a:link { color : #fff; text-decoration : none; }
+a:visited { color : #fff; text-decoration : none; }
+a:hover { color : #fff; text-decoration : underline; }
+a:active, a:focus { color : #fff; }
+
+
+/********** header **********/
+.header { background:red;}
+.header-container { margin:0 auto; width:1000px; height:100px;}
+
+/********** body ************/
+.body {padding: 0 0 1em 0;}
+.body-container { width:1000px; margin:0 auto; padding:0 0 40px 0; background:#fff; min-height:500px;}
+
+/********** footer **********/
+
+.footer {
+	position:fixed;
+	bottom:0;
+	z-index:999;
+	width:100%;
+	background: #2e2e2e;
+	border-top:1px solid #444;
+	padding:10px 0;
+	margin-top: 1em;
+}
+
+.footer .footer-container { width:1000px; color:#7f7f7f; font:normal 11px Tahoma, Geneva, sans-serif; text-align: left; margin:0 auto; }
+.footer .footer-container img { float:right; }
+p.clr,
+.clr { clear:both; padding:0; margin:0; background:none; }
+
+table.tableName
+{
+	border: 1px solid black;
+	table-layout:fixed;
+	width: 100%;
+	border-collapse:collapse;
+	font-size: 10px;
+	font-family:Arial, Helvetica, sans-serif;
+	margin: 1em 0 1em 0;
+}
+
+table.tableName thead 
+{
+	text-align:left;
+	color:#fff;
+}
+
+table.tableName thead tr th 
+{
+	border-bottom: 1px solid #000000;
+	background:#2e2e2e;
+	font-weight: bold;
+	font-size:11px;
+}
+
+table.tableName tbody tr td, table.tableName thead tr th
+{
+	padding-left: 1em;
+}
+
+tr.bgColor{
+	background: #CCCCCC;
+}
+
+tr.hghColor{
+	background: #000;
+	color: #ffffff;
+	cursor: pointer;
+}
+
+.dblinks {
+	text-align:right;	
+}
+
+
+/* START: Borgy manotoy CSS properties */
+
+/******** Purple color usually used by priside ********/
+.site-color { color: #412467; }
+
+/* START: Fonts */
+.italic {font-style: italic; }
+.bold { font-weight: bold; }
+.txt20Bold {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:20px;
+	font-weight: bold;
+}
+.txt18 {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:18px;
+}
+.txt18Sample {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:18px;
+	font-style: italic;
+	color: #949699;
+}
+.txt16 {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:16px;
+}
+.txt16Bold {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:16px;
+	font-weight: bold;
+	color: #000000;
+}
+.txt16White {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:16px;
+	color: #fff;
+}
+.txt16Default {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:16px;
+	font-style: italic;
+	color: #949699;
+}
+.txt16Purple {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:16px;
+	color: #412467;
+}
+.txt14 {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:14px;
+}
+.txt14Bold {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:14px;
+	font-weight: bold;
+	color: #000000;
+}
+.txt14White {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:14px;
+	color: #fff;
+}
+.txt14Default {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:14px;
+	font-style: italic;
+	color: #949699;
+}
+.txt14Purple {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:14px;
+	color: #412467;
+}
+.txt12 {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size:12px;
+}
+.txt12Bold {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:12px;
+	font-weight: bold;
+	color: #000000;
+}
+.txt12White {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:12px;
+	color: #fff;
+}
+.txt12Default {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:12px;
+	font-style: italic;
+	color: #949699;
+}
+.txt12Purple {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:12px;
+	color: #412467;
+}
+.txt11 {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size:11px;
+}
+.txt10 {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size:10px;
+}
+/* START: Textbox properties */
+.txtbox {
+	width: 200px;
+	height:18px;
+	border:2px solid #412467;
+	padding:3px 6px;
+	margin-bottom:0px;
+	-moz-border-radius: 7px;
+	-webkit-border-radius: 7px;
+	-khtml-border-radius: 7px;
+	border-radius: 7px;
+}
+.txtbox-disabled {
+	width: 200px;
+	background-color: #fff;
+	color : #000;
+	height:18px;
+	border:2px solid #c6bed1;
+	padding:4px 8px;
+	margin-bottom:0px;
+	-moz-border-radius: 7px;
+	-webkit-border-radius: 7px;
+	-khtml-border-radius: 7px;
+	border-radius: 7px;
+}
+
+/* START: Buttons */
+.button_text {
+	font-family:Arial Black;
+	font-size:18px;
+	color: #FFF;
+}
+.purple_button {
+	background: url('../img/button_purple_bg.png') repeat-x;
+	padding: 5px 15px 5px 15px;
+	-moz-border-radius: 10px;
+	-webkit-border-radius: 10px;
+	-khtml-border-radius: 10px;
+	border-radius: 10px;
+	cursor: pointer;
+}
+
+/* Search Dropbox and Combobox */
+
+/* START: Search list box */
+.dropbox{
+	width: 200px;
+	color : #000;
+	border:2px solid #412467;
+	padding:2px 5px;
+	margin-left: 10px;
+	margin-bottom:0px;
+	-moz-border-radius: 8px;
+	-webkit-border-radius: 8px;
+	-khtml-border-radius: 8px;
+	border-radius: 8px;
+	vertical-align: middle;
+	position: relative;
+	display: inline-block;
+}
+.dropboxLabel {
+	height: 18px;
+	width: 200px;
+	padding-left: 10px;
+	margin-left: 10px;
+	display: block;
+}
+.listBox {
+	width: 200px;
+	position: absolute;
+	left: -3px;
+	top: 27px;
+	padding: 0px;
+	color: #412467;
+	background-color: #f4f4f6;
+	border:2px solid #e7e9e9;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	-khtml-border-radius: 5px;
+	border-radius: 5px;
+	box-shadow: 2px 2px 1px #888888;
+}
+.search-input-box { 
+	border: 0px; 
+	width: 157px;
+}
+/* END: Search list box */
+
+/* START: Combo box */
+.combobox-container {
+	width: 200px;
+	color : #000;
+	border:2px solid #412467;
+	background-color: #ebe8ef;
+	padding:2px 0px 2px 8px ;
+	margin-left: 10px;
+	margin-bottom:0px;
+	-moz-border-radius: 7px;
+	-webkit-border-radius: 7px;
+	-khtml-border-radius: 7px;
+	border-radius: 7px;
+	vertical-align: middle;
+	position: relative;
+	display: inline-block;	
+}
+.comboboxLabel {
+	height: 18px;
+	width: 200px;
+	padding-left: 5px;
+	margin-left: 5px;
+	display: block;
+}
+.cmbText {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:12px;
+	font-style: italic;
+	color: #412467;
+}
+.comboBox {
+	width: 205px;
+	position: absolute;
+	left: -2px;
+	top: 25px;
+	padding: 0px 0px 0px 0px;
+	color: #412467;
+	background-color: #f4f4f6;
+	border:2px solid #e7e9e9;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	-khtml-border-radius: 5px;
+	border-radius: 5px;
+	box-shadow: 2px 2px 1px #888888;
+}
+/* END: Combo box */
+
+/* START: Search dropbox and Combobox common properties */
+.arrow-down-button {
+	width: 25px;
+	height: 15px;
+	cursor:  pointer;
+	padding: 2px 0px 2px 2px;
+}
+.listItems li:hover{ background-color: #FF9933; color: #FFFFFF; }
+.listItems{
+	padding: 0px;
+	margin: 0px;
+}
+.common-height { height: 18px; }
+.pre-padding-15 { padding-left: 15px; }
+.pre-margin-5 { margin-left: 5px; }
+.pre-margin-10 { margin-left: 10px; }
+.pre-margin-13 { margin-left: 13px; }
+.bottom-spacer { margin-bottom: 5px; }
+/* END of commons */
+
+
+
+
+
+/* Not used: Just for testing php-mysql table generation from query*/
+.header-row {
+	-moz-border-radius: 10px;
+	-webkit-border-radius: 10px;
+	-khtml-border-radius: 10px;
+	border-radius: 10px;
+	background-color: #412467;
+	color: #fff;
+}
+/* END of trash */

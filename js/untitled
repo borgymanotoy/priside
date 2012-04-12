@@ -1,0 +1,3 @@
+var hideAllTabs = function(){
+	$(".tab_content").hide();
+};
