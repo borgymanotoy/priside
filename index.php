@@ -16,7 +16,6 @@
 	<script>
 	$(document).ready(function(){
 		initComponents();
-		refreshUserTable("or");
 	});
 	
 	</script>
@@ -79,7 +78,7 @@
 							<span class="dropboxLabel" valign="middle"><span class="txt12Bold">Vad</span>&nbsp;<span class="txt12Bold">|</span>&nbsp;<span class="txt12">bransch, tjänst</span></span>
 							<div class="dropbox" style="z-index: 4;">
 								<input type="text" id="txt_vad_1" class="search-input-box txt12Default" maxlength="30" value="Ex. Flyttstädning" onkeyup="showSearchResultList(this.id, 'Ex. Flyttstädning', 'lst_vad_1', 'selected_item_value', event);" onclick="highlightSearchboxContent(this.id);" />
-								<span class="site-color arrow-down-button" onclick="showSubgroup('');"><span class="txt14Bold">|</span>&nbsp;<span class="txt11">välj</span>&nbsp;<span class="txt12">▼</span></span>
+								<span class="site-color arrow-down-button" onclick="showSubgroup('lst_cat_vad_1', 'list_categories');"><span class="txt14Bold">|</span>&nbsp;<span class="txt11">välj</span>&nbsp;<span class="txt12">▼</span></span>
 								<div id="lst_vad_1" class="listBox" style="display: none;">
 									<div id="divClose" align="right" onclick="closeListBox('lst_vad_1');">
 										<img src="img/closeImage.png" alt="Close" />
@@ -88,8 +87,13 @@
 										<ul class="listItems" type="none"></ul>
 									</div>
 								</div>
-								<div id="lst_sub_vad_1" class="listBox" style="display: none;">
-									<ul class="listItems" type="none"></ul>
+								<div id="lst_cat_vad_1" class="listBox" style="display: none;">
+									<div id="divClose" align="right" onclick="closeListBox('lst_cat_vad_1');">
+										<img src="img/closeImage.png" alt="Close" />
+									</div>
+									<div class="bottom-spacer">
+										<ul id="list_categories" class="listItems" type="none"></ul>
+									</div>
 								</div>
 							</div>
 							<!-- End: Search dropbox 1 -->

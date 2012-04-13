@@ -429,6 +429,24 @@ tr.hghColor{
 	cursor:  pointer;
 	padding: 2px 0px 2px 2px;
 }
+
+.categories-arrow-left {
+	padding-left: 13px;
+	background: url(../img/arrows.png) no-repeat 0px 0px; 
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:12px;
+	font-weight: bold;
+	color: #412467;
+}
+.categories-arrow-down { 
+	padding-left: 15px;
+	background: #FF9933 url(../img/arrows.png) no-repeat 0px 12x; 
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:12px;
+	font-weight: bold;
+	color: #FFF; 
+}
+
 .listItems li:hover{ background-color: #FF9933; color: #FFFFFF; }
 .listItems{
 	padding: 0px;

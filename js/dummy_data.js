@@ -25,10 +25,10 @@ function Location_state(name, abbr){
         this.abbr = abbr;
 }
 
-location_states.push(new Location("Davao del sur", "DVO_SUR"));
-location_states.push(new Location("Davao del norte", "DVO_NOR"));
-location_states.push(new Location("Davao oriental", "DVO_OR"));
-location_states.push(new Location("Surigao del sur", "SRG_SUR"));
+location_states.push(new Location_state("Davao del sur", "DVO_SUR"));
+location_states.push(new Location_state("Davao del norte", "DVO_NOR"));
+location_states.push(new Location_state("Davao oriental", "DVO_OR"));
+location_states.push(new Location_state("Surigao del sur", "SRG_SUR"));
 
 locations.push(new Location("Davao City", "DVO_SUR", "Philippines", "8000"));
 locations.push(new Location("Digos City", "DVO_SUR", "Philippines", "8001"));

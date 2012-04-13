@@ -263,14 +263,30 @@ var setSelectedItemValueToCombobox = function(obj, spanId, selected_item_text, v
 /* START: Show subgroup or display items by categories for search dropbox
    Function name: showSubgroup()
    Parameters:
+	   listBoxId - List box object name that will contain the list items (combo box options)
        obj - list item object
    Note: This is just to play with the PHP saving, not used in Priside project.
 */
-var showSubgroup = function(){
-	alert('Show subgroup');
+var showSubgroup = function(listBoxId, categoryListId){
+    var selectObj = jQuery("#"+listBoxId+" ul");
+    selectObj.empty();
+    hideListBox(listBoxId);
+
+    if(location_states.length > 0)
+    {
+		for(var a = 0; a < location_states.length; a++){
+			var location = location_states[a];
+			selectObj.append("<li class='categories-arrow-left' onclick=\"showCategoryItems(this, '" + location.state + "', '" + categoryListId + "')\";>"+location.name+"</li>");
+		}
+		jQuery("#"+listBoxId+" ul").show();
+		jQuery("#"+listBoxId).show();
+	}
 };
 
-
+var showCategoryItems = function(obj, selectedValue, categoryListId){
+	jQuery(".categories-arrow-down").removeClass("categories-arrow-down").addClass("categories-arrow-left");
+	obj.className = "categories-arrow-down";
+};
 
 
 
