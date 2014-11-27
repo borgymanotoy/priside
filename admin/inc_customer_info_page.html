@@ -1,0 +1,78 @@
+<script type="text/javascript">
+	$(document).ready(function(){
+		//load the default tab, usually its the general tab
+		$("#popup_outer_tabs").find("#<?=$defaultTab?>").find("a").click();
+		
+		/*
+		this routing will hide all tabs whose id > $tabsToBeDisplayed
+		using this function, customer_info_page.php can be reused :
+			$tabsToBeDisplayed : for more info please go to admin-preside.js under function showCustomerInfo(tableId,checksum,tabsToBeDisplayed)
+		*/
+		var tabsToBeDisplayed = parseInt('<?=$tabsToBeDisplayed?>');
+		$("#popup_main_content div").each(function(){
+			if(tabsToBeDisplayed == 5){
+				//exit, nothing to do
+				return false;
+			}
+			
+			var id = $(this).attr("id").substring(9);
+			if(id <= tabsToBeDisplayed){
+				$("#" + $(this).attr("id") + "header").show();
+			}
+			else{
+				$("#" + $(this).attr("id") + "header").hide();
+			}
+		});		
+	});
+	
+	function loadTabAjax( target, page ){
+		var lang = $("#loaded_inq_langugage").val();
+		var defaultSubTab = '<?=$defaultSubTab?>';
+		var callback      = null;
+		if(defaultSubTab != ""){
+			//callback for calling the sub tab
+			callback = function(){
+				$("#<?=$defaultSubTab?>").find("a").click();
+			}
+		}
+		$('#'+target).load(page,{lang:lang , ajaxRequest:'loadData', accountId:'<?=$accountId?>' ,customerId:'<?=$customerId?>' , checksum:'<?=$checksum?>'},callback);
+	}
+</script>
+<!-- inc_customer_info_page.html -->
+<div class="clearfix">
+	<h1 class="title" id="inc_customer_info_page_company_name_header">Bengtssons entreprenad AB</h1>
+</div>
+
+<input type="hidden" id="loaded_cnfo_popup_tab" value="" />
+
+<!-- popup body section -->
+<div id="popup_main">
+	<div id="popup_content" class="popup_wrapper">
+		<!-- popup outer tab section -->
+		<ol id="popup_outer_tabs">
+			<li id="popup_tab1header" class="popup-current"><a href="javascript:void(0);" onClick="loadTabAjax( 'popup_tab1', 'customer_info_general.php'); showHidePopupTab('tab1', true);"><span><?=$trans["cu_nfo_gen"];?></span></a></li>
+			<li id="popup_tab2header"><a href="javascript:void(0);" onClick="loadTabAjax( 'popup_tab2', 'customer_info_cinfo.php'); showHidePopupTab('tab2', true);"><span><?=$trans["cu_nfo_cu_nfo"];?></span></a></li>
+			<li id="popup_tab3header"><a href="javascript:void(0);" onClick="loadTabAjax( 'popup_tab3', 'customer_info_account.php'); showHidePopupTab('tab3', true);"><span><?=$trans["cu_nfo_accnt"];?></span></a></li>
+			<li id="popup_tab4header"><a href="javascript:void(0);" onClick="loadTabAjax( 'popup_tab4', 'customer_info_activities.php'); showHidePopupTab('tab4', true);"><span><?=$trans["cu_nfo_acts"];?></span></a></li>
+			<li id="popup_tab5header"><a href="javascript:void(0);" onClick="loadTabAjax( 'popup_tab5', 'customer_info_ads.php'); showHidePopupTab('tab5', true);"><span><?=$trans["cu_nfo_ads"];?></span></a></li>
+		</ol>
+		<div id="popup_main_content" class="clearfix">
+			<div id="popup_tab1" class="popup_tab_content">
+				<!-- ? include( "customer_info_general.php" ); ? -->
+			</div>
+			<div id="popup_tab2" class="popup_tab_content">
+				<!-- ? include( "customer_info_cinfo.php" ); ? -->
+			</div>
+			<div id="popup_tab3" class="popup_tab_content">
+				<!-- ? include( "customer_info_account.php" ); ? -->
+			</div>
+			<div id="popup_tab4" class="popup_tab_content">
+				<!-- ? include( "customer_info_activities.php" ); ? -->
+			</div>
+			<div id="popup_tab5" class="popup_tab_content">
+				<!-- ? include( "customer_info_ads.php" ); ? -->
+			</div>
+		</div>
+		<div id="popup_main-bottom-curve">&nbsp;</div>
+	</div>
+</div>

@@ -1,0 +1,56 @@
+<?php
+	require_once( $_SERVER['DOCUMENT_ROOT']."/translations/admin_panel_cu_new.php" );
+
+	require_once( "../libs/db_common.php" );
+
+//-------------------------------------------------------------------------------------------
+//	
+function GetCategoriesULSource(){
+
+	$refs = array();
+	$list = array();
+
+	$sql = "SELECT Id, Parent_Id, Category FROM BusinessServiceCategory ORDER BY Category";
+	$result = mysql_query($sql);
+
+	while( $data = @mysql_fetch_assoc( $result ) ){
+		$thisref = &$refs[ $data['Id'] ];
+		$thisref['Id'] = $data['Id'];
+		$thisref['Parent_Id'] = $data['Parent_Id'];
+		$thisref['Category'] = $data['Category'];
+		if ($data['Parent_Id'] == 0) 
+			$list[ $data['Id'] ] = &$thisref;
+		else
+			$refs[ $data['Parent_Id'] ]['children'][ $data['Id'] ] = &$thisref;
+	}
+	return( toUL( $list, false ) );
+}
+function toUL( $arr, $first=true ){ 
+  
+	if( $first )$html = "<ul>\n";
+	foreach( $arr as $v ){
+		$html .= "<li rel=\"{$v['Id']}\">{$v['Category']}\n";
+		if( array_key_exists( 'children', $v ) ){
+			$html .= toUL( $v['children'] );     
+		}
+		$html .= "</li>\n";
+	}   
+	$html .= "</ul>\n";   
+	return $html; 
+}
+//-------------------------------------------------------------------------------------------
+
+
+
+
+	db_connect();
+	
+	if( isset( $NewCustomerSaveButton ) ){
+		//
+
+	}
+
+	
+	include( "inc_admin_panel_cu_new.html" );
+	return;
+?>

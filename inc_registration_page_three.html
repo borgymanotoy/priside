@@ -1,0 +1,38 @@
+<style>
+.client-banner {
+	width: 285px;
+	color : #000;
+	border:2px solid #808285;
+	background: #808285;
+	padding:2px 5px;
+	margin-left: 10px;
+	margin-bottom:10px;
+	-moz-border-radius: 8px;
+	-webkit-border-radius: 8px;
+	-khtml-border-radius: 8px;
+	border-radius: 8px;
+	vertical-align: middle;
+	position: relative;
+	display: inline-block;
+	height:170px;
+}
+</style>
+<div id="content" class="wrapper">
+	<div id="main-content" class="clearfix">	
+		<div id="main-column">
+			<ul class="home-page-num">
+				<li><a href="javascript:void(0);" onclick="loadTabAjax('main', 'registration_page_one.php');">1</a></li>
+				<li><a href="javascript:void(0);" onclick="loadTabAjax('main', 'registration_page_two.php');">2</a></li>
+				<li><a id="active-pgnum" href="javascript:void(0);" onclick="">3</a></li>
+			</ul>
+			<h1 class="title"><?=$trans["reg_pge_three_title"];?></h1>
+			<p><?=$trans["reg_pge_three_acknowledgement_text"];?></p>
+			<p><?=$trans["reg_pge_three_thanks_message"];?></p>
+		</div>
+		<div id="sidebar-column">
+			<div class="client-banner"></div>
+			<? include( "info.php" ); ?>
+		</div>
+	</div>
+	<div id="main-bottom-curve">&nbsp;</div>
+</div>

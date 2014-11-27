@@ -1,0 +1,47 @@
+<!--inc_my_projects_main.html-->
+<script>
+$("#myProjectsSubTab li").click(function() {
+	var headerId = $(this).attr("id");
+	if (headerId) {
+		$("#myProjectsSubTab li a").removeClass('myproject_current');
+		$(this).children(":first").toggleClass("myproject_current");
+		$(".my_proj_sub_tab_content").hide();
+		var selected_tab = headerId.substring(0,17) // means tab1header to tab1
+		$("#"+selected_tab).fadeIn();
+	}
+});
+   
+$('document').ready( function() {
+	setTabHeader('myProjectsSubTab', 'subtab1MyProjectsheader', 'myproject_current');
+	showHideSubTabUserPanel('subtab1MyProjects',true);
+	loadTabAjax('subtab1MyProjects', 'project_overview.php');
+});
+
+function setTabHeader(target, selected, active_class){
+	$("#"+target+" li a").removeClass(active_class);
+	$("#"+selected).children(":first").toggleClass(active_class);
+}
+
+function loadTabAjax( target, page ){
+	$(".my_proj_sub_tab_content").html("");
+	var lang = $("#loaded_langugage").val();
+	$('#'+target).load( page, { lang:lang } );
+}
+
+</script>
+
+<ul id="myProjectsSubTab" class="submenu">
+	<li id="subtab1MyProjectsheader"><a href="javascript: void(0);" onclick="loadTabAjax('subtab1MyProjects', 'project_overview.php');"><?=$trans["my_projects_main_project_overview"];?></a>|</li>
+	<li id="subtab2MyProjectsheader"><a href="javascript: void(0);" onclick="loadTabAjax('subtab2MyProjects', 'documents_files.php');"><?=$trans["my_projects_main_documents_files"];?></a>
+</li>
+
+
+
+<div id="subtab1MyProjects" class="my_proj_sub_tab_content">
+
+</div>
+
+<div id="subtab2MyProjects" class="my_proj_sub_tab_content">
+
+</div>
+

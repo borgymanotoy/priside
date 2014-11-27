@@ -1,0 +1,64 @@
+<!--inc_my_company_profile_main.html-->
+<script>
+ $("#myCompanyProfileSubTab li").click(function() {
+	var headerId = $(this).attr("id");
+	
+	if (headerId) {
+		$("#myCompanyProfileSubTab li a").removeClass('mycp-current');
+		$(this).children(":first").toggleClass("mycp-current");
+		$(".mycp_sub_tab_content").hide();
+		var selected_tab = headerId.substring(0,23) // means tab1header to tab1
+		$("#"+selected_tab).fadeIn();
+	}
+});
+
+
+   
+$('document').ready( function(){
+	setTabHeader('myCompanyProfileSubTab', 'subtab2MyCompanyProfileheader', 'mycp-current');
+	showHideSubTabUserPanel('subtab2MyCompanyProfile',true);
+	loadTabAjax('subtab2MyCompanyProfile', 'modify_my_company_profile.php');} 
+);
+
+function loadTabAjax( target, page ){
+	$(".mycp_sub_tab_content").html("");
+	var lang = $("#loaded_langugage").val();
+	$('#'+target).load( page, { lang:lang } );
+}
+
+function setTabHeader(target, selected, active_class){
+	$("#"+target+" li a").removeClass(active_class);
+	$("#"+selected).children(":first").toggleClass(active_class);
+}
+
+</script>
+
+
+
+<ul id="myCompanyProfileSubTab" class="submenu">
+	<li id="subtab1MyCompanyProfileheader"><a onclick="loadTabAjax('subtab1MyCompanyProfile', 'my_company_profile.php');" href="javascript: void(0);"><?=$trans["my_company_prof_main_my_company_prof"];?></a>|</li>
+	<li id="subtab2MyCompanyProfileheader"><a onclick="loadTabAjax('subtab2MyCompanyProfile', 'modify_my_company_profile.php');" href="javascript: void(0);"><?=$trans["my_company_prof_main_modify_profile"];?></a>|</li>
+	<li id="subtab3MyCompanyProfileheader"><a onclick="loadTabAjax('subtab3MyCompanyProfile', 'my_reviews.php');" href="javascript: void(0);"><?=$trans["my_company_prof_main_my_review"];?></a>|</li>
+	<li id="subtab4MyCompanyProfileheader"><a onclick="loadTabAjax('subtab4MyCompanyProfile', 'references.php');" href="javascript: void(0);"><?=$trans["my_company_prof_main_ref"];?></a>|</li>
+	<li id="subtab5MyCompanyProfileheader"><a onclick="loadTabAjax('subtab5MyCompanyProfile', 'quality_stamps.php');" href="javascript: void(0);"><?=$trans["my_company_prof_main_quality_stamps"];?></a></li>
+</ul>
+
+<div id="subtab1MyCompanyProfile" class="mycp_sub_tab_content">
+
+</div>
+
+<div id="subtab2MyCompanyProfile" class="mycp_sub_tab_content">
+	
+</div>
+
+<div id="subtab3MyCompanyProfile" class="mycp_sub_tab_content">
+	
+</div>
+
+<div id="subtab4MyCompanyProfile" class="mycp_sub_tab_content">
+	
+</div>
+
+<div id="subtab5MyCompanyProfile" class="mycp_sub_tab_content">
+	
+</div>

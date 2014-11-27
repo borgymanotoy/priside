@@ -1,0 +1,665 @@
+<?php
+require_once( $_SERVER['DOCUMENT_ROOT']."/libs/combobox.php" );
+
+$classifications   = GetEnumStrings('Business','Classification');
+$myRequests = GetMyRequestTitles($classifications);
+
+// =============================================================================
+// = PHP FUNCTIONS                                                             =
+// =============================================================================
+/**
+*
+* Gets the titles and ids used for displaying the requests in the combobox.
+*
+* @param classificationStrings  String array of classifications. Their index shall be
+*                               their enum/id value in the database.
+*                               Used to map database classification ids to strings.
+*/
+function GetMyRequestTitles($classificationStrings) {
+		db_connect();
+
+
+		$sql = "
+				SELECT
+					U.Id,
+					SR.Id AS Request_Id,
+					SL.name AS Place,
+					BSC.Category AS Service,
+					SR.DateCreated AS Date,
+					SR.Status AS Status,
+					(SELECT COUNT(SRR.Id) FROM ServiceRequestReplies AS SRR WHERE SR.Id = SRR.ServiceRequest_Id) AS ReplyCount
+				FROM
+					User U INNER JOIN ServiceRequest SR ON U.Id = SR.User_Id
+					INNER JOIN BusinessServiceCategory BSC ON SR.BusinessServiceCategory_Id = BSC.Id
+					INNER JOIN Sweden_LanKommuner SL ON SR.Sweden_LanKommuner_Id = SL.Id
+				WHERE
+					U.Account_Id = ".$_SESSION['User']['AccountId'];
+		$sql.= "
+				ORDER BY
+					SR.Status ASC,
+					SR.DateCreated ASC
+			   ";
+		$result = mysql_query($sql);
+
+		if(0 != mysql_errno()){
+			$ErrMsg = "Query Error @ ".__LINE__." ". mysql_error();
+			echo $ErrMsg;
+			header("Status: 400 " . $ErrMsg ); // TODO: Fix error handling.
+			exit(0);
+		}
+
+		$rowNum = 0;
+		$requests = array();
+		while($row = mysql_fetch_assoc($result)){
+			$rowNum+=1;
+			// Replace some id's with their corresponding names.
+			$row['Classification'] = $classificationStrings[$row['Classification']];
+			$requests[$row['Request_Id']] = $row['Service'].', '.$row['Place'].' ('.$row['ReplyCount'].'/'.MAX_REPLIES_PER_INQUIRY.')';
+		}
+		mysql_free_result($result);
+
+		return $requests;
+}
+
+
+
+/**
+*
+* Gets the projects the logged in user has extended or admin access to.
+*
+* @return An associative array with the keys being project ids and the values the
+*         corresponding project name.
+*/
+function GetProjects() {
+		db_connect();
+
+		$sql = "
+			SELECT
+				Project.Id AS Project_Id,
+				Project.Name AS Project_Name
+			FROM
+				Project, ProjectParticipantsGroup PPG
+			WHERE
+				Project.Id = PPG.Project_Id
+				AND PPG.User_Id = ".$_SESSION['User']['Id']."
+				AND PPG.Permissions IN ('extended', 'admin')
+			ORDER BY
+				Project.Name, Project.Id";
+		$result = mysql_query($sql);
+
+		if(0 != mysql_errno()){
+			$ErrMsg = "Query Error @ ".__LINE__." ". mysql_error();
+			echo $ErrMsg;
+			header("Status: 400 " . $ErrMsg ); // TODO: Fix error handling.
+			exit(0);
+		}
+
+		$projects = array();
+		while($row = mysql_fetch_assoc($result)){
+			$projects[$row['Project_Id']] = $row['Project_Name'];
+		}
+		mysql_free_result($result);
+
+		return $projects;
+}
+?>
+
+<script type="text/javascript">
+<?php
+	require_once( $_SERVER['DOCUMENT_ROOT']."/js/priside-common-script.js" );
+	include_once( $_SERVER['DOCUMENT_ROOT']."/js/lib_notes.js" );
+?>
+
+// =============================================================================
+// = GLOBAL VARIABLES                                                          =
+// =============================================================================
+var MyReq = {
+	$deleteDialog : null // jQuery UI dialog for confirming request deletion.
+};
+
+
+// =============================================================================
+// = DOCUMENT READY                                                            =
+// =============================================================================
+$(document).ready(function() {
+	$('#my_request_connect_proj').click(connectProjectCheckboxClicked);
+	$("#txt_entrepreneur").autocomplete_dropdown({"table" : "Entrepreneurs", "type" : "autocomplete-only", "onChange" : function( id ){ ajaxGetEntrepreneurMail(id); }});
+	$("#txt_entrepreneur").on('change', function(e){
+		clearIdChecksum();
+	});
+
+	// Checkbox handler toggling show/hide of Invite companies/entrepeneurs
+	$('#my_request_invite_entrepreneurs').click(function() {
+		if ($(this).is(':checked')) {
+			$('#myreq_invite_entrepeneurs_container').show();
+		} else {
+			$('#myreq_invite_entrepeneurs_container').hide();
+		}
+	});
+
+	// Notes init.
+	CreateDialog( 'myReqNote_', 'noteDialogContainer', '<?=$trans['my_request_notes_title'];?>', 500, '<?=$trans['my_request_notes_btn_save'];?>', '<?=$trans['my_request_notes_btn_cancel'];?>' );
+
+	// --------------------------------------------------------------------------
+	// - Setup request delete confirmation dialog.
+	var $deleteDialogContent = $('#myreq_deletereq_dlg_content');
+
+	MyReq.$deleteDialog = $deleteDialogContent.
+		dialog(
+			{
+			'autoOpen' : false,
+			'draggable': false,
+			'modal'    : true,
+			'title'    : "<?=$trans['my_request_delete_dlg_title']?>",
+		});
+	// Move dialog back into our tab (jQuery UI attached it to the body and this
+	// causes us to get multiple dialogs in the DOM when this tab is revisited
+	// if we don't put it back into our tab).
+	MyReq.$deleteDialog.parent('.ui-dialog').appendTo('#main-column-2');
+	// - Request delete confirmation dialog setup done.
+	// --------------------------------------------------------------------------
+});
+
+
+// =============================================================================
+// = JAVASCRIPT FUNCTIONS                                                      =
+// =============================================================================
+function connectProjectCheckboxClicked() {
+	var requestId = getComboboxValue('myrequests');
+	var projectId = getComboboxValue('myrequests_projects');
+
+	// If user hasn't selected a service request, do nothing.
+	if (null == requestId || $.trim(requestId).length === 0) {
+		return;
+	}
+
+	if ($('#my_request_connect_proj').is(':checked')) {
+		// Connect request to selected project.
+		// If user hasn't selected a project, do nothing.
+		if (null == projectId || $.trim(projectId).length === 0 || '<?=$trans['my_request_select_proj']?>' === projectId) {
+			return;
+		}
+		connectRequestToProject(requestId, projectId, getComboboxText('myrequests_projects'));
+	} else {
+		// Disconnect request from project.
+		disconnectRequestFromProject(requestId);
+	}
+}
+
+/**
+ * Callback 'myrequests' combobox selection.
+ */
+function requestSelected(comboboxId, value, text) {
+   $.ajax({
+      type : "GET",
+      url  : 'my_request.php',
+      data : {
+         "ajaxRequest"                : "loadRequest",
+         "requestId"                  : value,
+         "checksum"                   : '<?=CheckSum($_SESSION['User']['Id'])?>' // TODO: Include requestId in checksum?
+      },
+      success: function(data) {
+			// Clear and hide company/entrepreneur invitation list.
+			clearInvitedEntrepreneurList();
+			$('#my_request_invite_entrepreneurs').attr('checked', false);
+			$('#myreq_invite_entrepeneurs_container').hide();
+
+			data = $.parseJSON(data);
+			$('#myrequest').html(data.html); // Show request info
+			
+			// Set request's project in project dropdown list.
+			if (data.ProjectId > 0) {
+				selectComboboxItem('myrequests_projects', data.ProjectId);
+				$('#my_request_connect_proj').attr('checked', true);
+			} else {
+				unselectComboboxItems('myrequests_projects', '<?=$trans['my_request_select_proj']?>');
+				$('#my_request_connect_proj').attr('checked', false);
+			}
+			
+			loadReplies(value); // Show request replies
+      },
+      error: function(xhr){
+         // TODO: Showing error messages isn't working yet in Opera!
+         showStatusMessageBox("my_request_error_msg", xhr.statusText, true);
+      }
+   });
+}
+
+/**
+ * Loads and displayes the replies made to a service request.
+ */
+function loadReplies(requestId) {
+   $.ajax({
+      type : "POST",
+      url  : 'my_request.php',
+      data : {
+         "ajaxRequest"                : "loadReplies",
+         "requestId"                  : requestId,
+         "checksum"                   : '<?=CheckSum($_SESSION['User']['Id'])?>' // TODO: Include requestId in checksum?
+      },
+      success: function(data) {
+         $('#requestRepliesCount').html(data.replyCount);
+         $('#requestRepliesContainer').html(data.html);
+      },
+      error: function(xhr){
+         // TODO: Showing error messages isn't working yet in Opera!
+         showStatusMessageBox("my_request_error_msg", xhr.statusText, true);
+      }
+   });
+}
+
+
+/**
+ * Assigns a request to an account.
+ *
+ * Upon success will reload the request in the UI.
+ */
+function assignRequest(requestId, accountId) {
+   $.ajax({
+      type : "POST",
+      url  : 'my_request.php',
+      data : {
+         "ajaxRequest"                : "assignRequest",
+         "requestId"                  : requestId,
+			"accountId"                  : accountId
+      },
+      success: function(data) {
+			// Force reload of request. This is a lazy way to update its state.
+			requestSelected(0, requestId, '');
+      },
+      error: function(xhr){
+         // TODO: Showing error messages isn't working yet in Opera!
+         showStatusMessageBox("my_request_error_msg", xhr.statusText, true);
+      }
+   });
+}
+
+
+/**
+ * Displayes the delete service request confirmation dialog.
+ *
+ * @param name  Text to use as name when asking user for confirmation of the
+ *              deletion.
+ */
+function showDeleteRequestDialog(requestId, name) {
+	// Update request name in dialog.
+	$('#myreq_deletereq_dlg_req_name').html(name);
+
+	// Create the buttons.
+	MyReq.$deleteDialog.dialog('option', 'buttons',
+		{
+			"<?=$trans['my_request_delete_dlg_btn_delete']?>" : function() {
+				deleteRequest(requestId);
+				$(this).dialog('close');
+			},
+
+			"<?=$trans['my_request_delete_dlg_btn_cancel']?>" : function() {
+				$(this).dialog('close');
+			}
+		});
+
+	MyReq.$deleteDialog.dialog('open');
+	return;
+}
+
+/**
+ * Deletes a request from the database and UI.
+ *
+ */
+function deleteRequest(requestId) {
+	$.ajax({
+      type : "POST",
+      url  : 'my_request.php',
+      data : {
+         "ajaxRequest"                : "deleteRequest",
+         "requestId"                  : requestId,
+      },
+      success: function(data) {
+			// Reload our tab to get rid of the deleted inquiry. Yes, this is the
+			// lazy way of doing it.
+			loadInCurrentTabAjax('my_request.php');
+      },
+      error: function(xhr){
+         // TODO: Showing error messages isn't working yet in Opera!
+         showStatusMessageBox("my_request_error_msg", xhr.statusText, true);
+      }
+   });
+}
+
+/**
+ * Combobox callback when user has selected a project in the dropdown (combobox)
+ * for connecting the request to a project.
+ */
+function projectSelected(comboboxId, value, text) {
+	var requestId = getComboboxValue('myrequests');
+
+	// If user hasn't selected a service request, do nothing.
+	if (null == requestId || $.trim(requestId).length === 0) {
+		return;
+	}
+
+	// If "Connect request to project" checkbox isn't checked, do nothing.
+	if (!$('#my_request_connect_proj').is(':checked')) {
+		return;
+	}
+
+	connectRequestToProject(requestId, value, text);
+}
+
+/**
+ * Connects a service request to a project.
+ *
+ * If successfull the content of the element #my_request_project_container
+ * will be updated and set to projectName.
+ *
+ * @param projectName  The name of the project. This will be used to update
+ *                     #my_request_project_container.
+ */
+function connectRequestToProject(requestId, projectId, projectName) {
+   $.ajax({
+      type : "POST",
+      url  : 'my_request.php',
+      data : {
+         "ajaxRequest"                : "connectToProject",
+			"requestId"                  : requestId,
+			"projectId"                  : projectId,
+         "checksum"                   : '<?=CheckSum($_SESSION['User']['Id'])?>' // TODO: Include requestId and value in checksum?
+      },
+      success: function(data) {
+			$('#my_request_project_container').html(projectName);
+      },
+      error: function(xhr){
+         // TODO: Showing error messages isn't working yet in Opera!
+         showStatusMessageBox("my_request_error_msg", xhr.statusText, true);
+      }
+   });
+}
+
+/**
+ * Disconnects/removes a service request from its project.
+ *
+ * If successfull the content of the element #my_request_project_container
+ * will be updated.
+ */
+function disconnectRequestFromProject(requestId) {
+   $.ajax({
+      type : "POST",
+      url  : 'my_request.php',
+      data : {
+         "ajaxRequest"                : "disconnectFromProject",
+			"requestId"                  : requestId,
+         "checksum"                   : '<?=CheckSum($_SESSION['User']['Id'])?>' // TODO: Include requestId and value in checksum?
+      },
+      success: function(data) {
+			$('#my_request_project_container').html(
+				'<a href="#connect_proj_section"><?=$trans['my_request_connect_to_proj']?></a>');
+      },
+      error: function(xhr){
+         // TODO: Showing error messages isn't working yet in Opera!
+         showStatusMessageBox("my_request_error_msg", xhr.statusText, true);
+      }
+   });
+}
+
+/* START: Entrepreneur Specific Codes */
+function ajaxGetEntrepreneurMail(id){
+	$.ajax({
+		type : "GET",
+		url : "/my_request.php",
+		data : {
+			"ajaxRequest" : "ajaxGetEntrepreneurMail",
+			"EntrepreneurId" : id
+		},
+		success: function(EntrepreneurInfos){
+			$("#selectedEntId").val(EntrepreneurInfos.Id);
+			$("#selectedEntChecksum").val(EntrepreneurInfos.Checksum);
+			$("#txt_request_email_add").val(EntrepreneurInfos.Email);
+		},
+		error: function(xhr){
+			showStatusMessageBox("my_request_error_msg", xhr.statusText, true);
+		}
+	});
+}
+
+var entrepreneurList = new Array();
+function addEntrepreneurMail() {
+
+	var entrepreneur = $("#txt_entrepreneur").val();
+	var email = $("#txt_request_email_add").val();
+
+	if( 0 == entrepreneur.length || 0 == email.length  ){
+		showStatusMessageBox("my_request_error_msg", "<?=$trans['my_request_invite_error_add_email']?>", true);
+		return false;
+	}
+
+	// Entrepreneur id and checksum
+	var id = $("#selectedEntId").val();
+	var checksum = $("#selectedEntChecksum").val();
+	var idChecksum = "N/A";
+	//if( (id && id.length > 0) && (checksum && checksum.length > 0) ){
+	//	idChecksum = ( id && id.length ? id : "" ) + ":" + $("#selectedEntChecksum").val();
+	//}
+
+	var list_entry = entrepreneur + " (" + email + ")";
+	if ( !checkIfMailExists(entrepreneurList, list_entry) ) {
+		entrepreneurList.push( idChecksum + "~:~" + list_entry );
+	}
+
+
+   $.ajax({
+      type : "GET",
+      url  : 'my_request.php',
+      data : {
+         "ajaxRequest"                : "inviteBusiness",
+			"requestId"                  : getComboboxValue('myrequests'),
+			"businessName"               : entrepreneur,
+			"businessEmail"              : email,
+			"businessId"                 : id,
+			"businessIdChecksum"         : checksum,
+         "checksum"                   : '<?=CheckSum($_SESSION['User']['Id'])?>' // TODO: Include requestId in checksum?
+      },
+      success: function(data) {
+			loadMailsToList( entrepreneurList );
+			clearEntrepreneurMail();
+      },
+      error: function(xhr){
+         // TODO: Showing error messages isn't working yet in Opera!
+         showStatusMessageBox("my_request_error_msg", xhr.statusText, true);
+      }
+   });
+
+}
+
+/**
+ * Clears input boxes for entrepreneur name and email.
+ */
+function clearEntrepreneurMail(){
+	$("#txt_entrepreneur").val("");
+	$("#txt_request_email_add").val("");
+}
+
+/**
+ * Clears the displayed list of invited entrepreneurs of a request.
+ *
+ * Only clears the shown list. It doesn't affect any database etc.
+ * This function is typically used when for example switching to show another
+ * request/inquiry.
+ */
+function clearInvitedEntrepreneurList() {
+	clearEntrepreneurMail();
+	$("ul#list_entrepreneurs").empty();
+	entrepreneurList.length = 0; // Empty array.
+}
+
+function checkIfMailExists(mail_list, item){
+	if(mail_list){
+		for(var idx in mail_list){
+			var mailInfos 	= mail_list[idx].split("~:~");
+			var idChecksum 	= mailInfos[0];
+			var infos 		= mailInfos[1];
+			if( infos.indexOf(item) >= 0 ) return true;
+		}
+	}
+	return false;
+}
+
+function loadMailsToList(mail_list){
+	if(mail_list){
+		$("ul#list_entrepreneurs").empty();
+		for(var idx in mail_list){
+			var mailInfos 	= mail_list[idx].split("~:~");
+			var idChecksum 	= mailInfos[0];
+			var infos 		= mailInfos[1];
+			var temp = "";
+			temp += "<li>";
+			temp += "	<input type=\"hidden\" id=\"idChecksum\" value=\""+idChecksum+"\">";
+			temp += "	<span class=\"txt12\" style=\"margin-right: 10px;\">";
+			temp += 		infos;
+			temp += "	</span>";
+			temp += "</li>";
+			$("ul#list_entrepreneurs").append(temp);
+		}
+	}
+}
+
+
+function clearIdChecksum(){
+	$("#selectedEntId").val("");
+	$("#selectedEntChecksum").val("");
+}
+/* END: Entrepreneur Specific Codes */
+</script>
+
+<!-- inc_my_request.html -->
+<style>
+   .myreq_business_link:hover {
+      color: #ffffff;
+      background-color: #e66414;
+   }
+</style>
+<div id="main-column-2">
+	<h1 class="title"><?=$trans["my_request_my_req"];?></h1>
+
+	<!-- Status Message Box -->
+	<div id="my_request_error_msg" class="status-msg-box" style="display:none"></div>
+
+	<!-- <notes dialog box> -->
+	<div id="myReqNote_noteDialogContainer" style="display: none;">
+		<input type="hidden" name="noteDialogUpdateIdCheckSum" id="myReqNote_noteDialogUpdateIdCheckSum">
+		<input type="hidden" name="noteDialogTargetIdCheckSum" id="myReqNote_noteDialogTargetIdCheckSum">
+		<input type="hidden" name="noteDialogCurrNoteType" id="myReqNote_noteDialogCurrNoteType">
+		<textarea name="noteDialogText" cols="75" rows="10" id="myReqNote_noteDialogText"></textarea>
+	</div>
+	<!-- </notes dialog box> -->
+
+	<div class="clearfix container-small">
+		<div class="left">
+			<div class="combobox-container left">
+				<?php WriteCombobox('myrequests','&nbsp;', $myRequests, requestSelected); ?>
+			</div>
+		</div>
+	</div>
+	<div id="myrequest" class="clearfix container-small">
+		<!-- Request placed here. -->
+	</div>
+   <h3><?=$trans["my_request_contractors"];?>: (<span id="requestRepliesCount">-</span>/4)</h3>
+	<div class="clearfix container-small">
+		<div class="requestsHeader">
+			<div class="serviceheadercontainer_top_left">
+				<div class="serviceheadercontainer_bottom_right">
+					<div class="serviceheadercontainer_top_right">
+					  <div class="serviceheadercontainer_bottom_left">
+						  <table>
+							<thead>
+								<th>
+									<td><?=$trans["my_request_company"];?></td>
+									<td><?=$trans["my_request_place"];?></td>
+									<td><?=$trans["my_request_jugdement"];?></td>
+								</th>
+							</thead>
+						  </table>
+					  </div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="requestRepliesContainer">
+		</div> <!-- End of requestRepliesContainer-->
+	</div>
+
+	<div class="clearfix container-small" >
+		<a name="connect_proj_section"></a>
+		<input type="checkbox" id="my_request_connect_proj" name="my_request_connect_proj" /><label for="my_request_connect_proj">&nbsp;<b><?=$trans["my_request_connect_proj"];?></b></label>
+	</div>
+
+	<div class="clearfix container-small">
+		<div class="left">
+			<div class="combobox-container left">
+				<?php WriteCombobox('myrequests_projects', $trans['my_request_select_proj'], GetProjects(), projectSelected); ?>
+			</div>
+		</div>
+		<div class="clearfix container-small">
+
+			<div class="left" style="margin-top:.2em; margin-left:1em;">
+				<a class="btn-violet" href="#"><span><h5><?=$trans["my_request_create_new_proj"];?></h5></span></a>
+			</div>
+
+		</div>
+	</div>
+
+	<h3><?=$trans["my_request_invite_entrepreneurs"];?></h3>
+	<p><?=$trans["my_request_invite_ent_text"];?></p>
+	<input type="checkbox" id="my_request_invite_entrepreneurs" name="my_request_invite_entrepreneurs" /><label for="my_request_invite_entrepreneurs">&nbsp;<b><?=$trans["my_request_invite_entrepreneurs"];?></b></label>
+	
+	<div id="myreq_invite_entrepeneurs_container" class="clearfix container-small" style="display:none">
+	<div class="clearfix container-small">
+		<div class="clearfix left">
+			<input type="hidden" id="selectedEntId" value="" />
+			<input type="hidden" id="selectedEntChecksum" value="" />
+			<span class="pre-margin-10 bold"><?=$trans["my_request_find_entrepreneurs"];?> </span>
+			<div class="combox">
+				<input id="txt_entrepreneur" type="text" name="tb5" value="">
+			</div>
+		</div>
+		<div class="input-text left" style="margin-left:3em;">
+			<span><?=$trans["my_request_mail"];?> </span>
+			<div><input type="text" id="txt_request_email_add" /></div>
+		</div>
+		<div class="left" style="margin-top: 10px;">
+			<a class="btn-orange" href="javascript:void(0);" onclick="addEntrepreneurMail();"><span><?=$trans["my_request_invite_entrepreneur"];?></span></a>
+		</div>
+	</div>
+	<div class="clearfix container-small">
+		<div class="left">
+			<h4><?=$trans["my_request_invited_entre"];?></h4>
+			<ul id="list_entrepreneurs" style="list-style: none; padding-left: 0px;">
+			</ul>
+		</div>
+	</div>
+	</div>
+
+	<!-- Request deletion confirmation dialog content -->
+	<div id="myreq_deletereq_dlg_content" style="display:none;">
+		<span><?=$trans['my_request_delete_dlg_text_pre']?></span><span id="myreq_deletereq_dlg_req_name"></span><span><?=$trans['my_request_delete_dlg_text_post']?></span>
+	</div>
+
+</div>
+
+<div id="sidebar-column">
+	<div class="info-pane">
+		<span class="help-user-tile" style="display:block;"><?=$trans["my_request_new_help"];?></span>
+		<div class="help-user-title"><?=$trans["my_request_my_req"];?></div>
+		<div class="info-pane-content clearfix" style="margin-top: 45px;">
+			<div class="txt12" style="margin-top: 5px; margin-left: 50px; width: 240px;"><?=$trans["my_request_my_req_text"];?></div>
+			<div style="margin-top: 5px; width: 260px;">
+				<ul class="txt12">
+					<li class="list_envelope"><?=$trans["my_request_new_msg"];?></li>
+					<li class="list_reputation"><?=$trans["my_request_reputation"];?> 1 - 5</li>
+				</ul>
+			</div>
+		</div>
+		<? include( "inc_users_panel_client_banner.html" ); ?>
+	</div>
+</div>
+

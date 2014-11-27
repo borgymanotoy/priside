@@ -1,0 +1,34 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"/>
+	<title>Logout</title>  
+	<link href="../css/screen.css" type="text/css" rel="stylesheet" media="screen,projection" />
+</head>
+<body>
+	<!-- header section -->
+	<? include( "../header.php" ); ?>
+	<!-- header section -->
+	
+	<!-- body section -->
+	<div id="main">
+		<div id="content" class="wrapper">
+			<div id="main-content" class="clearfix">		
+				<div id="main-contents">
+					<? if( ! empty( $ErrMsgs ) )
+						echo DumpMsgs( $ErrMsgs );
+					if( ! empty( $OkMsgs ) )
+						echo DumpMsgs( $OkMsgs, "<li><font color=\"blue\"><strong>" );
+					?>
+					<br>
+					<div class="txt12Bold" style="width: 100%; text-align: center;">You are now logged out.</div>
+				</div>
+			</div>
+			<div id="main-bottom-curve">&nbsp;</div>			
+		</div>
+		
+	</div>
+	<!-- footer section -->
+	<? include( "../footer.php" ); ?>
+</body>
+</html>

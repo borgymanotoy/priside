@@ -1,0 +1,479 @@
+<!--inc_modify_my_company_profile.html-->
+<script type="text/javascript">
+	$(document).ready(function(){
+	
+		$("#btnModifyMyAccountUploadPicture").css({"position" : "relative" ,"top" : "0px"}).fileuploader({
+				"onComplete" : function(filename){
+					 $.ajax( {
+						type: 'POST',
+						url:  '/modify_my_company_profile.php',
+						data: { 'ajaxRequest'   : 'getPreview', 'filename' : filename },
+						success: function(data){
+
+							$("#companyBanner").html("<img height=\"200\" width=\"250\" src=\""+data.fileUrl+"\">");
+
+						},
+						error: function(xhr){
+							showStatusMessageBox("div_modify_my_company_profile_status_msgs",xhr.statusText, true);
+						}
+					 });
+				},
+				"onError" : function(error){
+					showStatusMessageBox("div_modify_my_company_profile_status_msgs",error, true);
+				},
+				"useExternProgressHandler" : true, 
+				"ButtonStateCancel" : '<?=$trans["certs_ButtonStateCancel"];?>',
+				'FlashVars' 	: "SavePath=<?=base64_encode( $UploadPath );?>,CheckSum=<?=CheckSum( base64_encode( $UploadPath ) );?>,Session=<?=session_id();?>",
+				'filters'       : "(Images):*.bmp;*.png;*.jpg;*.gif;*.jpeg;"
+		});
+		
+	});
+	function validateBusinessEntries(){
+		if($("#Address").val().length == 0) return false;
+		else if($("#City").val().length == 0) return false;
+		else if($("#Postal").val().length == 0) return false;
+		return true;
+	}
+	
+	function saveBusinessEntries() {
+		if(!validateBusinessEntries()) {
+			var validation_msg = $("#hiw_modify_my_company_prof_error_entry_validation").val();
+			showStatusMessageBox("div_modify_my_company_profile_status_msgs", validation_msg, true);
+			return;
+		}
+		ajaxSaveBusinessEntries();
+	}
+
+	function ajaxSaveBusinessEntries(){
+		$.ajax({
+			type : "POST",
+			url : "/modify_my_company_profile.php",
+			data : {
+				"ajaxRequest" : "ajaxSaveBusinessEntries",
+				"Address" : $("#Address").val(),
+				"City" : $("#City").val(),
+				"Postal" : $("#Postal").val(),
+				"BillingAddress" : $("#BillingAddress").val(),
+				"BillingCity" : $("#BillingCity").val(),
+				"BillingPostal" : $("#BillingPostal").val(),
+				"Video" : $("#Video").val(),
+				"LinkedIn" : $("#LinkedIn").val(),
+				"Facebook" : $("#Facebook").val(),
+				"Twitter" : $("#Twitter").val(),
+				"Presentation" : $("#Presentation").val(),
+				"file_name" : $("#file_name").val(),
+				"HomePage" : $("#HomePage").val(),
+				"Email" : $("#BusinessEmail").val()
+			},
+			success: function(data){ 
+				showStatusMessageBox("div_modify_my_company_profile_status_msgs", data, false);
+			},
+			error: function(xhr){  
+				showStatusMessageBox("div_modify_my_company_profile_status_msgs", xhr.statusText, true);
+			}
+		});
+		
+	}
+
+	function validateContactEntries(){
+		if($("#FirstName").val().length == 0) return false;
+		else if($("#LastName").val().length == 0) return false;
+		else if($("#Phone").val().length == 0) return false;
+		else if($("#Email").val().length == 0) return false;
+		else if($("#ContactPostal").val().length == 0) return false;		
+		else if($("#PersonNumber").val().length == 0) return false;
+		else if($("#ContactCity").val().length == 0) return false;		
+		//Title
+		//AltPhone
+		return true;
+	}
+
+	function saveContactEntries() {
+		if(!validateContactEntries()){
+			var validation_msg = $("#hiw_modify_my_company_prof_error_entry_validation").val();
+			showStatusMessageBox("div_modify_my_company_profile_status_msgs", validation_msg, true);
+		}
+		
+		ajaxAddContactEntries();
+	}
+
+	function ajaxAddContactEntries() {
+		var IsPrimary;
+		if( 'checked' == $('#modify_my_company_prof_enter_main_contact').attr('checked') )
+			IsPrimary = 1;
+		else
+			IsPrimary = 0;
+		$.ajax({
+			type : "POST",
+			url : "/modify_my_company_profile.php",
+			data : {
+				"ajaxRequest" : "ajaxAddContactEntries",
+				"FirstName" : $("#FirstName").val(),
+				"LastName" : $("#LastName").val(),
+				"Phone" : $("#Phone").val(),
+				"Email" : $("#Email").val(),
+				"Postal" : $("#ContactPostal").val(),
+				"PersonNumber" : $("#PersonNumber").val(),
+				"City" : $("#ContactCity").val(),
+				"Title" : $("#Title").val(),
+				"AltPhone" : $("#AltPhone").val(),
+				"Address" : $("#ContactAddress").val(),
+				"IsPrimary" : IsPrimary,
+				"LoadedContactId" : $("#ContactId").val(),
+				"LoadedCheckSum" : $("#ContactIdCheckSum").val()
+			},
+			success: function(data){ 
+			
+			// reset fields
+				$("#FirstName").val("");
+				$("#LastName").val("");
+				$("#Title").val("");
+				$("#Phone").val("");
+				$("#Email").val("");
+				$("#AltPhone").val("");
+				$("#PersonNumber").val("");
+				$("#ContactAddress").val("");
+				$("#ContactPostal").val("");
+				$("#ContactCity").val("");
+				$("#spn_contact").text("<?=$trans["modify_my_company_prof_select_contact"];?>");
+				$("#ContactId").val("");
+				$("#ContactIdCheckSum").val("");
+				$("#contactButton").val("");
+				$("#modify_my_company_prof_enter_main_contact").prop('checked',false);
+				//
+				$("#contactButton").text( data.UpdateContactButton );
+				
+				showStatusMessageBox("div_modify_my_company_profile_status_msgs", data.OkMsg, false);
+			},
+			error: function(xhr){  
+				showStatusMessageBox("div_modify_my_company_profile_status_msgs", xhr.statusText, true);
+			}
+		});
+		
+		
+	}
+
+	function showBillingInfo() {
+		$("#billingInfo").toggle();
+	}
+
+	function ajaxReloadContactsList(){
+		$.ajax({
+			type : "POST",
+			url : "/modify_my_company_profile.php",
+			data : {
+				"ajaxRequest" : "ajaxReloadContactsList",
+			},
+			success: function(data){ 
+				$('#contactsListHTML').html( data );
+			},
+			error: function(xhr){  
+				showStatusMessageBox("div_modify_my_company_profile_status_msgs", xhr.statusText, true);
+			}
+		});
+	}
+
+	function ajaxLoadSelectedContact( Contact_Id, CheckSum ){
+		$.ajax({
+			type : "POST",
+			url : "/modify_my_company_profile.php",
+			data : {
+				"ajaxRequest"	: "ajaxLoadSelectedContact",
+				"Contact_Id" 	: Contact_Id,
+				"CheckSum"		: CheckSum
+			},
+			success: function(data){
+				
+				$("#FirstName").val( data.FirstName );
+				$("#LastName").val( data.LastName );
+				$("#Title").val( data.Title );
+				$("#Phone").val( data.Phone );
+				$("#Email").val( data.Email );
+				$("#AltPhone").val( data.AltPhone );
+				$("#PersonNumber").val( data.PersonNumber );
+				$("#ContactAddress").val( data.Address );
+				$("#ContactPostal").val( data.Postal );
+				$("#ContactCity").val( data.City );
+				
+				if( 1 == data.IsPrimary )
+					$("#modify_my_company_prof_enter_main_contact").prop('checked',true);
+				else
+					$("#modify_my_company_prof_enter_main_contact").prop('checked',false);
+				
+				
+				// update hidden fields
+				$("#ContactId").val( data.ContactId );
+				$("#ContactIdCheckSum").val( data.CheckSum );
+				
+				// modify Contact Button
+				$("#contactButton").text( data.UpdateContactButton );
+				
+			},
+			error: function(xhr){  
+				showStatusMessageBox("div_modify_my_company_profile_status_msgs", xhr.statusText, true);
+			}
+		});
+	}
+	
+</script>
+
+<style>
+	.list {
+		padding:0;
+		list-style: none;
+	}
+	.list li{
+		position:relative;
+		
+	}
+	.list span {
+		position: absolute;
+		top:0;
+		left: 2em;
+	}
+</style>
+<div id="main-column-2">
+	<input type="hidden" id="hiw_modify_my_company_prof_error_entry_validation" value="<?=$trans["hiw_modify_my_company_prof_error_entry_validation"];?>"/>
+	<!-- START: Status Message Box -->
+	<div id="div_modify_my_company_profile_status_msgs" class="status-msg-box" style="display: none;">
+		<?if(!empty($ErrMsg)){?> 
+			<script type="text/javascript">
+				showStatusMessageBox("div_modify_my_company_profile_status_msgs","<?=$ErrMsg?>", true);
+			</script>
+		<?}?> 
+		<?if(!empty($OkMsg)){?>
+			<script type="text/javascript">
+				showStatusMessageBox("div_modify_my_company_profile_status_msgs","<?=$OkMsg?>", false);
+			</script>
+		<?}?>
+	</div>
+	<!-- END -->
+	<h1 class="title"><?=$trans["modify_my_company_prof_mod_company_prof"];?></h1>
+	
+		<div class="clearfix container-small">
+			<div class="combobox-container left">
+				<input type="hidden" id="default_contact" value="<?=$trans["modify_my_company_prof_select_contact"];?>" />
+				<span id="spn_contact" class="cmb_sel_item_value italic" style="margin-left: 5px; width: 210px;"><?=$trans["modify_my_company_prof_select_contact"];?></span>
+				<span class="site-color arrow-down-button" style="width: 25px; height: 18px; border-left: 2px solid #412467;" onclick=""></span>
+				<span class="combobox-arrow" style="margin-left: 8px;" onclick="ajaxReloadContactsList();showHideComboboxItems('div_contact');"></span>
+				<div id="div_contact" class="combox-search-container comboBox combo-list-container">
+					<div id="divClose" align="right" onclick="closeListBox('div_contact');"><img src="../img/closeImage.png" alt="Close" /></div>
+					<ul class="combobox-list" id="contactsListHTML">
+						<?=$contactsListHTML;?>
+					</ul>
+				</div>
+
+				<? 
+					// flag for adding or editing contacts 
+				   // By default it has no value which means it is in adding state
+				   // If Contact is selected through the dropdown list ContactId & ContactIdCheckSum will be update which means it is in editing state
+				?>
+				<input type="hidden" id="ContactId" value=""/>
+				<input type="hidden" id="ContactIdCheckSum" value=""/>
+				
+			</div>
+			<div class="left" style="margin-left:3em;">
+				<input type="checkbox" id="modify_my_company_prof_enter_main_contact" name="modify_my_company_prof_enter_main_contact" /><label for="modify_my_company_prof_enter_main_contact"><b><?=$trans["modify_my_company_prof_enter_main_contact"];?></b></label>
+			</div>
+			
+		</div>
+
+		<div class="clearfix container-small">
+				<div class="input-text left">
+					<span><?=$trans["modify_my_company_prof_first_name"];?> *</span>
+					<div><input id="FirstName" type="text" name="FirstName"></div>
+				</div>
+
+				<div class="input-text left" style="margin-left:3em;">
+					<span><?=$trans["modify_my_company_prof_last_name"];?> *</span>
+					<div><input id="LastName" type="text" name="LastName"></div>
+				</div>
+		</div>
+		<div class="clearfix container-small">
+				<div class="input-text left">
+					<span><?=$trans["modify_my_company_prof_title"];?></span>
+					<div><input id="Title" type="text" name="Title"></div>
+				</div>
+
+				<div class="input-text left" style="margin-left:3em;">
+					<span><?=$trans["modify_my_company_prof_telephone"];?> *</span>
+					<div><input id="Phone" type="text" name="Phone"></div>
+				</div>
+		</div>
+		<div class="clearfix container-small">
+				<div class="input-text left">
+					<span><?=$trans["modify_my_company_prof_mail"];?> *</span>
+					<div><input id="Email" type="text" name="Email"></div>
+				</div>
+
+				<div class="input-text left" style="margin-left:3em;">
+					<span><?=$trans["modify_my_company_prof_alternative_phone"];?></span>
+					<div><input id="AltPhone" type="text" name="AltPhone"></div>
+				</div>
+		</div>
+		
+		<div class="clearfix container-small">
+				<div class="input-text left">
+					<span><?=$trans["modify_my_company_prof_person_num"];?> *</span>
+					<div><input id="PersonNumber" type="text" name="tb5"></div>
+				</div>
+
+				<div class="input-text left" style="margin-left:3em;">
+					<span><?=$trans["modify_my_company_prof_contact_address"];?> *</span>
+					<div><input id="ContactAddress" type="text" name="tb5"></div>
+				</div>
+		</div>
+		<div class="clearfix container-small">
+				<div class="input-text left">
+					<span><?=$trans["modify_my_company_prof_contact_postal"];?> *</span>
+					<div><input id="ContactPostal" type="text" name="tb5"></div>
+				</div>
+
+				<div class="input-text left" style="margin-left:3em;">
+					<span><?=$trans["modify_my_company_prof_contact_city"];?> *</span>
+					<div><input id="ContactCity" type="text" name="tb5"></div>
+				</div>
+		</div>
+
+		
+		<div class="clearfix container-small">
+			<a class="btn-violet" href="javascript:void(0);" onclick="saveContactEntries();"><span id="contactButton"><?=$trans["modify_my_company_prof_add_contact"];?></span></a>
+		</div>
+		
+
+
+		
+		<h3><?=$trans["modify_my_company_prof_address"];?></h3>
+		<div class="clearfix container-small">
+				<div class="input-text left">
+					<span><?=$trans["modify_my_company_prof_address"];?> *</span>
+					<div><input type="text" name="Address" id="Address" value="<?=$Business["Address"];?>"></div>
+				</div>
+
+				<div class="input-text left" style="margin-left:3em;">
+					<span><?=$trans["modify_my_company_prof_zip_code"];?> *</span>
+					<div><input type="text" name="Postal" id="Postal" value="<?=$Business["Postal"];?>"></div>
+				</div>
+		</div>
+		<div class="clearfix container-small">
+				<div class="input-text left">
+					<span><?=$trans["modify_my_company_prof_location"];?> *</span>
+					<div><input type="text" name="City" id="City" value="<?=$Business["City"];?>"></div>
+				</div>
+		</div>
+		<div class="clearfix container-small">
+				<input onclick="showBillingInfo();" type="checkbox" id="modify_my_company_prof_other_billing" name="modify_my_company_prof_other_billing" /><label for="modify_my_company_prof_other_billing"><b><?=$trans["modify_my_company_prof_other_billing"];?></b></label>
+		</div>
+		
+		
+		<div id="billingInfo" class="clearfix container-small hide">
+				<div class="input-text left">
+					<span><?=$trans["modify_my_company_prof_address"];?></span>
+					<div><input type="text" name="Address" id="BillingAddress" value="<?=$Business["BillingAddress"];?>"></div>
+				</div>
+
+				<div class="input-text left" style="margin-left:3em;">
+					<span><?=$trans["modify_my_company_prof_zip_code"];?></span>
+					<div><input type="text" name="Postal" id="BillingPostal" value="<?=$Business["BillingPostal"];?>"></div>
+				</div>
+				<div class="input-text left">
+					<span><?=$trans["modify_my_company_prof_location"];?></span>
+					<div><input type="text" name="City" id="BillingCity" value="<?=$Business["BillingCity"];?>"></div>
+				</div>
+		</div>
+		
+		
+		
+		
+		<h3><?=$trans["modify_my_company_prof_webI_social_media"];?> </h3>
+		<div class="clearfix container-small">
+				<div class="input-text left">
+					<span><?=$trans["modify_my_company_prof_home_page"];?></span>
+					<div><input type="text" name="HomePage" id="HomePage" value="<?=$Business["HomePage"];?>"></div>
+				</div>
+
+				<div class="input-text left" style="margin-left:3em;">
+					<span><?=$trans["modify_my_company_prof_mail"];?></span>
+					<div><input type="text" name="BusinessEmail" id="BusinessEmail" value="<?=$Business["Email"];?>"></div>
+				</div>
+		</div>
+		<div class="clearfix container-small">
+				<div class="input-text left">
+					<span>Facebook</span>
+					<div><input id="Facebook" type="text" name="facebook" value="<?=$Business["Facebook"];?>"></div>
+				</div>
+
+				<div class="input-text left" style="margin-left:3em;">
+					<span>Twitter</span>
+					<div><input id="Twitter" type="text" name="twitter" value="<?=$Business["Twitter"];?>"></div>
+				</div>
+		</div>
+		
+		<div class="clearfix container-small">
+				<div class="input-text left">
+					<span>Linked In</span>
+					<div><input id="LinkedIn" type="text" name="linkedIn" value="<?=$Business["LinkedIn"];?>"></div>
+				</div>
+
+				<div class="input-text left" style="margin-left:3em;">
+					<span>Video (<?=$trans["modify_my_company_prof_videos"];?>)</span>
+					<div><input id="Video" type="text" name="video" value="<?=$Business["Video"];?>"></div>
+				</div>
+		</div>
+		
+		<div class="clearfix container-small">
+			<h3><?=$trans["modify_my_company_prof_company_presentation"];?></h3>
+			<div class="textarea_top_left">
+			   <div class="textarea_bottom_right">
+				   <div class="textarea_top_right">
+					   <div class="textarea_bottom_left">
+							<textarea id="Presentation" style="resize: vertical; border: 0; margin: 5px;" rows="10" cols="63"><?=$Business['Presentation'];;?></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		
+		
+		<div class="clearfix container-small">
+			<a id="btnModifyMyAccountUploadPicture" class="btn-violet" href="javascript:void(0);"><span><h5><?=$trans["modify_my_company_prof_upload_pics"];?>
+			</h5></span></a>&nbsp;<img style="margin-top:.3em;" src="img/question_mark.png">
+		</div>
+		
+		<? 
+			// Hidden field is use when saving upload file
+			// This will serve as a flag if a an image is already in the file system
+		?>
+		<input id="file_name" type="hidden" value="" />
+		
+		<div id="companyBanner" class="clearfix container-small">
+			<!-- preview image here--->
+			<img src="<?=$Business['LogoUrl'];?>" width="250" height="200" />
+		</div>
+		
+		<div class="clearfix container-small"> 
+			<div class="left">
+				<span>* <?=$trans["modify_my_company_prof_req_fields"];?></span>
+			</div>
+			<div class="right">
+				<a class="btn-orange" href="javascript:void(0);" onclick="saveBusinessEntries();"><span><?=$trans["modify_my_company_prof_save"];?></span></a>
+			</div>
+		</div>
+
+</div>
+
+
+
+<div id="sidebar-column">
+	
+	<div class="info-pane">
+		<span class="help-user-tile" style="display:block;"><?=$trans["modify_my_company_prof_help"];?></span>
+		<div class="help-user-title"><?=$trans["modify_my_company_prof_mod_company_prof"];?></div>
+		<div class="info-pane-content clearfix" style="margin-top: 45px;">
+			<div class="txt12" style="margin-top: 5px; margin-left: 50px; width: 240px;"><?=$trans["modify_my_company_prof_desc"];?></div>
+		</div>
+		<? include( "inc_users_panel_client_banner.html" ); ?>
+	</div>
+	
+</div>

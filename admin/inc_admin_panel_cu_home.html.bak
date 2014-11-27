@@ -1,0 +1,238 @@
+<!-- inc_admin_panel_cu_home.html -->
+<style>
+	.col1 { text-align:left; width: 70px; }
+	.col2 { text-align:left; width: 200px; }
+	.col3 { text-align:left; width: 170px; }
+	.col4 { text-align:left; width: 90px; }
+	.col5 { text-align:left; width: 70px; }
+	.col6 { text-align:left; width: 100px; }
+	.col7 { text-align:left; width: 100px; }
+	.col8 { text-align:left; width: 100px; }
+</style>
+<div id="main">
+	<div id="content" class="wrapper">
+
+		<div id="main-column">
+
+			<div class="clearfix" style="padding: 10px;">
+				<h1 class="title"><?=$trans["cu_customers_users"];?></h1>
+				<div class="clearfix container-small" style="width: 900px;">
+					<div class="clearfix left">
+						<div class="textarea_top_left">
+							<div class="textarea_bottom_right">
+								<div class="textarea_top_right">
+									<div class="textarea_bottom_left">
+										<div style="position: relative">
+											<input type="text" name="tb5" class="txt12Default" style="width: 600px; border:none; margin:5px 5px 5px 5px" value="<?=$trans["cu_home_search_text"];?>"/>
+											<div style="position: absolute; height: 20px; width: 65px; top: 3px; right: -25px; background: url(img/search_button_help.png) no-repeat; cursor: pointer;" onclick="alert('search me');"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="clearfix right">
+						<a class="btn-orange trebuchetWhite" href="#">
+							<span><?=$trans["cu_button_new_customer"];?></span>
+						</a>
+					</div>
+				</div>
+
+				<div class="clearfix container-small">
+					<ol class="checklist-horizontal" style="list-style: none; padding-left: 0px;">
+						<li id="check_1" style="padding-right: 10px;"><input type="checkbox" name="vehicle" value="Bike" />&nbsp;<span><?=$trans["supplier"];?></span></li>
+						<li id="check_2" style="padding-right: 10px;"><input type="checkbox" name="vehicle" value="Bike" />&nbsp;<span><?=$trans["consumer"];?></span></li>
+						<li id="check_3" style="padding-right: 10px;"><input type="checkbox" name="vehicle" value="Bike" />&nbsp;<span><?=$trans["advertiser"];?></span></li>
+					</ol>
+				</div>
+
+				<div class="clearfix container-small">
+					<ol class="checklist-horizontal" style="list-style: none; padding-left: 0px;">
+						<li id="check_4" style="padding-right: 10px;"><input type="checkbox" name="vehicle" value="Bike" />&nbsp;<span><?=$trans["cu_home_company"];?></span></li>
+						<li id="check_5" style="padding-right: 10px;"><input type="checkbox" name="vehicle" value="Bike" />&nbsp;<span><?=$trans["cu_home_builder_contractor"];?></span></li>
+						<li id="check_6" style="padding-right: 10px;"><input type="checkbox" name="vehicle" value="Bike" />&nbsp;<span><?=$trans["cu_home_tenant"];?></span></li>
+						<li id="check_7" style="padding-right: 10px;"><input type="checkbox" name="vehicle" value="Bike" />&nbsp;<span><?=$trans["cu_home_non_profit"];?></span></li>
+						<li id="check_8" style="padding-right: 10px;"><input type="checkbox" name="vehicle" value="Bike" />&nbsp;<span><?=$trans["cu_home_municipality_country_authority"];?></span></li>
+					</ol>
+				</div>
+
+				<br/>
+				<div class="clearfix" style="width: 900px;">
+					
+					<div class="pagging-links clearfix" style="margin-left: 5px;">
+						<div class="left trebuchetGray">
+							<?=$trans["cu_search_display"];?>
+							<span id="span_cu_start">1</span>
+							-
+							<span id="span_cu_end">20</span>
+							&nbsp;
+							<?=$trans["cu_search_of"];?>
+							<span id="span_cu_search_total">82</span>
+							<?=$trans["cu_search_matched_customers_users"];?>
+						</div>
+						<div class="right">
+							<a href="#"><<</a>
+							<a href="#"><?=$trans["lang_previous"];?></a>
+							<a href="#">1</a>
+							<a href="#">2</a>
+							<a href="#">3</a>
+							<a href="#">4</a>
+							<a href="#">5</a>
+							<a href="#">6</a>
+							<a href="#">7</a>
+							<a href="#">8</a>
+							<a href="#">9</a>
+							<a href="#"><?=$trans["lang_next"];?></a>
+							<a href="#">>></a>
+						</div>
+					</div>
+					<!-- START: Header -->
+					<div class="requestsHeader">
+						<div class="serviceheadercontainer_top_left">
+							<div class="serviceheadercontainer_bottom_right">
+								<div class="serviceheadercontainer_top_right">
+									<div class="serviceheadercontainer_bottom_left">
+										<table border="0">
+											<thead>
+												<tr>
+												<th class="col1 pre-padding-5 txt10ArialWhiteBold" onclick="showCustomerInfo('test');"><?=$trans["cu_header_custno"];?></th>
+												<th class="col2 pre-padding-5 txt10ArialWhiteBold" onclick="showCustomerInfo('test');"><?=$trans["cu_header_customer"];?></th>
+												<th class="col3 pre-padding-5 txt10ArialWhiteBold" onclick="showCustomerInfo('test');"><?=$trans["cu_header_regno"];?></th>
+												<th class="col4 pre-padding-5 txt10ArialWhiteBold" onclick="showCustomerInfo('test');"><?=$trans["cu_header_place"];?></th>
+												<th class="col5 pre-padding-5 txt10ArialWhiteBold" onclick="showCustomerInfo('test');"><?=$trans["cu_header_trade"];?></th>
+												<th class="col6 pre-padding-5 txt10ArialWhiteBold" onclick="showCustomerInfo('test');"><?=$trans["cu_header_type"];?></th>
+												<th class="col7 pre-padding-5 txt10ArialWhiteBold" onclick="showCustomerInfo('test');"><?=$trans["cu_header_login"];?>.</th>
+												<th class="col8 pre-padding-5 txt10ArialWhiteBold" onclick="showCustomerInfo('test');"><?=$trans["cu_header_status"];?></th>
+												</tr>
+											</thead>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!-- END: Header -->
+					<!-- START: Rows -->
+						<div id="serviceRequestRow-1" class="serviceRequest odd">
+							<div class="servicecontainer_top_left">
+								<div class="servicecontainer_bottom_right">
+									<div class="servicecontainer_top_right">
+										<div class="servicecontainer_bottom_left">
+											<table id="tbl_310" border="0">
+												<tr>
+													<td id="td_id_310" class="col1 pre-padding-5 txt10ArialPurple" onclick="showCustomerInfo('test');">310</td>
+													<td id="td_name_310" class="col2 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');">Bengtssons etreprenad AB</td>
+													<td id="td_accnt_310" class="col3 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');">123456-7890</td>
+													<td id="td_loc_310" class="col4 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');">Hunnebostrand</td>
+													<td id="td_ind_310" class="col5 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');"><?=$trans["cu_home_industry_construction"];?></td>
+													<td id="td_type_310" class="col6 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');"><?=$trans["cu_home_type_supplier"];?></td>
+													<td id="td_date_310"class="col7 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');"><?=$trans["cu_home_today"];?>&nbsp;<span id="span_time_101">14:36</span></td>
+													<td id="td_status_310" class="col8 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');"><?=$trans["cu_home_active"];?></td>
+												</tr>
+											</table>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div id="serviceRequestRow-2" class="serviceRequest even">
+							<div class="servicecontainer_top_left">
+								<div class="servicecontainer_bottom_right">
+									<div class="servicecontainer_top_right">
+										<div class="servicecontainer_bottom_left">
+											<table id="tbl_311" border="0">
+												<tr>
+													<td id="td_id_311" class="col1 pre-padding-5 txt10ArialPurple" onclick="showCustomerInfo('test');">311</td>
+													<td id="td_name_311" class="col2 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');">Bengtssons färghandel AB</td>
+													<td id="td_accnt_311" class="col3 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');">123456-7890</td>
+													<td id="td_loc_311" class="col4 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');">Malmö</td>
+													<td id="td_ind_311" class="col5 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');"><?=$trans["cu_home_industry_construction"];?></td>
+													<td id="td_type_311" class="col6 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');"><?=$trans["cu_home_type_advertiser"];?></td>
+													<td id="td_date_311" class="col7 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');"><?=$trans["cu_home_today"];?>&nbsp;<span id="span_time_101">14:36</span></td>
+													<td id="td_status_311" class="col8 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');"><?=$trans["cu_home_active"];?></td>
+												</tr>
+											</table>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div id="serviceRequestRow-3" class="serviceRequest odd">
+							<div class="servicecontainer_top_left">
+								<div class="servicecontainer_bottom_right">
+									<div class="servicecontainer_top_right">
+										<div class="servicecontainer_bottom_left">
+											<table id="tbl_312" border="0">
+												<tr>
+													<td id="td_id_312" class="col1 pre-padding-5 txt10ArialPurple" onclick="showCustomerInfo('test');">312</td>
+													<td id="td_name_312" class="col2 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');">Bengt Bengtsson</td>
+													<td id="td_accnt_312" class="col3 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');">-</td>
+													<td id="td_loc_312" class="col4 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');">Helsingborg</td>
+													<td id="td_ind_312" class="col5 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');">-</td>
+													<td id="td_type_312" class="col6 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');"><?=$trans["cu_home_type_consumer"];?></td>
+													<td id="td_date_312" class="col7 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');"><?=$trans["cu_home_today"];?>&nbsp;<span id="span_time_101">14:36</span></td>
+													<td id="td_status_312" class="col8 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');"><?=$trans["cu_home_active"];?></td>
+												</tr>
+											</table>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div id="serviceRequestRow-4" class="serviceRequest even">
+							<div class="servicecontainer_top_left">
+								<div class="servicecontainer_bottom_right">
+									<div class="servicecontainer_top_right">
+										<div class="servicecontainer_bottom_left">
+											<table id="tbl_313" border="0">
+												<tr>
+													<td id="td_id_313" class="col1 pre-padding-5 txt10ArialPurple" onclick="showCustomerInfo('test');">313</td>
+													<td id="td_name_313" class="col2 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');">Bengtssons städ AB</td>
+													<td id="td_accnt_313" class="col3 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');">123456-7890</td>
+													<td id="td_loc_313" class="col4 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');">Landskrona</td>
+													<td id="td_ind_313" class="col5 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');"><?=$trans["cu_home_industry_cleaning"];?></td>
+													<td id="td_type_313" class="col6 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');"><?=$trans["cu_home_type_supplier"];?></td>
+													<td id="td_date_313" class="col7 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');"><?=$trans["cu_home_today"];?>&nbsp;<span id="span_time_101">14:36</span></td>
+													<td id="td_status_313" class="col8 pre-padding-5 txt10ArialColorBlack" onclick="showCustomerInfo('test');"><?=$trans["cu_home_active"];?></td>
+												</tr>
+											</table>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="pagging-links clearfix" style="margin-left: 5px;">
+						<div class="left trebuchetGray">
+							<?=$trans["cu_search_display"];?>
+							<span id="span_cu_start">1</span>
+							-
+							<span id="span_cu_end">20</span>
+							&nbsp;
+							<?=$trans["cu_search_of"];?>
+							<span id="span_cu_search_total">82</span>
+							<?=$trans["cu_search_matched_customers_users"];?>
+						</div>
+						<div class="right">
+							<a href="#"><<</a>
+							<a href="#"><?=$trans["lang_previous"];?></a>
+							<a href="#">1</a>
+							<a href="#">2</a>
+							<a href="#">3</a>
+							<a href="#">4</a>
+							<a href="#">5</a>
+							<a href="#">6</a>
+							<a href="#">7</a>
+							<a href="#">8</a>
+							<a href="#">9</a>
+							<a href="#"><?=$trans["lang_next"];?></a>
+							<a href="#">>></a>
+						</div>
+						</div>
+					<!-- END: Rows -->
+				</div>
+
+			</div>
+		</div>
+
+	</div>
+</div>

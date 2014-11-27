@@ -1,0 +1,228 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!--DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"-->
+
+<!-- inc_admin_panel.html -->
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"/>
+	<title>Priside Administration</title>
+
+	<link type="text/css" href="/css/screen.css" rel="stylesheet" media="screen,projection" />
+	<link type="text/css" href="/css/jquery.ui.all.css" rel="stylesheet" />
+	<link type="text/css" href="/css/jqueryfiletree.css" rel="stylesheet" />
+
+	<script type="text/javascript" src="/js/jquery-latest.js"></script>
+	<script type="text/javascript" src="/js/jquery-ui-core.min.js"></script>
+	<script type="text/javascript" src="/js/jquery.ui.datepicker.js"></script>
+	<script type="text/javascript" src="/js/jquery-ui-dialog.min.js"></script>
+	<script type="text/javascript" src="/js/admin-priside-script.js"></script>
+	<script type="text/javascript" src="/js/priside-common-script.js"></script>
+	<script type="text/javascript" src="/js/nygren_temp.js"></script>
+	<script type="text/javascript" src="/js/jquery.validate.min.js"></script>
+	<script type="text/javascript" src="/js/formvalidation.js"></script>
+	<script type="text/javascript" src="/js/autocomplete_dropdown.js"></script>
+	<script type="text/javascript" src="/js/fileuploader.js"></script>
+
+	<script type="text/javascript">
+		$(document).ready(function() {
+			// Position modal box in the center of the page
+			jQuery.fn.center = function () {
+				this.css("position","absolute");
+				//Instead of using this.height() which returns 661px, we will use 527px since this is the actual measurement of modal-profile box (due to different factors i.e. paddings, etc.).
+				this.css("top", ( (jQuery(window).height() - 527) / 2 + jQuery(window).scrollTop() ) + "px");
+				
+				//Instead of using this.width(), we will use 635px since this is the actual measurement of modal-profile box (due to different factors i.e. paddings, etc.).
+				this.css("left", ( (jQuery(window).width() - 635) / 2 + jQuery(window).scrollLeft() ) + "px");
+				return this;
+			}
+			
+			
+			jQuery(".modal-profile").center();
+			
+			// Set height of light out div	
+			jQuery('.modal-lightsout').css("height", jQuery(document).height());
+
+			// closes modal box if the lights out divis clicked
+			jQuery('a.modal-close-profile, .modal-lightsout').click(function() {
+				jQuery('.modal-profile').hide();
+				jQuery('.modal-lightsout').hide();
+			});
+			initAdminComponents();
+		});
+	</script>
+	<style type="text/css">
+
+	<!-- validation css -->
+      .formerror {
+         color: red;
+      }
+      .formErrorIcon {
+         display: none;
+         width: 16px;
+         height: 16px;
+      }
+      .errorListContainer {
+         display: none;
+         position: fixed;
+         z-index: 1;
+         padding: 5px;
+         background: white;
+         border-style: solid;
+         border-width: 1px;
+         border-radius: 5px;
+         border-color: #555555;
+      }
+      .errorList {
+         padding: 0;
+         margin: 0;
+         list-style-type: none;
+      }
+	<!-- end validation css -->
+	
+	.tab_content, .tab_content_inner {
+		display: none;
+		width:100%;
+	}
+	
+	#main-column {	
+	}
+	
+	#main-column {
+		height: 100%;
+		width:650px; /*650*/ /*970*/
+		float:left;
+	}
+	
+	#sidebar-column {
+		height: 100%;
+		width:320px;
+		float:left;
+	}
+					
+	.date { width:100px; }
+	.inquiry { width:280px; }
+	.municipality { width:100px;}
+	</style>
+	
+	<script type="text/javascript">
+		$('document').ready( function() { 
+			loadTabAjax( 'tab1', 'admin_panel_overview.php' ); 
+		});
+
+		function loadTabAjax( target, page ){
+			var lang = $("#loaded_langugage").val();
+			$('#'+target).load( page, { lang:lang }, function(){  } );
+		}
+		
+		function gotoTab(mainTab,subTab){
+			if($("#" + mainTab).length == 0){
+				//the mainTab does not exist
+				return;
+			}
+			//parse the onclick handler of the tab, since we cant attach a handler to the load method
+			var onclick    = $("#" + mainTab).find("a").attr("onclick").replace(/loadTabAjax/g, "").replace(/'/g, "").replace(/\(/g, "").replace(/\)/g, "").replace(/;/g, "");
+			var parameters = onclick.split(",");
+			var target     = parameters[0].replace(/\s/g, "");
+			var url        = parameters[1].replace(/\s/g, "");
+			//call back function when the page is successfully loaded, set a delay to make it look more presentable
+			var callback   = function(){
+				if($("#" + target).find("#" + subTab).length == 0){
+					//the subTab does not exist
+					return;
+				}
+				
+				setTimeout(function(){
+					//unset the selected tab
+					$(".current").removeClass("current");
+					//set the selected tab
+					$("#" + mainTab).addClass("current");
+					//hide all the tabs
+					$(".tab_content").hide();
+					//show the "mainTab"
+					$("#" + target).show();
+					//load the subTab
+					$("#" + target).find("#" + subTab).find("a").click();
+				},100);
+			};
+			var language   = $("#loaded_langugage").val();
+			$("#" + target).load(url,{lang:language},callback);
+		}
+	</script>
+	
+</head>
+<body>
+
+	<? include( $_SERVER['DOCUMENT_ROOT']. "/header.php" ); ?>
+
+	<input type="hidden" id="loaded_langugage" value="<? echo $lang; ?>" />
+	<input type="hidden" id="select_translation" value="<?=$trans["search_select"];?>"/>
+
+	<!-- body section -->
+	<div id="main">
+		<div id="content" class="wrapper">
+
+			<!-- outer tab section -->
+
+			<ol id="outer-tabs">
+				<li id="tab1header" class="current"><a href="javascript:void(0);" onClick="loadTabAjax( 'tab1', 'admin_panel_overview.php' );"><span><?=$trans["tab_overview"];?></span></a></li>
+				<li id="tab2header"><a href="javascript:void(0);" onClick="loadTabAjax( 'tab2','admin_panel_pages.php' );"><span><?=$trans["tab_pages"];?></span></a></li>
+				<li id="tab3header"><a href="javascript:void(0);" onClick="loadTabAjax( 'tab3','admin_panel_cu.php' );"><span><?=$trans["tab_cust_users"];?></span></a></li>
+				<li id="tab4header"><a href="javascript:void(0);" onClick="loadTabAjax( 'tab4','admin_panel_inquiries.php' );"><span><?=$trans["tab_inquiries"];?></span></a></li>
+				<li id="tab5header"><a href="javascript:void(0);" onClick="loadTabAjax( 'tab5','admin_panel_certifications.php' );"><span><?=$trans["tab_certifications"];?></span></a></li>
+				<li id="tab6header"><a href="javascript:void(0);" onClick="loadTabAjax( 'tab6','admin_panel_mail.php' );"><span><?=$trans["tab_mail"];?></span></a></li>
+				<li id="tab7header"><a href="javascript:void(0);" onClick="loadTabAjax( 'tab7','admin_panel_ads.php' );"><span><?=$trans["tab_ads"];?></span></a></li>
+			</ol>
+
+			<div id="main-content" class="clearfix">
+				<div id="tab1" class="tab_content">
+					<!-- content loaded by tab click call to loadTabAjax() -->
+				</div>
+				<div id="tab2" class="tab_content">
+					<!-- content loaded by tab click call to loadTabAjax() -->
+				</div>
+				<div id="tab3" class="tab_content">
+					<!-- content loaded by tab click call to loadTabAjax() -->
+				</div>
+				<div id="tab4" class="tab_content">
+					<!-- content loaded by tab click call to loadTabAjax() -->
+				</div>
+				<div id="tab5" class="tab_content">
+					<!-- content loaded by tab click call to loadTabAjax() -->
+				</div>
+				<div id="tab6" class="tab_content">
+					<!-- content loaded by tab click call to loadTabAjax() -->
+				</div>
+				<div id="tab7" class="tab_content">
+					<!-- content loaded by tab click call to loadTabAjax() -->
+				</div>
+			</div>
+
+			<div id="main-bottom-curve">&nbsp;</div>
+		</div>
+	</div>
+
+	<? include( $_SERVER['DOCUMENT_ROOT']. "/footer.php" ); ?>
+
+<!-- START: Generic popup window -->
+	<div id="div_modal_popup">
+		<div class="modal-lightsout"></div>
+		<div class="modal-profile">
+			<a href="#" title="Close profile window" class="modal-close-profile"><img src="../img/closeImage.png" border="0" alt="Close window" /></a>
+			<div id="div_popup_contents">
+				<!-- ? include( "customer_info_page.php" ); ? -->
+			</div>
+		</div>
+	</div>
+<!-- END: Generic popup window -->
+
+
+<!-- START: Spinner fading div -- >
+<div id="loading">
+  <p><img src="../img/ubuntu-loader.gif" /> Please Wait</p>
+</div>
+< !-- END: Spinner fading div -->
+
+
+</body>
+</html>

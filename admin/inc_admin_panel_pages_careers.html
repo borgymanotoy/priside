@@ -1,0 +1,332 @@
+<!-- inc_admin_panel_pages_careers.html -->
+<script type="text/javascript">
+	$(document).ready(function(){
+		$("#btnCareersUploadPicture").css({"position" : "relative" ,"top" : "0px"}).fileuploader({
+				"onComplete" : function(filename){
+					 $.ajax( {
+						type: 'POST',
+						url:  'admin_panel_pages_careers.php',
+						data: 
+							{
+								'ajaxRequest' 	: 'getPreview',
+								'filename' 		: filename
+							},
+						success: function(data){
+							var CareerImageInfos = JSON.parse( data );
+							$("#CareerBannerFile_Name").val(CareerImageInfos.CareerImageFileName);
+							$("#imgCareerBanner").attr("src", CareerImageInfos.CareerImageUrl);
+						},
+						error: function(xhr){
+							showStatusMessageBox("div_pages_home_status_msgs",xhr.statusText, true);
+						}
+					 });
+				},
+				"onError" : function(error){
+					showStatusMessageBox("div_pages_home_status_msgs",error, true);
+				},
+				"useExternProgressHandler" : true,
+				"ButtonStateCancel" : '<?=$trans["button_state_cancel"];?>',
+				'FlashVars' 	: "SavePath=<?=base64_encode( $UploadPath );?>,CheckSum=<?=CheckSum( base64_encode( $UploadPath ) );?>,Session=<?=session_id();?>",
+				'filters'       : "(Images):*.bmp;*.png;*.jpg;*.gif;*.jpeg;"
+		});
+		resetCareersModifiedFlag();
+
+		//Confirmation dialog for Admin pages here
+		var dialogBoxInst = $('#confirmCareersDialog').dialog({
+			title: '', //prompt,
+			modal : true,
+			resizable : false,
+			autoOpen : false,
+			buttons: [
+						{
+							text: "Yes",
+							click: function(){
+								ajaxRemoveCareers();
+								$(this).dialog( "close" );
+							}
+						},
+						{ text: "No", click: function(){ $(this).dialog("close"); } }
+					]
+		});
+		dialogBoxInst.parent('.ui-dialog').appendTo('#div_careers_container');
+	});
+
+	/* START: Saving or Updating functions */
+	function validateCareerImage(){
+		if(0 == $("#CareerBannerFile_Name").val().length) return false;
+		return true;
+	}
+
+	function validateSavingUpdateCareers(){
+		if($("#CareerTitle").val().length == 0) return false;
+		else if($("#CareerDescription").val().length == 0) return false;
+		return true;
+	}
+
+	function saveUpdateCareers(){
+		if( !validateCareerImage() ){
+			showStatusMessageBox("div_careers_status_msgs", "<?=$trans["pcareers_ErrMsg_filename"];?>", true);
+		}
+		else if(!validateSavingUpdateCareers()){
+			showStatusMessageBox("div_careers_status_msgs", $("#careers_error_entry_validation").val(), true);
+		}else{
+			ajaxSaveUpdateCareers();
+		}
+	}
+
+	function ajaxSaveUpdateCareers(){
+		$.ajax({
+			type : "POST",
+			url : "/admin/admin_panel_pages_careers.php",
+			data : {
+				"ajaxRequest" 			: "ajaxSaveUpdateCareers",
+				"CareerIdCheckSum" 		: $("#CareerId").val()+":"+$("#CareerCheckSum").val(),
+				"BannerIdChecksum" 		: $("#CareerBannerFile_Id").val()+":"+$("#CareerBannerFile_Checksum").val(),
+				"BannerFileName" 		: $("#CareerBannerFile_Name").val(),
+				"CareerTitle" 			: $("#CareerTitle").val(),
+				"CareerDescription" 	: $("#CareerDescription").val()
+			},
+			success: function(data){
+				showStatusMessageBox("div_careers_status_msgs", data, false);
+				resetCareersModifiedFlag();
+				clearCareersInfos();
+				reloadCareersList();
+			},
+			error: function(xhr){
+				showStatusMessageBox("div_careers_status_msgs", xhr.statusText, true);
+			}
+		});
+	}
+	/* END: Saving or Updating functions */
+
+	/* START: Removing functions */
+	function validateCareersDeletion(){
+		if($("#CareerId").val().length == 0) return false;
+		return true;
+	}
+	function removeCareers(){
+		if(!validateCareersDeletion()) return;
+		var msg = "<?=$trans["careers_confirm_delete"];?>";
+		$('#confirmCareersDialog').dialog( "option", "title", "<?=$trans["careers_confirm_delete_title"];?>" );
+		$('#confirmationCareersMessage').html(msg);
+		$('#confirmCareersDialog').dialog( "open" );
+	}
+	function ajaxRemoveCareers(){
+		$.ajax({
+			type : "POST",
+			url : "/admin/admin_panel_pages_careers.php",
+			data : {
+				"ajaxRequest" 	: "ajaxRemoveCareers",
+				"CareerIdCheckSum" 		: $("#CareerId").val()+":"+$("#CareerCheckSum").val(),
+				"BannerIdChecksum" 		: $("#CareerBannerFile_Id").val()+":"+$("#CareerBannerFile_Checksum").val(),
+			},
+			success: function(data){
+				showStatusMessageBox("div_careers_status_msgs", data, false);
+				resetCareersModifiedFlag();
+				clearCareersInfos();
+				reloadCareersList();
+			},
+			error: function(xhr){
+				showStatusMessageBox("div_careers_status_msgs", xhr.statusText, true);
+			}
+		});
+	}
+	/* END: Removing functions */
+
+	function displayCareerInfos(careerId, checksum){
+		//Send Ajax Request to display Career Infos by sending the career id and it checksum only
+		$.ajax({
+			type : "POST",
+			url : "/admin/admin_panel_pages_careers.php",
+			data : {
+				"ajaxRequest" 		: "displayCareerInfos",
+				"CareerIdChecksum" 	: careerId+":"+checksum,
+			},
+			success: function(data){
+				//Returned JSON Object fields (CareerId, CareerChecksum, CareerTitle, CareerDescription, CareerImageId, CareerImageChecksum, CareerImageFileName, CareerImageUrl)
+				var CareerInfos = JSON.parse( data );
+
+				$("#CareerId").val(CareerInfos.CareerId);
+				$("#CareerCheckSum").val(CareerInfos.CareerChecksum);
+				$("#CareerTitle").val(CareerInfos.CareerTitle);
+				$("#CareerDescription").val(CareerInfos.CareerDescription);
+
+				//Load career image infos here
+				$("#CareerBannerFile_Id").val(CareerInfos.CareerImageId);
+				$("#CareerBannerFile_Checksum").val(CareerInfos.CareerImageChecksum);
+				$("#CareerBannerFile_Name").val(CareerInfos.CareerImageFileName);
+				$("#imgCareerBanner").attr("src", CareerInfos.CareerImageUrl);
+
+				//Display career page entry container.
+				enterPageMode('careers', 'entry');
+				$('#btnCareersUploadPicture').fileuploader('resize');
+			},
+			error: function(xhr){
+				showStatusMessageBox("div_careers_status_msgs", xhr.statusText, true);
+			}
+		});
+	}
+	function reloadCareersList(){
+		$.ajax({
+			type : "POST",
+			url : "/admin/admin_panel_pages_careers.php",
+			data : {
+				"ajaxRequest" : "reloadCareersList",
+			},
+			success: function(data){
+				$("#CareerListHtml").html(data);
+			},
+			error: function(xhr){
+				showStatusMessageBox("div_careers_status_msgs", xhr.statusText, true);
+			}
+		});
+	}
+
+	function modifiedCareersFields(){
+		if($("careers_modified").val() == "false") $("careers_modified").val("true");
+	}
+	function resetCareersModifiedFlag(){
+		$("careers_modified").val("false");
+	}
+	function clearCareersInfos(){
+		$("#CareerId").val("");
+		$("#CareerCheckSum").val("");
+		$("#CareerTitle").val("");
+		$("#CareerDescription").val("");
+		$("#CareerBannerFile_Id").val("");
+		$("#CareerBannerFile_Checksum").val("");
+		$("#CareerBannerFile_Name").val("");
+		$("#imgCareerBanner").attr("src", "/img/transparent_logo.png");
+		enterPageMode('careers', 'display');
+	}
+	function clearCareersCheckSum(){
+		$("#CareerId").val("");
+		$("#CareerCheckSum").val("");
+	}
+</script>
+
+<input type="hidden" id="careers_error_entry_validation" value="<?=$trans["careers_error_entry_validation"];?>"/>
+<input type="hidden" id="careers_modified" value="false"/>
+
+<div id="main-column">
+	<div id="div_careers_container">
+
+		<!-- START: Create confirm dialog here -->
+		<div id="confirmCareersDialog" style="display: none; height: 200px; padding: 0px 10px;">
+			<span id="confirmationCareersMessage" class="txt12Purple bold"></span>
+		</div>
+		<!-- END -->
+
+		<div class="clearfix" style="padding: 10px; width: 650px;">
+			<h1 class="title"><?=$trans["pages_sub_careers"];?></h1>
+
+			<!-- START: Status Message Box -->
+			<div id="div_careers_status_msgs" class="status-msg-box" style="display: none;">
+				<?if(!empty($ErrMsg)){?>
+					<script type="text/javascript">
+						showStatusMessageBox("div_careers_status_msgs","<?=$ErrMsg?>", true);
+					</script>
+				<?}?>
+				<?if(!empty($OkMsg)){?>
+					<script type="text/javascript">
+						showStatusMessageBox("div_careers_status_msgs","<?=$OkMsg?>", false);
+					</script>
+				<?}?>
+			</div>
+			<!-- END -->
+
+			<!-- START: Customer Service infos -->
+			<input type="hidden" id="CareerId" value="" />
+			<input type="hidden" id="CareerCheckSum" value="" />
+			<input type="hidden" id="CareerBannerFile_Id" value="" />
+			<input type="hidden" id="CareerBannerFile_Checksum" value="" />
+			<input type="hidden" id="CareerBannerFile_Name" value="" />
+			<!-- END -->
+
+			<div id="div_careers_display" style="display: block; margin-top: 10px;">
+				<div class="clearfix container-small">
+					<a class="btn-orange txt14White bold" href="javascript: void(0);" onclick="clearCareersCheckSum(); enterPageMode('careers', 'entry'); $('#btnCareersUploadPicture').fileuploader('resize');">
+						<span><?=$trans["pages_button_add"];?></span>
+					</a>
+				</div>
+				<div id="CareerListHtml" class="clearfix container-small">
+					<?= $CareerListHtml ?>
+				</div>
+			</div>
+			<div id="div_careers_entry" style="display: none;">
+				<div class="clearfix container-small">
+					<div class="clearfix input-text left">
+						<span><?=$trans["careers_title_service"];?></span>
+						<div class="left" style="width: 250px;"><input type="text" id="CareerTitle" maxlength="150" /></div>
+					</div>
+					<div class="left" style="margin-left: 10px; margin-top: 21px;">
+						<a id="btnCareersUploadPicture" class="btn-violet txt12White" href="javascript:void(0);" onclick=""><span><?=$trans["button_choose_picture"];?></span></a>  
+					</div>
+				</div>
+
+				<div class="clearfix container-small">
+					<img id="imgCareerBanner" src="<?=$CareerImageUrl;?>" style="min-height: 100px; min-width: 100px; max-height: 500px; max-width: 500px; margin-bottom: 10px; border: 1px solid #eee;" alt="Careers"/>
+				</div>
+
+				<div class="clearfix container-small">
+					<label for="text-area" class="pre-margin-10 txt12Bold" style="display:block;"><?=$trans["cs_text_label"];?></label>
+					<div class="textarea_top_left">
+					   <div class="textarea_bottom_right">
+						   <div class="textarea_top_right">
+							   <div class="textarea_bottom_left">
+									<textarea class="txt-area" id="CareerDescription" rows="10" cols="71"></textarea>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="clearfix container-small">
+					<div class="clearfix left">
+						<a class="btn-orange txt14White bold" href="javascript: void(0);" onclick="saveUpdateCareers();">
+							<span><?=$trans["pages_button_save"];?></span>
+						</a>
+						<a class="btn-orange txt14White bold" href="javascript: void(0);" style="margin-left: 10px;" onclick="removeCareers();">
+							<span><?=$trans["pages_button_remove"];?></span>
+						</a>
+					</div>
+					<div class="clearfix right">
+						<a class="btn-orange txt14White bold" href="javascript: void(0);" onclick="clearCareersInfos(); enterPageMode('careers', 'display');">
+							<span><?=$trans["pages_button_cancel"];?></span>
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="sub-sidebar-column">
+	<div class="help-sub-panel-location">
+		<div class="overview-info">
+			<div class="help-tile"><?=$trans["page_help"];?></div>
+			<div class="help-header">
+				<span id="span_help_id_cyb" class="txt16Orange bold"><?=$trans["pages_sub_careers"];?></span>
+			</div>
+			<div class="help-content-panel corners-bottom">
+				<span class="txt14Bold"><?=$trans["pages_help_html_tags"];?></span><br/>
+				<span class="txt12"><?=$trans["pages_help_msg1"];?></span><br/>
+				<br/>
+				<span class="txt12"><?=$trans["pages_help_bold"];?>:</span><br/>
+				<span class="txt12">&lt;strong&gt;<?=$trans["pages_help_sample_bold"];?>&lt;/strong&gt;</span><br/>
+				<br/>
+				<span class="txt12"><?=$trans["pages_help_italic"];?>:</span><br/>	
+				<span class="txt12">&lt;em&gt;<?=$trans["pages_help_sample_italic"];?>&lt;/em&gt;</span><br/>
+				<br/>
+				<span class="txt12"><?=$trans["pages_help_bullets"];?>:</span><br/>
+				<span class="txt12">&lt;ul&gt;</span>&nbsp;<span class="arialGray"><?=$trans["pages_help_bullets_msg_start"];?></span><br/>
+				<span class="txt12">&lt;li&gt;<?=$trans["pages_help_bullets_item"];?>&nbsp;1&lt;/li&gt;</span><br/>
+				<span class="txt12">&lt;li&gt;<?=$trans["pages_help_bullets_item"];?>&nbsp;2&lt;/li&gt;</span><br/>
+				<span class="txt12">&lt;li&gt;<?=$trans["pages_help_bullets_item"];?>&nbsp;3&lt;/li&gt;</span><br/>
+				<span class="txt12">&lt;/ul&gt;</span>&nbsp;<span class="arialGray"><?=$trans["pages_help_bullets_msg_end"];?></span><br/>
+				<br/>
+				<span class="txt12"><?=$trans["pages_help_linking_a_text"];?>:</span><br/>
+				<span class="txt12">&lt;a href="http://www.lankadress.se"&gt;<u><?=$trans["pages_help_text_to_link"];?></u>&lt;/a&gt;</span><br/>
+			</div>
+		</div>
+	</div>
+</div>

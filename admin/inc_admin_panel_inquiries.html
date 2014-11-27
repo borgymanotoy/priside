@@ -1,0 +1,29 @@
+<!-- inc_admin_panel_cu_main.html -->
+<script type="text/javascript">
+	$('document').ready(function() { 
+		loadTabAjax( 'inq_tab_services', 'admin_panel_inquiries_services.php' );
+		showHideInquiriesSubtabContent('services', true); 
+	});
+
+	function loadTabAjax( target, page ){
+		var lang = $("#loaded_inq_langugage").val();
+		$('#'+target).load( page, { lang:lang } );
+	}
+</script>
+
+<input type="hidden" id="loaded_inq_langugage" value="<? echo $lang; ?>" />
+
+<input type="hidden" id="loaded_inq_tab" value="" />
+<ul id="inq_sub_list" class="submenu">
+	<li id="inq_sub_tab_services"><a class="inq_current" href="javascript: void(0);" onclick="loadTabAjax( 'inq_tab_services', 'admin_panel_inquiries_services.php' );showHideInquiriesSubtabContent('services', true);"><?=$trans["inq_tab_services"];?></a>|</li>
+	<li id="inq_sub_tab_certifications"><a href="javascript: void(0);" onclick="loadTabAjax( 'inq_tab_certifications', 'admin_panel_inquiries_certifications.php' );showHideInquiriesSubtabContent('certifications', true);"><?=$trans["inq_tab_certs"];?></a></li>
+</ul>
+
+<div class="clearfix">
+	<div id="inq_tab_services" class="inq_sub_tab_content">
+		<!-- ? include( "admin_panel_inquiries_services.php" ); ? -->
+	</div>
+	<div id="inq_tab_certifications" class="inq_sub_tab_content">
+		<!-- ? include( "admin_panel_inquiries_certifications.php" ); ? -->
+	</div>
+</div>

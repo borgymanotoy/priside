@@ -1,0 +1,215 @@
+<!--inc_project_overview.html-->
+<script type="text/javascript">
+<?=include( $_SERVER['DOCUMENT_ROOT']."/jscommon/common_js.php" );?>
+</script>
+<? if( 'sv' == $_SESSION['LANG'] ) { ?>
+	<script type="text/javascript" src="/js/jquery.ui.datepicker-sv.js"></script>
+<? } ?>
+
+<script type="text/javascript">
+
+/*
+	TODOS:
+	------
+	1. Finish Inquiries List in Project Page. [Done]
+	2. Use date pickers for project start and end dates. [Done]
+	3. Functionalities for Edit Project Page. [Done]
+	4. Create new Project. [Done]
+	5. And Events to event calendar. [Done]
+	6. Add functionality to add project participant. [Done]
+	7. Add functionality to add service request. [On-going]
+*/
+
+	var G_currentProjectId = '';
+	var G_currentEvets = [];
+	
+	function LoadProjectDetails( projectId, msg ){
+		if( projectId ){
+			G_currentProjectId = projectId;
+
+			$.ajax({ type : 'GET', url : 'project_overview.php',
+				data : { "ajaxRequest" : "LoadProjectDetails", "projectId" : projectId },
+				success: function(data) {
+					$("#projectOverViewMain").html(data);
+					$("#main_content_div").show();
+					if(msg){
+						showStatusMessageBox("div_project_overview_status_msgs", msg, false);
+					}
+				},
+				error: function(xhr){
+					showStatusMessageBox("documents_files_statusmsg",xhr.statusText, true);
+				}
+			});
+		}
+		else{
+			loadTabAjax('subtab1MyProjects', 'project_overview.php');
+		}
+	}
+	function CreateNewProject(){
+		$.ajax({ type : 'GET', url : 'project_overview.php',
+			data : { "ajaxRequest" : "CreateNewProject" },
+			success: function(data) {
+				$("#projectOverViewMain").html(data);
+				$("#main_content_div").hide();
+			},
+			error: function(xhr){
+				showStatusMessageBox("documents_files_statusmsg",xhr.statusText, true);
+			}
+		});
+	}
+	function EditProjectDetails( projectId ){
+		if( '' === G_currentProjectId ) return;
+		$.ajax({ type : 'GET', url : 'project_overview.php',
+			data : { "ajaxRequest" : "EditProjectDetails", "projectId" : projectId },
+			success: function(data) {
+				$("#projectOverViewMain").html(data);
+				$("#main_content_div").hide();
+			},
+			error: function(xhr){
+				showStatusMessageBox("documents_files_statusmsg",xhr.statusText, true);
+			}
+		});
+	}
+
+	function GetEventsForMonth( year, month ){
+		$.ajax({
+			type: "GET",
+			url: "project_overview.php",
+			async: false,
+			data: { "ajaxRequest" : "getCalendarEvents", "year" : year, "month" : month, "projectId" : G_currentProjectId },
+			success: function(data){
+				G_currentEvets = data;
+			}
+		});
+	}
+	
+	function Calendar(){
+		// get first (current) month's events.
+		var d = new Date();
+		GetEventsForMonth( ( d.getYear() + 1900 ), d.getMonth() + 1 );
+
+		$("#datepicker").datepicker({
+
+			onChangeMonthYear: function( year, month, inst ){
+				GetEventsForMonth( year, month );
+			},
+			beforeShowDay: function (date){
+				// called for every cell (date), so we convert to a unix_timestamp and look for an event
+				var ux_timestamp = date.getTime() / 1000;
+				if( G_currentEvets[ux_timestamp] )
+					return( [true,"ui-state-active",G_currentEvets[ux_timestamp].Message] );
+				return( [false,""] );
+			},
+			onSelect: function( dateText ){
+				$.ajax({
+					type: "GET",
+					url: "project_overview.php",
+					async: false,
+					data: { "ajaxRequest" : "getCalendarEventDay", "date" : dateText, "projectId" : G_currentProjectId },
+					success: function(data){
+						$('#currentEventsContainer').html( data );
+					}
+				});
+			}
+		}).datepicker("show");
+	}
+	function validateSaveProjectInfoChanges(){
+		if( 0 == $("#txt_project_name").val().length ){
+			showStatusMessageBox("div_edit_project_status_msgs","<?=$trans["pcreate_edit_project_name_blank"];?>", true);
+			$("#txt_project_name").focus();
+			return false;
+		}
+		else if( 0 == $("#txt_project_description").val().length ){
+			showStatusMessageBox("div_edit_project_status_msgs","<?=$trans["pcreate_edit_project_description_blank"];?>", true);
+			$("#txt_project_description").focus();
+			return false;
+		}
+		else if( 0 == $("#txt_project_purpose").val().length ){
+			showStatusMessageBox("div_edit_project_status_msgs","<?=$trans["pcreate_edit_project_purpose_blank"];?>", true);
+			$("#txt_project_purpose").focus();
+			return false;
+		}
+		else if( 0 == $("#txt_project_start_date").val().length || 0 == $("#txt_project_end_date").val().length){
+			showStatusMessageBox("div_edit_project_status_msgs","<?=$trans["pcreate_edit_project_date_inavlid"];?>", true);
+			return false;
+		}
+		return true;
+	}
+	function ajaxSaveProjectInfoChanges(){
+		if( validateSaveProjectInfoChanges() ){
+			$.ajax({
+				type : "POST",
+				url : "project_overview.php",
+				data : {
+					"ajaxRequest" 		: "ajaxSaveProjectInfoChanges",
+					"ProjectIdChecksum"	: $("#ProjectId").val() + ":" + $("#ProjectChecksum").val(),
+					"Name" 				: $("#txt_project_name").val(),
+					"Description" 		: $("#txt_project_description").val(),
+					"Purpose"	 		: $("#txt_project_purpose").val(),
+					"StartDate"	 		: $("#txt_project_start_date").val(),
+					"EndDate"	 		: $("#txt_project_end_date").val()
+				},
+				success: function(data){
+					var ProjectInfos = JSON.parse( data );
+					LoadProjectDetails( ProjectInfos.ProjectId + ":" + ProjectInfos.ProjectChecksum , ProjectInfos.ProjectStatusMsg );
+				},
+				error: function(xhr){
+					showStatusMessageBox("div_pages_home_status_msgs", xhr.statusText, true);
+				}
+			});
+		}
+	}
+</script>
+<div id="main-column-2">
+	<div id="main_content_div">
+		<h1 class="title"><?=$trans["proj_overview_project_overview"];?></h1>
+
+		<!-- START: Status Message Box -->
+		<div id="div_project_overview_status_msgs" class="status-msg-box" style="display: none;">
+			<?if(!empty($ErrMsg)){?>
+				<script type="text/javascript">
+					showStatusMessageBox("div_project_overview_status_msgs","<?=$ErrMsg?>", true);
+				</script>
+			<?}?>
+			<?if(!empty($OkMsg)){?>
+				<script type="text/javascript">
+					showStatusMessageBox("div_project_overview_status_msgs","<?=$OkMsg?>", false);
+				</script>
+			<?}?>
+		</div>
+		<!-- END -->
+
+		<div class="clearfix container-small">
+			<div class="combobox-container left">
+				<input type="hidden" id="default_project" value="<?=$trans["proj_overview_select_project"];?>" />
+				<span id="spn_project_overview" class="cmb_sel_item_value italic" style="margin-left: 5px; width: 210px;"><?=$trans["proj_overview_select_project"];?></span>
+				<span class="site-color arrow-down-button" style="width: 25px; height: 18px; border-left: 2px solid #412467;" onclick=""></span>
+				<span class="combobox-arrow" style="margin-left: 8px;" onclick="showHideComboboxItems('div_project_overview');"></span>
+				<div id="div_project_overview" class="combox-search-container comboBox combo-list-container">
+					<div id="divClose" align="right" onclick="closeListBox('div_project_overview');"><img src="../img/closeImage.png" alt="Close" /></div>
+					<ul class="combobox-list">
+					<?=GetComboboxProjectItems( "div_project_overview", "spn_project_overview" );?>
+					</ul>
+				</div>
+			</div>
+			<div class="left" style="margin-top:.2em; margin-left:1em;">
+				<a class="btn-violet" href="javascript:void(0);" onclick="EditProjectDetails( G_currentProjectId );"><span><?=$trans["proj_overview_edit"];?></span></a>
+			</div>
+			<div class="left" style="margin-top:.2em; margin-left:1em;">
+				<a class="btn-violet" href="javascript:void(0);" onclick="CreateNewProject();"><span><?=$trans["proj_overview_create_new_proj"];?></span></a>
+			</div>
+		</div>
+	</div>
+	<div id="projectOverViewMain"></div>
+</div>
+<div id="sidebar-column">
+	<div class="info-pane">
+		<span class="help-user-tile" style="display:block;"><?=$trans["proj_overview_help"];?></span>
+		<div class="help-user-title"><?=$trans["proj_overview_project_overview"];?></div>
+		<div class="info-pane-content clearfix" style="margin-top: 45px;">
+			<div class="txt12" style="margin-top: 5px; margin-left: 50px; width: 240px;"><?=$trans["proj_overview_document_files_text1"];?></div>
+			<div class="txt12" style="margin-top: 5px; margin-left: 50px; width: 240px;"><?=$trans["proj_overview_document_files_text2"];?></div>
+		</div>
+		<? include( "inc_users_panel_client_banner.html" ); ?>
+	</div>
+</div>

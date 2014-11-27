@@ -1,0 +1,269 @@
+<!-- inc_admin_panel_pages_cyb.html -->
+
+<script type="text/javascript">
+	$(document).ready(function(){
+		
+		$("#btnPagesCybUpload").css({"position" : "relative" ,"top" : "0px"}).fileuploader({
+				"onComplete" : function(filename){
+					// fired when the file upload is completed.
+					// here we post back to php to finish 
+					// the upload transaction.
+					var dt = new Date();
+					 $.ajax( {
+						type: 'POST',
+						url:  'admin_panel_pages_cyb.php',
+						data:
+						   {
+							  'ajaxRequest'   : 'saveBannerImage',
+							  'BannerIdChecksum' : $("#CompanyBannerFile_Id").val()+":"+$("#CompanyBannerFile_Checksum").val(),
+							  'filename'      : filename
+						   },
+						success: function(data){
+							var fileInfos = JSON.parse( data );
+							loadBanner("imgCybBanner", fileInfos.FileUrl);
+							$("#CompanyBannerFile_Id").val(fileInfos.FileId);
+							$("#CompanyBannerFile_Checksum").val(fileInfos.FileChecksum);
+							$("#CompanyBannerFile_Name").val(fileInfos.FileName);
+						},
+						error: function(xhr){
+							showStatusMessageBox("div_cyb_status_msgs",xhr.statusText, true);
+						}
+					 });
+					
+				},
+				"onError" : function(error){
+					showStatusMessageBox("div_cyb_status_msgs",error, true);
+				},
+				"useExternProgressHandler" : false, 
+				"ButtonStateCancel" : '<?=$trans["document_files_ButtonStateCancel"];?>',
+				'FlashVars' 	: "SavePath=<?=base64_encode( $UploadPath );?>,CheckSum=<?=CheckSum( base64_encode( $UploadPath ) );?>,Session=<?=session_id();?>",
+				'filters'       : "(Images):*.bmp;*.png;*.jpg;*.gif;*.jpeg;"
+		});
+
+		$("#btnPagesCybUploadPriceList").css({"position" : "relative" ,"top" : "0px"}).fileuploader({
+				"onComplete" : function(filename){
+					 $.ajax( {
+						type: 'POST',
+						url:  'admin_panel_pages_cyb.php',
+						data:
+							{
+								'ajaxRequest'   : 'setUploadedPriceList',
+								'PricelistIdChecksum' : $("#cybPriceListFileId").val()+":"+$("#cybPriceListFileChecksum").val(),
+								'filename' : filename
+							},
+						success: function(data){
+							var fileInfos = JSON.parse( data );
+							$("#cybPriceListFileId").val(fileInfos.PricelistId);
+							$("#cybPriceListFileChecksum").val(fileInfos.PricelistChecksum);
+							$("#pricelistFileLink").attr("href", fileInfos.PricelistUrl);
+							$("#spanPricelistName").html(fileInfos.PricelistName);
+							$("#pricelistFileLink").addClass("arrow-link");
+						},
+						error: function(xhr){
+							showStatusMessageBox("div_cyb_status_msgs",xhr.statusText, true);
+						}
+					 });
+				},
+				"onError" : function(error){
+					showStatusMessageBox("div_cyb_status_msgs",error, true);
+				},
+				"useExternProgressHandler" : true,
+				"ButtonStateCancel" : '<?=$trans["button_state_cancel"];?>',
+				'FlashVars' 	: "SavePath=<?=base64_encode( $UploadPath );?>,CheckSum=<?=CheckSum( base64_encode( $UploadPath ) );?>,Session=<?=session_id();?>",
+				'filters'       : "(Documents):*.doc;*.xls;*.odt;*.rtf;*.pdf;"
+		});
+
+		$("#btnPagesCybUploadAgreement").css({"position" : "relative" ,"top" : "0px"}).fileuploader({
+				"onComplete" : function(filename){
+					 $.ajax( {
+						type: 'POST',
+						url:  'admin_panel_pages_cyb.php',
+						data:
+							{
+								'ajaxRequest'   : 'setUploadedAgreement',
+								'AgreementIdChecksum' : $("#cybAgreementFileId").val()+":"+$("#cybAgreementFileChecksum").val(),
+								'filename' : filename
+							},
+						success: function(data){
+							var fileInfos = JSON.parse( data );
+							$("#cybAgreementFileId").val(fileInfos.AgreementId);
+							$("#cybAgreementFileChecksum").val(fileInfos.AgreementChecksum);
+							$("#spanAgreementFileName").html(fileInfos.AgreementName);
+							$("#agreementFileLink").attr("href", fileInfos.AgreementUrl).addClass("arrow-link");
+						},
+						error: function(xhr){
+							showStatusMessageBox("div_cyb_status_msgs",xhr.statusText, true);
+						}
+					 });
+				},
+				"onError" : function(error){
+					showStatusMessageBox("div_cyb_status_msgs",error, true);
+				},
+				"useExternProgressHandler" : true,
+				"ButtonStateCancel" : '<?=$trans["button_state_cancel"];?>',
+				'FlashVars' 	: "SavePath=<?=base64_encode( $UploadPath );?>,CheckSum=<?=CheckSum( base64_encode( $UploadPath ) );?>,Session=<?=session_id();?>",
+				'filters'       : "(Documents):*.doc;*.xls;*.odt;*.rtf;*.pdf;"
+		});
+
+		resetCYBModifiedFlag();
+	});
+
+	function loadBanner(imageObjectId, imageUrl){
+		$("#"+imageObjectId).attr("src",imageUrl);
+	}
+	function validateCYBEntries(){
+		if($("#ApplicationContents").val().length == 0) return false;
+		return true;
+	}
+	function saveCYB(){
+		if(!validateCYBEntries()){
+			var validation_msg = $("#cyb_error_entry_validation").val();
+			showStatusMessageBox("div_cyb_status_msgs", validation_msg, true);
+			return;
+		}else{
+			ajaxSaveCYB();
+		}
+	}
+	function ajaxSaveCYB(){
+		var url = "/admin/admin_panel_pages_cyb.php";
+		$.ajax({
+			type : "POST",
+			url : url,
+			data : {
+				"ajaxRequest" : "ajaxSaveCYB",
+				'CybIdChecksum' : $("#CybId").val()+":"+$("#CybChecksum").val(),
+				'BannerIdChecksum' : $("#CompanyBannerFile_Id").val()+":"+$("#CompanyBannerFile_Checksum").val(),
+				'PricelistIdChecksum' : $("#cybPriceListFileId").val()+":"+$("#cybPriceListFileChecksum").val(),
+				'AgreementIdChecksum' : $("#cybAgreementFileId").val()+":"+$("#cybAgreementFileChecksum").val(),
+				"ApplicationContents" : $("#ApplicationContents").val(),
+			},
+			success: function(data){ 
+				var CybInfos = JSON.parse( data );
+				$("#CybId").val(CybInfos.CybId);
+				$("#CybChecksum").val(CybInfos.CybChecksum);
+				showStatusMessageBox("div_cyb_status_msgs", CybInfos.CybStatusMsg, false);
+				resetCYBModifiedFlag();
+			},
+			error: function(xhr){  
+				showStatusMessageBox("div_cyb_status_msgs", xhr.statusText, true);
+			}
+		});
+	}
+	function modifiedCYBFields(){
+		if($("cyb_modified").val() == "false") $("cyb_modified").val("true");
+	}
+	function resetCYBModifiedFlag(){
+		$("cyb_modified").val("false");
+	}
+</script>
+
+<input type="hidden" id="cyb_error_entry_validation" value="<?=$trans["cyb_error_entry_validation"];?>"/>
+<input type="hidden" id="cyb_modified" value="false"/>
+
+<div id="main-column">
+	<div style="padding: 10px; width: 650px;" class="clearfix">
+		<h1 class="title"><?=$trans["cyb_title"];?></h1>
+
+		<!-- START: Status Message Box -->
+		<div id="div_cyb_status_msgs" class="status-msg-box" style="display: none;">
+			<?if(!empty($ErrMsg)){?> 
+				<script type="text/javascript">
+					showStatusMessageBox("div_cyb_status_msgs","<?=$ErrMsg?>", true);
+				</script>
+			<?}?> 
+			<?if(!empty($OkMsg)){?>
+				<script type="text/javascript">
+					showStatusMessageBox("div_cyb_status_msgs","<?=$OkMsg?>", false);
+				</script>
+			<?}?>
+		</div>
+		<!-- END -->
+
+		<div style="margin-top: 10px;">
+			<img id="imgCybBanner" src="<?=$CYBImageUrl;?>" style="height: 150px; width: 600px; border: 1px solid #eee;" alt="Connect your business banner"/>
+		</div>
+		<br/>
+
+		<!-- START: Connect your company infos -->
+		<input type="hidden" id="CybId" value="<?=$CYBDefaults['Id'];?>" />
+		<input type="hidden" id="CybChecksum" value="<?=$CYBDefaults['CybChecksum'];?>" />
+		<input type="hidden" id="CompanyBannerFile_Id" value="<?=$CYBDefaults['CompanyBannerFile_Id'];?>" />
+		<input type="hidden" id="CompanyBannerFile_Checksum" value="<?=$CYBDefaults['CompanyBannerFile_Checksum'];?>" />
+		<input type="hidden" id="CompanyBannerFile_Name" value="<?=$CYBDefaults['BannerFileName'];?>" />
+		<!-- END -->
+
+
+		<p style="display:inline-block;">
+			<div class="left">
+				<a id="btnPagesCybUpload" class="btn-violet txt12White" href="#"><span><?=$trans["pages_button_choose_picture"];?></span></a>  
+			</div>
+		</p>
+		<br/>
+		<label for="text-area" class="pre-margin-10 txt12Bold"><?=$trans["cyb_apply_for_provider_account"];?></label>
+		<div class="textarea_top_left">
+		   <div class="textarea_bottom_right">
+			   <div class="textarea_top_right">
+				   <div class="textarea_bottom_left">
+						<textarea class="txt-area" id="ApplicationContents" rows="15" cols="71" onchange="modifiedCYBFields();"><?=$CYBDefaults['ApplicationContents'];?></textarea>
+					</div>
+				</div>
+			</div>
+		</div>
+		<p style="display:inline-block;">
+			<div class="left" style="padding: 5px 0px;">
+				<a id="btnPagesCybUploadPriceList" class="btn-violet txt12White" href="#"><span><?=$trans["cyb_button_upload_price_list"];?></span></a>
+				<a id="pricelistFileLink" href="<?=$CYBPriceListUrl;?>" <?= !empty( $CYBDefaults['PricelistName'] ) ? "class=\"arrow-link\"" : ""; ?>  style="margin-left: 15px;">&nbsp;<span id="spanPricelistName"><?=$CYBDefaults['PricelistName'];?></span></a>
+				<input type="hidden" id="cybPriceListFileId" value="<?=$CYBDefaults["PriceListFile_Id"];?>" />
+				<input type="hidden" id="cybPriceListFileChecksum" value="<?=$CYBDefaults["PriceListFile_Checksum"];?>" />
+			</div>
+		</p>
+		<br/><br/>
+		<p style="display:inline-block;">
+			<div class="left" style="padding: 5px 0px;">
+				<a id="btnPagesCybUploadAgreement" class="btn-violet txt12White" href="#"><span><?=$trans["cyb_button_upload_agreement"];?></span></a>
+				<a id="agreementFileLink" href="<?=$CYBAgreementFileUrl;?>" <?= !empty( $CYBDefaults['AgreementFileName'] ) ? "class=\"arrow-link\"" : ""; ?> style="margin-left: 15px;">&nbsp;<span id="spanAgreementFileName"><?=$CYBDefaults['AgreementFileName'];?></span></a>
+				<input type="hidden" id="cybAgreementFileId" value="<?=$CYBDefaults["AgreementFile_Id"];?>" />
+				<input type="hidden" id="cybAgreementFileChecksum" value="<?=$CYBDefaults["AgreementFile_Checksum"];?>" />
+			</div>
+		</p>
+		<br/>
+		<p style="margin-bottom: 1em;">
+			<div class="clearfix left">
+				<a class="btn-orange trebuchetWhite" href="javascript:void(0);" onclick="saveCYB();">
+					<span><?=$trans["pages_button_save"];?></span>
+				</a>
+			</div>
+		</p>
+	</div>
+</div>
+
+<div id="sub-sidebar-column">
+	<div class="help-sub-panel-location">
+		<div class="overview-info">
+			<div class="help-tile"><?=$trans["page_help"];?></div>
+			<div class="help-header">
+				<div id="span_help_id_cyb" class="txt16Orange bold"><?=$trans["cyb_title"];?></div>
+			</div>
+			<div class="help-content-panel corners-bottom">
+				<span class="txt14Bold"><?=$trans["pages_help_html_tags"];?></span><br/>
+				<span class="txt12"><?=$trans["pages_help_msg1"];?></span><br/>
+				<br/>
+				<span class="txt12"><?=$trans["pages_help_bold"];?>:</span><br/>
+				<span class="txt12">&lt;strong&gt;<?=$trans["pages_help_sample_bold"];?>&lt;/strong&gt;</span><br/>
+				<br/>
+				<span class="txt12"><?=$trans["pages_help_italic"];?>:</span><br/>	
+				<span class="txt12">&lt;em&gt;<?=$trans["pages_help_sample_italic"];?>&lt;/em&gt;</span><br/>
+				<br/>
+				<span class="txt12"><?=$trans["pages_help_bullets"];?>:</span><br/>
+				<span class="txt12">&lt;ul&gt;</span>&nbsp;<span class="arialGray"><?=$trans["pages_help_bullets_msg_start"];?></span><br/>
+				<span class="txt12">&lt;li&gt;<?=$trans["pages_help_bullets_item"];?>&nbsp;1&lt;/li&gt;</span><br/>
+				<span class="txt12">&lt;li&gt;<?=$trans["pages_help_bullets_item"];?>&nbsp;2&lt;/li&gt;</span><br/>
+				<span class="txt12">&lt;li&gt;<?=$trans["pages_help_bullets_item"];?>&nbsp;3&lt;/li&gt;</span><br/>
+				<span class="txt12">&lt;/ul&gt;</span>&nbsp;<span class="arialGray"><?=$trans["pages_help_bullets_msg_end"];?></span><br/>
+				<br/>
+				<span class="txt12"><?=$trans["pages_help_linking_a_text"];?>:</span><br/>
+				<span class="txt12">&lt;a href="http://www.lankadress.se"&gt;<u><?=$trans["pages_help_text_to_link"];?></u>&lt;/a&gt;</span><br/>
+			</div>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,6 @@
+<?php
+	require_once( $_SERVER['DOCUMENT_ROOT']."/translations/admin_panel_pages_cs.php" );
+
+	include( "inc_admin_panel_pages_cs.html" );
+	return;
+?>

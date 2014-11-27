@@ -1,0 +1,286 @@
+<script type="text/javascript">
+	<?
+		$records = 5;
+		$page    = 1;
+	?>
+	var uploadedFile   = "";
+
+	$(document).ready(function(){
+		$("#txt_link_address").focus(function() { $(this).select().removeClass("txt12Default").addClass("txt12"); } );
+		$("#UploadCustomerInfoAdsImage").fileuploader({
+			"onComplete" : function(filename){
+				$.ajax({
+					type : "POST",
+					url  : 'customer_info_ads_advertisement.php',
+					data : {
+						"ajaxRequest" : "getImagePreview",
+						"accountId"	  : "<?=$accountId?>",
+						"customerId"  : "<?=$customerId?>",
+						"checksum"    : '<?=CheckSum($customerId)?>'
+					},
+					success: function(data) {
+						uploadedFile = filename;
+						$("#SelAdFileName").val(filename);
+						$("#removeAdvertisementImage").show();
+						$("#imgAdvertisement").attr("src",data["fileUrl"]);
+						$("#UploadCustomerInfoAdsImage").fileuploader("resize");
+					},
+					error: function(xhr){
+						showStatusMessageBox("customer_info_ads_error_msg",xhr.statusText, true);
+					}
+				});
+			},
+			"onError" : function(error){
+				removeAddPreview();
+				showStatusMessageBox("customer_info_ads_error_msg",error, true);
+			},
+			"onCancel" : function(control){
+			},
+			"useExternProgressHandler" : true,
+			"ButtonStateCancel" : "<?=$trans["cust_nfo_ads_btn_file_upld"];?>",
+			'FlashVars'  : "SavePath=<?=$SavePathImage?>",
+			'filters'       : "Image Files:*.jpg;*.jpeg;*.gif;*.bmp;*.png;"
+		});
+		$("#navBarTopCustomerAds").html($("#navBarBottomCustomerAds").html());
+		$('#UploadCustomerInfoAdsImage').fileuploader('resize');
+	});
+
+	function removeAddPreview(){
+		uploadedFile = "";
+		$('#imgAdvertisement').attr('src','/img/transparent_logo.png');
+		$("#removeAdvertisementImage").hide();
+	}
+
+	function loadCustomerAdvertisements( records, page, checksum ){
+		$.ajax({
+			type : "GET",
+			url : "/admin/customer_info_ads_advertisement.php",
+			data : {
+				"ajaxRequest" 	: "loadCustomerAdvertisements",
+				"accountId"	  	: "<?=$accountId?>",
+				"customerId"  : "<?=$customerId?>",
+				"records"		: records,
+				"page"			: page,
+				"checksum"		: checksum
+			},
+			success: function(data){
+				$("#CustomerAdsListHTML").html(data);
+				$("#navBarTopCustomerAds").html($("#navBarBottomCustomerAds").html());
+				clearAdFields();
+			},
+			error: function(xhr){
+				showStatusMessageBox("customer_info_ads_error_msg", xhr.statusText, true);
+			}
+		});
+	}
+
+	function loadCustomerAdInfos( AdIdChecksum ){
+		if( AdIdChecksum ){
+			$.ajax({
+				type : "GET",
+				url : "/admin/customer_info_ads_advertisement.php",
+				data : {
+					"ajaxRequest"       : "loadCustomerAdInfos",
+					"AdIdChecksum"      : AdIdChecksum
+				},
+				success: function( AdInfos ){
+					console.log("Industries: " + AdInfos.Industry);
+					$("#SelAdId").val(AdInfos.Ad_Id);
+					$("#SelAdChecksum").val(AdInfos.Checksum);
+					$("#SelAdFileId").val(AdInfos.ImageFile_Id);
+					$("#SelAdFileName").val(AdInfos.FileName);
+					$("#imgAdvertisement").attr('src', AdInfos.AdImageUrl);
+					$("#txt_link_address").val(AdInfos.Link);
+					$("#span_industries").html(AdInfos.Industry);
+					$("#span_locations").html(AdInfos.Location);
+					$("#sel_ad_status").val(AdInfos.Status);
+				},
+				error: function(xhr){
+					showStatusMessageBox("customer_info_ads_error_msg", xhr.statusText, true);
+				}
+			});
+		}
+	}
+
+	function validateAdvertisementInfos(){
+		if( $("#SelAdId").val().length == 0 ||
+			$("#SelAdChecksum").val().length == 0 ||
+			$("#sel_ad_status").val() == "default" ){
+			return false;
+		}
+		return true;
+	}
+
+	function ajaxUpdateAdvertisementInfos(){
+		if( !validateAdvertisementInfos() ){
+			showStatusMessageBox("customer_info_ads_error_msg", "<?=$trans["pcust_nfo_ads_fill_fields"];?>", true);
+		}
+		else{
+			$.ajax({
+				type : "POST",
+				url : "/admin/customer_info_ads_advertisement.php",
+				data : {
+					"ajaxRequest" 	: "ajaxUpdateAdvertisementInfos",
+					"AdIdChecksum"  : $("#SelAdId").val() + ":" + $("#SelAdChecksum").val(),
+					"accountIdChecksum"	  	: "<?=$accountId.':'.CheckSum($accountId);?>",
+					"customerIdChecksum"  	: "<?=$customerId.':'.CheckSum($customerId);?>",
+					"Status"		: $("#sel_ad_status").val(),
+					"ImageFileId"	: $("#SelAdFileId").val(),
+					"ImageName"		: $("#SelAdFileName").val(),
+					"Link"			: $("#txt_link_address").val()
+				},
+				success: function( data ){
+					showStatusMessageBox("customer_info_ads_error_msg", data, false);
+					clearAdFields();
+					loadCustomerAdvertisements( <?=$records;?>, 1, "<?=CheckSum($records."1");?>" )
+				},
+				error: function(xhr){
+					showStatusMessageBox("customer_info_ads_error_msg", xhr.statusText, true);
+				}
+			});
+		}
+	}
+
+	function clearAdFields(){
+		$("#SelAdId").val("");
+		$("#SelAdChecksum").val("");
+		$("#SelAdFileId").val("");
+		$("#SelAdFileName").val("");
+		$("#imgAdvertisement").attr("src", "/img/transparent_logo.png");
+		$("#txt_link_address").val("");
+		$("#span_industries").html("");
+		$("#span_locations").html("");
+		$("#sel_ad_status").val("default");
+	}
+
+	function closeCustomerAdListPopup(){
+		hidePopupModal();
+		if( $("#hReloadAdsList").val("YES") ){
+			loadAdvertisements( 10, 1,'<?=CheckSum("10"."1");?>');
+		}
+	}
+</script>
+
+<div class="clearfix" style="width:550px; padding: 10px 5px;">
+
+	<input type="hidden" id="hReloadAdsList" value="NO" />
+
+	<? if( empty($FromAdsPage) ){ ?>
+		<div class="txt16Bold"><?=$trans["cust_nfo_ads_advertising"];?></div>
+	<? }else{ ?>
+		<h1 class="title"><?=$trans["cust_nfo_ads_advertising"];?></h1>
+	<? } ?>
+
+	<div style="padding-top: 10px; width: 555px;" class="clearfix">
+		<!-- START: Status Message Box -->
+		<div id="customer_info_ads_error_msg" class="status-msg-box" style="display:none">
+		<?if(!empty($ErrMsg)){?>
+			<script type="text/javascript">
+				showStatusMessageBox("customer_info_ads_error_msg","<?=$ErrMsg?>", true);
+			</script>
+		<?}?> 
+		<?if(!empty($OkMsg)){?>
+				<script type="text/javascript">
+					showStatusMessageBox("customer_info_ads_error_msg","<?=$OkMsg?>", false);
+				</script>
+		<?}?>
+		</div>
+		<!-- END -->
+	</div>
+
+	<div class="clearfix" style="width: 550px; margin-top: 15px;">
+
+		<div class="pagging-links clearfix" style="margin-left: 5px;">
+			<span id="navBarTopCustomerAds">
+				<!--copy from navBarBottom!-->
+				<!--inc_customer_info_ads_advertisement.html!-->
+			</span>
+		</div>
+
+		<!-- START: Header -->
+		<div class="requestsHeader">
+		   <div class="serviceheadercontainer_top_left">
+			   <div class="serviceheadercontainer_bottom_right">
+				   <div class="serviceheadercontainer_top_right">
+					  <div class="serviceheadercontainer_bottom_left">
+						  <table border="0">
+							  <thead>
+								<tr>
+									<th class="pre-padding-5 txt10ArialWhiteBold" style="text-align:left; width: 70px;"><?=$trans["cust_nfo_ads_annonsnr"];?>.</th>
+									<th class="pre-padding-5 txt10ArialWhiteBold" style="text-align:left; width: 100px;"><?=$trans["cust_nfo_ads_investment"];?></th>
+									<th class="pre-padding-5 txt10ArialWhiteBold" style="text-align:left; width: 80px;"><?=$trans["cust_nfo_ads_start"];?></th>
+									<th class="pre-padding-5 txt10ArialWhiteBold" style="text-align:left; width: 80px;"><?=$trans["cust_nfo_ads_end"];?></th>
+									<th class="pre-padding-5 txt10ArialWhiteBold" style="text-align:left; width: 80px;"><?=$trans["cust_nfo_ads_screenings"];?></th>
+									<th class="pre-padding-5 txt10ArialWhiteBold" style="text-align:left; width: 100px;"><?=$trans["cust_nfo_ads_unique_impr"];?>.</th>
+									<th class="pre-padding-5 txt10ArialWhiteBold" style="text-align:left; width: 30px;"><?=$trans["cust_nfo_ads_click"];?></th>
+									<th class="pre-padding-5 txt10ArialWhiteBold" style="text-align:left; width: 30px;"><?=$trans["cust_nfo_ads_status"];?></th>
+								</tr>
+							  </thead>
+						  </table>
+					  </div>
+				   </div>
+			   </div>
+		   </div>
+		</div>
+		<!-- END: Header -->
+
+		<!-- START: Rows -->
+		<div id="CustomerAdsListHTML">
+			<?=$CustomerAdsListHTML;?>
+		</div>
+		<!-- END: Rows -->
+	</div>
+	<div class="clearfix" style="width: 550px; margin-top: 15px;">
+		<div class="clearfix left" style="width: 250px; margin-top: 0px;">
+			<div style="display: inline-block; width: 100%; margin-right: 10px;">
+				<input type="hidden" id="SelAdId" value="" />
+				<input type="hidden" id="SelAdChecksum" value="" />
+				<input type="hidden" id="SelAdFileId" value="" />
+				<input type="hidden" id="SelAdFileName" value="" />
+				<span id="removeAdvertisementImage" class="close-icon" style="display:none; cursor:default; position:relative; float:right; top:0px;" onclick="removeAddPreview();"></span>
+				<div style="margin-top: 20px;">
+					<div class="txt12" style="height: 100px; width: 250px; color: #000;" align="center">
+						<img id="imgAdvertisement" src="/img/transparent_logo.png" style="border: 1px solid #f4f4f6; height: 98px; width: 248px;" alt="Upload Image" />		
+					</div>
+					<div class="clearfix" style="width: 255px; margin-top: 10px;">
+						<input type="text" id="txt_link_address" maxlength="150" value="<?= $trans["cust_nfo_ads_link_url"]; ?>" class="left textInputBox txt12Default" style="width: 143px;" />
+						<a id="UploadCustomerInfoAdsImage" class="btn-violet txt12White pre-margin-5" href="javascript: void(0);"><span><?=$trans["cust_nfo_ads_btn_file_upld"];?></span></a>
+					</div>
+				</div>
+				<div style="margin-top: 10px;" style="width: 255px; margin-top: 20px;">
+					<span class="txt12Purple bold" style="margin-right: 10px;">Status:</span>
+					<div class="simple-dropdown">
+						<select id="sel_ad_status" style="border: 0; width: 135px;">
+							<option id="opt_default" value="default"><?=$trans["cust_nfo_ads_select_status"];?></option>
+							<option id="opt_added" value="added"><?=$trans["cust_nfo_ads_added"];?></option>
+							<option id="opt_active" value="active"><?=$trans["cust_nfo_ads_active"];?></option>
+							<option id="opt_booked" value="booked"><?=$trans["cust_nfo_ads_booked"];?></option>
+							<option id="opt_closed" value="closed"><?=$trans["cust_nfo_ads_closed"];?></option>
+						</select>
+					</div>
+				</div>
+				<div style="margin-top: 20px;">
+					<a class="btn-orange" href="javascript: void(0);" onclick="ajaxUpdateAdvertisementInfos();"><span><?=$trans["button_save"];?></span></a>
+					<? if( !empty($FromAdsPage) ){ ?>
+						<a class="btn-orange" href="javascript: void(0);" onclick="closeCustomerAdListPopup();"><span><?=$trans["button_close"];?></span></a>
+					<? } ?>
+				</div>
+			</div>
+		</div>
+		<div class="clearfix left" style="width: 290px; margin-top: 0px;">
+			<div style="margin-top: 20px;">
+				<div class="clearfix" style="width: 100%; margin-top: 0px; padding-left: 10px;">
+					<div><span class="txt12Bold"><?=$trans["field_industry"];?><br/><span id="span_industries" class="txt12Purple">Selected Ad Industries</span></div><br/>
+					<div><span class="txt12Bold"><?=$trans["field_localities"];?><br/><span id="span_locations" class="txt12Purple">Selected Ad Locations</span></div>
+				</div>
+				<div class="clearfix right" style="width: 250px; margin-top: 72px;">
+					<span style="background-color: #40ae49; width: 15px; height: 15px; display: inline-block;">&nbsp;</span>&nbsp;<?=$trans["cust_nfo_ads_active"];?>&nbsp;&nbsp;
+					<span style="background-color: #fff101; width: 15px; height: 15px; display: inline-block;">&nbsp;</span>&nbsp;<?=$trans["cust_nfo_ads_added"];?>&nbsp;&nbsp;
+					<span style="background-color: #412467; width: 15px; height: 15px; display: inline-block;">&nbsp;</span>&nbsp;<?=$trans["cust_nfo_ads_booked"];?>&nbsp;&nbsp;
+					<span style="background-color: #d1232a; width: 15px; height: 15px; display: inline-block;">&nbsp;</span>&nbsp;<?=$trans["cust_nfo_ads_closed"];?>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</div>

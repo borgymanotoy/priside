@@ -1,0 +1,23 @@
+<script type="text/javascript">
+	$('document').ready( function() { loadTabAjax( 'acnt_tab_account', 'customer_info_account_acnt.php' ); showHideAccntAccountsContent('account', true); } );
+	function loadTabAjax( target, page ){
+		var lang = $("#loaded_langugage").val();
+		$('#'+target).load( page, { lang:lang, ajaxRequest:'loadData',  accountId:'<?=$accountId?>', customerId:'<?=$customerId?>' , checksum:'<?=$checksum?>'});
+	}
+</script>
+
+<div class="clearfix" style="width:570px; padding: 5px;">
+	<input type="hidden" id="loaded_acnt_tab" value="" />
+	<ul id="acnt_sub_list" class="submenu">
+		<li id="cust_acnt_subtab_account" class="account-current" ><a href="javascript:void(0);" onclick="loadTabAjax( 'acnt_tab_account', 'customer_info_account_acnt.php' ); showHideAccntAccountsContent('account', true);"><span><?=$trans["cust_nfo_acnt_account"];?></span></a>|</li>
+		<li id="cust_acnt_subtab_certifications"><a href="javascript:void(0);" onclick="loadTabAjax( 'acnt_tab_certifications', 'customer_info_account_certs.php' ); showHideAccntAccountsContent('certifications', true);"><span><?=$trans["cust_nfo_acnt_certifications"];?></span></a></li>
+	</ul>
+	<div>
+		<div id="acnt_tab_account" class="acnt_tab_content">
+			<!-- ? include( "customer_info_account_acnt.php" ); ? -->
+		</div>
+		<div id="acnt_tab_certifications" class="acnt_tab_content">
+			<!-- ? include( "customer_info_account_certs.php" ); ? -->
+		</div>
+	</div>
+</div>

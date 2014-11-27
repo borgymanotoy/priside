@@ -1,0 +1,289 @@
+<!--inc_my_company_profile.html-->
+<script type="text/javascript">
+	/*
+	$(document).ready(function() {
+
+	}); 
+
+	function loadTabAjax( target, page ){
+		var lang = $("#loaded_langugage").val();
+		$('#'+target).load( page, { lang:lang } );
+	}
+*/
+$('#myCompanyProfileSubTab li').click(function() {
+	var id = $(this).attr('id');
+	$('#myCompanyProfileSubTab li').removeClass("current");
+	$(this).toggleClass("current");
+	
+	$(".mycmpy_sub_tab_content").hide();
+	var selected_tab = id.substring(0,23);
+	$("#"+selected_tab).fadeIn();
+});
+
+
+
+function getAllContacts() {
+	$.ajax({
+		type : "GET",
+		url : "my_company_profile.php",
+		data : {
+			"ajaxRequest" : "getAllContacts",
+		},
+		
+		success: function(data){ 
+			$("#contactsContainer").html(data);
+			//showStatusMessageBox("div_my_company_profile_status_msgs", data, false);
+			
+		},
+			error: function(xhr){  
+			showStatusMessageBox("div_my_company_profile_status_msgs", xhr.statusText, true);
+		}
+	});
+}
+
+
+
+function getContact(Id,CheckSum) {
+	$.ajax({
+		type : "GET",
+		url : "my_company_profile.php",
+		data : {
+			"ajaxRequest" : "getContact",
+			"Id" : Id,
+			"CheckSum" : CheckSum
+		},
+
+		success: function(data){ 
+			$('#contactsContent').html( data );
+			//showStatusMessageBox("div_my_company_profile_status_msgs", data, false);
+			
+		},
+			error: function(xhr){  
+			showStatusMessageBox("div_my_company_profile_status_msgs", xhr.statusText, true);
+		}
+	});
+}
+
+var isLoadCertification = false;
+function loadCertification() {
+	// if contents is already loaded don't query
+	if(isLoadCertification)
+		return;
+		
+	$.ajax({
+		type : "GET",
+		url : "my_company_profile.php",
+		data : {
+			"ajaxRequest" : "loadCertification"
+		},
+		success: function(data){ 
+			$("#subtab4myCompanyProfile").html(data);
+			isLoadCertification = true;
+		},
+		error: function(xhr){  
+			showStatusMessageBox("div_my_company_profile_status_msgs", xhr.statusText, true);
+		}
+	});
+}
+
+
+var isLoadReferences = false;
+function loadReferences() {
+	// if contents is already loaded don't query
+	if(isLoadReferences)
+		return;
+		
+	$.ajax({
+		type : "GET",
+		url : "my_company_profile.php",
+		data : {
+			"ajaxRequest" : "loadReferences"
+		},
+
+		success: function(data){ 
+			$("#subtab3myCompanyProfile").html(data);
+			isLoadReferences = true;
+		},
+		error: function(xhr){  
+			showStatusMessageBox("div_my_company_profile_status_msgs", xhr.statusText, true);
+		}
+	});
+}
+var isLoadReviews = false;
+function loadReviews() {
+	// if contents is already loaded don't query
+	if(isLoadReviews)
+		return;
+	
+	$.ajax({
+		type : "GET",
+		url : "my_company_profile.php",
+		data : {
+			"ajaxRequest" : "loadReviews"
+		},
+
+		success: function(data){ 
+			$("#subtab2myCompanyProfile").html(data);
+			isLoadReviews = true;
+		},
+		error: function(xhr){  
+			showStatusMessageBox("div_my_company_profile_status_msgs", xhr.statusText, true);
+		}
+	});
+}
+
+function showContacts() {
+	$("#contactsContainer").toggle();
+}
+
+$(document).ready(function() {
+	showHideTab('subtab1myCompanyProfile',true)
+}); // end document ready
+
+</script>
+<style>
+	.list {
+		padding:0;
+		list-style: none;
+	}
+	.list li{
+		position:relative;
+		
+	}
+	.list li img+span {
+		position: absolute;
+		top:0;
+		left: 2em;
+	}
+	.contacts {
+		clear:both; 
+		list-style: none;
+		margin:0;
+		padding:0 0 0 0;
+		display:none;
+		border: 1px solid #ccc; 
+		position:absolute; 
+		top: 90px; 
+		left:140px; z-index:500; 
+		background:white;
+	}
+	
+	.contacts li:hover{				
+		background:#E66313;
+		color:#fff;
+		pointer:default;
+	}
+	
+	.contacts li {
+		padding:0 1em 0 1em;
+	}
+	
+	.contacts {
+		-moz-border-radius: 5px;
+		-webkit-border-radius: 5px;
+		-khtml-border-radius: 5px;
+		border-radius: 5px;
+	}
+</style>
+	<!-- START: Status Message Box -->
+	<div id="div_my_company_profile_status_msgs" class="status-msg-box" style="display: none;">
+		<?if(!empty($ErrMsg)){?> 
+			<script type="text/javascript">
+				showStatusMessageBox("div_my_company_profile_status_msgs","<?=$ErrMsg?>", true);
+			</script>
+		<?}?> 
+		<?if(!empty($OkMsg)){?>
+			<script type="text/javascript">
+				showStatusMessageBox("div_my_company_profile_status_msgs","<?=$OkMsg?>", false);
+			</script>
+		<?}?>
+	</div>
+	<!-- END -->
+<div id="main-column-2">
+	<h1 class="title"><?=$trans["my_company_prof_my_company_prof"];?></h1>
+	<h3 style="padding:0;margin:0;"><?=$Business["Name"];?></h3>
+	
+
+	
+	<div class="clearfix container-small">
+		<div id="contactsContent" style="float:left; width:325px; position:relative;">
+			<?
+				// php includes my_company_profileSnippet.html
+				// and dumps it into $my_company_profileSnippet_html here
+				// ***
+				echo $my_company_profileSnippet_html;
+			?>
+		</div>
+		<div class="left" style="width: 250px; height:200px;">
+			<img src="<?=$Business['LogoUrl'];?>" width="250" height="200" />
+		</div>
+	</div>
+	<div class="container-small">
+		<a href="<?=$Business["LinkedIn"];?>"><img style="margin-left:1em; border:0;" src="img/in.png" /></a>
+		<a href="<?=$Business["Facebook"];?>"><img style="margin-left:1em; border:0;" src="img/fb_logo.png" /></a>
+		<a href="<?=$Business["Twitter"];?>"><img style="margin-left:1em; border:0;" src="img/twitter_logo.png" /></a>
+		<a href="<?=$Business["Video"];?>"><img style="margin-left:1em; border:0;" src="img/play.png" /></a>
+	</div>
+	<div id="main-inner">
+		<div  id="content-inner" class="inner_wrapper">
+			<ol id="myCompanyProfileSubTab" class="inner-tabs">
+				<li id="subtab1myCompanyProfileHeader" class="current"><a href="javascript:void(0);" ><span><?=$trans["my_company_prof_company_presentation"];?></span></a></li>
+				<li id="subtab2myCompanyProfileHeader"><a href="javascript:void(0);" onclick="loadReviews();"><span><?=$trans["my_company_prof_reviews"];?></span></a></li>
+				<li id="subtab3myCompanyProfileHeader"><a href="javascript:void(0);" onclick="loadReferences();"><span><?=$trans["my_company_prof_references"];?></span></a></li>
+				<li id="subtab4myCompanyProfileHeader"><a href="javascript:void(0);" onclick="loadCertification();"><span><?=$trans["my_company_prof_certification"];?></span></a></li>
+			</ol>
+		
+			<div id="main-content-inner" class="clearfix">
+				<div id="subtab1myCompanyProfile" class="mycmpy_sub_tab_content">
+					<div style="width:380px" class="left">
+						<?=$Business["Presentation"];?>
+					</div>
+					<!--
+					<div style="width:190px;margin-top:2em; " class="left">
+						
+						<strong>Registrerade för F-skattsedel</strong>
+						<ul class="checked" style="padding:0;">
+							<li><a href=""></a>Kvalitetssäkrat företag</li>
+							<li><a href=""></a>Registrerade för Moms</li>
+							<li><a href=""></a>Skuldsaldo 0kr</li>
+							<li><a href=""></a>Godkänd kredithistorik</li>
+						</ul>
+						<p class="text-align-right">Läs mer</p>
+						
+						<p>Företaget registrerade sig på Prisidé</p>
+						<div class="text-align-right">2011-12-15</div>
+						
+					</div>
+					-->
+				</div>
+
+				<div id="subtab2myCompanyProfile" class="mycmpy_sub_tab_content">
+					
+				</div>
+				<div id="subtab3myCompanyProfile" class="mycmpy_sub_tab_content">
+					
+				</div>
+				<div id="subtab4myCompanyProfile" class="mycmpy_sub_tab_content">
+					<!-- certification -->
+				</div>
+				
+			</div>	
+			<div id="main-bottom-curve-inner">&nbsp;</div>
+		</div>
+	</div>
+	
+	
+	
+</div>
+
+<div id="sidebar-column">
+	<div class="info-pane">
+		<span class="help-user-tile" style="display:block;"><?=$trans["my_company_prof_help"];?></span>
+		<div class="help-user-title"><?=$trans["my_company_prof_my_company_prof"];?></div>
+		<div class="info-pane-content clearfix" style="margin-top: 45px;">
+			<div class="txt12" style="margin-top: 5px; margin-left: 50px; width: 240px;"><?=$trans["my_company_prof_desc"];?></div>
+		</div>
+		<? include( "inc_users_panel_client_banner.html" ); ?>
+	</div>
+</div>
+

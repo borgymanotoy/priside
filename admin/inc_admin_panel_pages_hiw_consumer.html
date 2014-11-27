@@ -1,0 +1,238 @@
+<!-- inc_admin_panel_pages_hiw_consumer.html -->
+
+<script type="text/javascript">
+	$(document).ready(function(){
+		//Upload Banner Image
+		$("#btnPagesHiwConsumerUploadPicture").css({"position" : "relative" ,"top" : "0px"}).fileuploader({
+				"onComplete" : function(filename){
+					// fired when the file upload is completed.
+					// here we post back to php to finish
+					// the upload transaction.
+					var dt = new Date();
+					 $.ajax( {
+						type: 'POST',
+						url:  'admin_panel_pages_hiw_consumer.php',
+						data:
+						   {
+							  'ajaxRequest'   : 'saveBannerImage',
+							  'BannerIdChecksum' : $("#HIWConsumerBannerFile_Id").val()+":"+$("#HIWConsumerBannerFile_Checksum").val(),
+							  'filename'      : filename
+						   },
+						success: function(data){
+							var fileInfos = JSON.parse( data );
+							$("#imgHIWConsumerBanner").attr("src",fileInfos.FileUrl);
+							$("#HIWConsumerBannerFile_Id").val(fileInfos.FileId);
+							$("#HIWConsumerBannerFile_Checksum").val(fileInfos.FileChecksum);
+							$("#HIWConsumerBannerFile_Name").val(fileInfos.FileName);
+						},
+						error: function(xhr){
+							showStatusMessageBox("div_hiw_consumer_status_msgs",xhr.statusText, true);
+						}
+					 });
+				},
+				"onError" : function(error){
+					showStatusMessageBox("div_hiw_consumer_status_msgs",error, true);
+				},
+				"useExternProgressHandler" : false,
+				"ButtonStateCancel" : '<?=$trans["button_state_cancel"];?>',
+				'FlashVars' 	: "SavePath=<?=base64_encode( $UploadPath );?>,CheckSum=<?=CheckSum( base64_encode( $UploadPath ) );?>,Session=<?=session_id();?>",
+				'filters'       : "(Images):*.bmp;*.png;*.jpg;*.gif;*.jpeg;"
+		});
+
+		//Upload Brochure File
+		$("#btnPagesHiwConsumerUploadBrochure").css({"position" : "relative" ,"top" : "0px"}).fileuploader({
+				"onComplete" : function(filename){
+					 $.ajax( {
+						type: 'POST',
+						url:  'admin_panel_pages_hiw_consumer.php',
+						data:
+							{
+								'ajaxRequest'   : 'setUploadedBrochure',
+								'BrochureIdChecksum' : $("#HIWConsumerBrochureFileId").val()+":"+$("#HIWConsumerBrochureFileChecksum").val(),
+								'filename' : filename
+							},
+						success: function(data){
+							var fileInfos = JSON.parse( data );
+							$("#HIWConsumerBrochureFileId").val(fileInfos.BrochureId);
+							$("#HIWConsumerBrochureFileChecksum").val(fileInfos.BrochureChecksum);
+							$("#spanConsumerBrochureName").html(fileInfos.BrochureName);
+							$("#HIWConsumerBrochureLink").attr("href", fileInfos.BrochureUrl).addClass("arrow-link");
+						},
+						error: function(xhr){
+							showStatusMessageBox("div_hiw_consumer_status_msgs",xhr.statusText, true);
+						}
+					 });
+				},
+				"onError" : function(error){
+					showStatusMessageBox("div_hiw_consumer_status_msgs",error, true);
+				},
+				"useExternProgressHandler" : true,
+				"ButtonStateCancel" : '<?=$trans["button_state_cancel"];?>',
+				'FlashVars' 	: "SavePath=<?=base64_encode( $UploadPath );?>,CheckSum=<?=CheckSum( base64_encode( $UploadPath ) );?>,Session=<?=session_id();?>",
+				'filters'       : "(Documents):*.doc;*.xls;*.odt;*.rtf;*.pdf;"
+		});
+		resetHiwConsumerModifiedFlag();
+	});
+
+	function validateHIWConsumerEntries(){
+		if($("#HIWConsumerSH1").val().length == 0) return false;
+		else if($("#HIWConsumerSH2").val().length == 0) return false;
+		else if($("#HIWConsumerSH3").val().length == 0) return false;
+		else if($("#HIWConsumerSHText1").val().length == 0) return false;
+		else if($("#HIWConsumerSHText2").val().length == 0) return false;
+		else if($("#HIWConsumerSHText3").val().length == 0) return false;
+		return true;
+	}
+
+	function saveHiwConsumer(){
+		if(!validateHIWConsumerEntries()){
+			var validation_msg = $("#hiw_consumer_error_entry_validation").val();
+			showStatusMessageBox("div_hiw_consumer_status_msgs", validation_msg, true);
+			return;
+		}else{
+			ajaxSaveHIWConsumer();
+		}
+	}
+	function ajaxSaveHIWConsumer(){
+		var url = "/admin/admin_panel_pages_hiw_consumer.php";
+		$.ajax({
+			type : "POST",
+			url : url,
+			data : {
+				"ajaxRequest"           : "ajaxSaveHIWConsumer",
+				"HIWConsumerIdChecksum" : $("#HIWConsumerId").val()+":"+$("#HIWConsumerChecksum").val(),
+				'BannerIdChecksum'      : $("#HIWConsumerBannerFile_Id").val()+":"+$("#HIWConsumerBannerFile_Checksum").val(),
+				'BrochureIdChecksum'    : $("#HIWConsumerBrochureFileId").val()+":"+$("#HIWConsumerBrochureFileChecksum").val(),
+				"SubHeading1"           : $("#HIWConsumerSH1").val(),
+				"SubHeadingText1"       : $("#HIWConsumerSHText1").val(),
+				"SubHeading2"           : $("#HIWConsumerSH2").val(),
+				"SubHeadingText2"       : $("#HIWConsumerSHText2").val(),
+				"SubHeading3"           : $("#HIWConsumerSH3").val(),
+				"SubHeadingText3"       : $("#HIWConsumerSHText3").val()
+			},
+			success: function(data){
+				var HIWConsumerInfos = JSON.parse( data );
+				$("#HIWConsumerId").val(HIWConsumerInfos.HIWConsumerId);
+				$("#HIWConsumerChecksum").val(HIWConsumerInfos.HIWConsumerChecksum);
+				showStatusMessageBox("div_hiw_consumer_status_msgs", HIWConsumerInfos.HIWConsumerStatusMsg, false);
+				resetHiwConsumerModifiedFlag();
+			},
+			error: function(xhr){
+				showStatusMessageBox("div_hiw_consumer_status_msgs", xhr.statusText, true);
+			}
+		});
+	}
+	function modifiedHiwConsumerFields(){
+		if($("hiw_consumer_modified").val() == "false") $("hiw_consumer_modified").val("true");
+	}
+	function resetHiwConsumerModifiedFlag(){
+		$("hiw_consumer_modified").val("false");
+	}
+</script>
+
+<input type="hidden" id="hiw_consumer_error_entry_validation" value="<?=$trans["hiw_consumer_error_entry_validation"];?>"/>
+<input type="hidden" id="hiw_consumer_modified" value="false"/>
+
+<div id="main-column">
+	<div style="padding: 0px; width: 650px;" class="clearfix">
+		<!-- START: Status Message Box -->
+		<div id="div_hiw_consumer_status_msgs" class="status-msg-box" style="display: none;">
+			<?if(!empty($ErrMsg)){?> 
+				<script type="text/javascript">
+					showStatusMessageBox("div_hiw_consumer_status_msgs","<?=$ErrMsg?>", true);
+				</script>
+			<?}?> 
+			<?if(!empty($OkMsg)){?>
+				<script type="text/javascript">
+					showStatusMessageBox("div_hiw_consumer_status_msgs","<?=$OkMsg?>", false);
+				</script>
+			<?}?>
+		</div>
+		<!-- END -->
+	</div>
+
+	<!-- START: HIW consumer infos -->
+	<input type="hidden" id="HIWConsumerId" value="<?=$HIWDefaults['HIWConsumerId'];?>" />
+	<input type="hidden" id="HIWConsumerChecksum" value="<?=CheckSum( $HIWDefaults['HIWConsumerId'] );?>" />
+	<input type="hidden" id="HIWConsumerBannerFile_Id" value="<?=$HIWDefaults['HIWConsumerBannerFile_Id'];?>" />
+	<input type="hidden" id="HIWConsumerBannerFile_Checksum" value="<?=CheckSum( $HIWDefaults['HIWConsumerBannerFile_Id'] );?>" />
+	<input type="hidden" id="HIWConsumerBannerFile_Name" value="<?=$HIWDefaults['HIWConsumerBannerFileName'];?>" />
+	<!-- END -->
+
+	<div style="padding: 10px; width: 650px;" class="clearfix">
+		<div style="margin-top: 0px;">
+			<img id="imgHIWConsumerBanner" src="<?=$HIWImageUrl;?>" style="height: 150px; width: 600px; margin-bottom: 10px; border: 1px solid #eee;" alt="How It Works Priside : Consumer"/>
+		</div>
+
+		<p style="display:inline-block;">
+			<div class="left">
+				<a id="btnPagesHiwConsumerUploadPicture" class="btn-violet txt12White" href="#"><span><?=$trans["pages_button_choose_picture"];?></span></a>  
+			</div>
+		</p>
+		<br/>
+		<div class="clearfix input-text" style="display:block;">
+			<span><?=$trans["hiw_consumer_subheading"];?>&nbsp;1</span>
+			<div><input type="text" id="HIWConsumerSH1" maxlength="250" onchange="modifiedHiwConsumerFields();" value="<?=$HIWDefaults['HIWConsumerSH1'];?>" /></div>
+		</div>
+		<br/>
+		<label for="text-area" class="pre-margin-10 txt12Bold" style="display: block;"><?=$trans["hiw_consumer_text"];?>&nbsp;1</label>
+		<div class="textarea_top_left">
+		   <div class="textarea_bottom_right">
+			   <div class="textarea_top_right">
+				   <div class="textarea_bottom_left">
+						<textarea class="txt-area" id="HIWConsumerSHText1" rows="10" cols="71" onchange="modifiedHiwConsumerFields();"><?=$HIWDefaults['HIWConsumerSHText1'];?></textarea>
+					</div>
+				</div>
+			</div>
+		</div>
+		<br/>
+		<div class="clearfix input-text" style="display:block; margin-top: 20px;">
+			<span><?=$trans["hiw_consumer_subheading"];?>&nbsp;2</span>
+			<div><input type="text" id="HIWConsumerSH2" maxlength="250" onchange="modifiedHiwConsumerFields();" value="<?=$HIWDefaults['HIWConsumerSH2'];?>" /></div>
+		</div>
+		<br/>
+		<label for="text-area" class="pre-margin-10 txt12Bold" style="display: block;"><?=$trans["hiw_consumer_text"];?>&nbsp;2</label>
+		<div class="textarea_top_left">
+		   <div class="textarea_bottom_right">
+			   <div class="textarea_top_right">
+				   <div class="textarea_bottom_left">
+						<textarea class="txt-area" id="HIWConsumerSHText2" rows="10" cols="71" onchange="modifiedHiwConsumerFields();"><?=$HIWDefaults['HIWConsumerSHText2'];?></textarea>
+					</div>
+				</div>
+			</div>
+		</div>
+		<br/>
+		<div class="clearfix input-text" style="display:block; margin-top: 20px;">
+			<span><?=$trans["hiw_consumer_subheading"];?>&nbsp;3</span>
+			<div><input type="text" id="HIWConsumerSH3" maxlength="250" onchange="modifiedHiwConsumerFields();" value="<?=$HIWDefaults['HIWConsumerSH3'];?>" /></div>
+		</div>
+		<br/>
+		<label for="text-area" class="pre-margin-10 txt12Bold" style="display: block;"><?=$trans["hiw_consumer_text"];?>&nbsp;3</label>
+		<div class="textarea_top_left">
+		   <div class="textarea_bottom_right">
+			   <div class="textarea_top_right">
+				   <div class="textarea_bottom_left">
+						<textarea class="txt-area" id="HIWConsumerSHText3" rows="10" cols="71" onchange="modifiedHiwConsumerFields();"><?=$HIWDefaults['HIWConsumerSHText3'];?></textarea>
+					</div>
+				</div>
+			</div>
+		</div>
+		<br/>
+		<p style="display:inline-block;">
+			<div class="left" style="padding: 5px 0px;">
+				<a id="btnPagesHiwConsumerUploadBrochure" class="btn-violet txt12White" href="#"><span><?=$trans["hiw_consumer_button_brochure"];?></span></a>
+				<a id="HIWConsumerBrochureLink" href="<?=$HIWBrochureUrl;?>" <?= !empty( $HIWBrochureUrl ) ? "class=\"arrow-link\"" : ""; ?>  style="margin-left: 15px;">&nbsp;<span id="spanConsumerBrochureName"><?=$HIWDefaults['HIWConsumerBrochureName'];?></span></a>
+				<input type="hidden" id="HIWConsumerBrochureFileId" value="<?= empty( $HIWDefaults["HIWConsumerBrochureFile_Id"] ) ? 0 : $HIWDefaults["HIWConsumerBrochureFile_Id"];?>" />
+				<input type="hidden" id="HIWConsumerBrochureFileChecksum" value="<?=empty( $HIWDefaults["HIWConsumerBrochureFile_Id"]) ? CheckSum(0) : CheckSum( $HIWDefaults["HIWConsumerBrochureFile_Id"] );?>" />
+			</div>
+		</p>
+		<br/>
+		<p style="margin-bottom: 1em;">
+			<div class="clearfix left">
+				<a class="btn-orange txt14White bold" href="javascript:void(0);" onclick="saveHiwConsumer();">
+					<span><?=$trans["pages_button_save"];?></span>
+				</a>
+			</div>
+		</p>
+	</div>
+</div>

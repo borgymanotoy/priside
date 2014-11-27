@@ -1,0 +1,215 @@
+<!-- inc_admin_panel_pages_cs.html -->
+
+<script type="text/javascript">
+	$(document).ready(function(){
+		//Upload Banner Image
+		$("#btnCSUploadPicture").css({"position" : "relative" ,"top" : "0px"}).fileuploader({
+				"onComplete" : function(filename){
+					var dt = new Date();
+					 $.ajax( {
+						type: 'POST',
+						url:  'admin_panel_pages_cs.php',
+						data:
+						   {
+							  'ajaxRequest'   : 'saveBannerImage',
+							  'BannerIdChecksum' : $("#CSBannerFile_Id").val()+":"+$("#CSBannerFile_Checksum").val(),
+							  'filename'      : filename
+						   },
+						success: function(data){
+							var fileInfos = JSON.parse( data );
+							$("#imgCSBanner").attr("src",fileInfos.FileUrl);
+							$("#CSBannerFile_Id").val(fileInfos.FileId);
+							$("#CSBannerFile_Checksum").val(fileInfos.FileChecksum);
+							$("#CSBannerFile_Name").val(fileInfos.FileName);
+						},
+						error: function(xhr){
+							showStatusMessageBox("div_cs_status_msgs",xhr.statusText, true);
+						}
+					 });
+				},
+				"onError" : function(error){
+					showStatusMessageBox("div_cs_status_msgs",error, true);
+				},
+				"useExternProgressHandler" : false,
+				"ButtonStateCancel" : '<?=$trans["button_state_cancel"];?>',
+				'FlashVars' 	: "SavePath=<?=base64_encode( $UploadPath );?>,CheckSum=<?=CheckSum( base64_encode( $UploadPath ) );?>,Session=<?=session_id();?>",
+				'filters'       : "(Images):*.bmp;*.png;*.jpg;*.gif;*.jpeg;"
+		});
+		resetCSModifiedFlag();
+	});
+	function validateCSEntries(){
+		if($("#CSText").val().length == 0) return false;
+		else if($("#CSPhone").val().length == 0) return false;
+		else if($("#CSVisitingAddress").val().length == 0) return false;
+		else if($("#CSEmail").val().length == 0) return false;
+		else if($("#CSHoursOfOperation").val().length == 0) return false;
+		return true;
+	}
+	function saveCS(){
+		if(!validateCSEntries()){
+			var validation_msg = $("#cs_error_entry_validation").val();
+			showStatusMessageBox("div_cs_status_msgs", validation_msg, true);
+			return;
+		}else{
+			ajaxSaveCS();
+		}
+	}
+	function ajaxSaveCS(){
+		var url = "/admin/admin_panel_pages_cs.php";
+		$.ajax({
+			type : "POST",
+			url : url,
+			data : {
+				"ajaxRequest" : "ajaxSaveCS",
+				"CSIdChecksum" : $("#CSId").val()+":"+$("#CSChecksum").val(),
+				'BannerIdChecksum' : $("#CSBannerFile_Id").val()+":"+$("#CSBannerFile_Checksum").val(),
+				"CSText" : $("#CSText").val(),
+				"CSPhone" : $("#CSPhone").val(),
+				"CSVisitingAddress" : $("#CSVisitingAddress").val(),
+				"CSEmail" : $("#CSEmail").val(),
+				"CSHoursOfOperation" : $("#CSHoursOfOperation").val(),
+			},
+			success: function(data){ 
+				var CSInfos = JSON.parse( data );
+				$("#CSId").val(CSInfos.CSId);
+				$("#CSChecksum").val(CSInfos.CSChecksum);
+				showStatusMessageBox("div_cs_status_msgs", CSInfos.CSStatusMsg, false);
+				resetCSModifiedFlag();
+			},
+			error: function(xhr){  
+				showStatusMessageBox("div_cs_status_msgs", xhr.statusText, true, function(){ $("#div_status_box").hide(); });
+			}
+		});
+	}
+	function modifiedCSFields(){
+		if($("cs_modified").val() == "false") $("cs_modified").val("true");
+	}
+	function resetCSModifiedFlag(){
+		$("cs_modified").val("false");
+	}
+</script>
+
+<input type="hidden" id="cs_error_entry_validation" value="<?=$trans["cs_error_entry_validation"];?>"/>
+<input type="hidden" id="cs_modified" value="false"/>
+
+<div id="main-column">
+	<div class="clearfix" style="padding: 10px; width: 650px;">
+		<h1 class="title"><?=$trans["pages_sub_custservice"];?></h1>
+
+		<!-- START: Status Message Box -->
+		<div id="div_cs_status_msgs" class="status-msg-box" style="display: none;">
+			<?if(!empty($ErrMsg)){?> 
+				<script type="text/javascript">
+					showStatusMessageBox("div_cs_status_msgs","<?=$ErrMsg?>", true);
+				</script>
+			<?}?> 
+			<?if(!empty($OkMsg)){?>
+				<script type="text/javascript">
+					showStatusMessageBox("div_cs_status_msgs","<?=$OkMsg?>", false);
+				</script>
+			<?}?>
+		</div>
+		<!-- END -->
+
+		<!-- START: Customer Service infos -->
+		<input type="hidden" id="CSId" value="<?=$CSDefaults['CSId'];?>" />
+		<input type="hidden" id="CSChecksum" value="<?=CheckSum( $CSDefaults['CSId'] );?>" />
+		<input type="hidden" id="CSBannerFile_Id" value="<?=$CSDefaults['CSImageFile_Id'];?>" />
+		<input type="hidden" id="CSBannerFile_Checksum" value="<?=CheckSum( $CSDefaults['CSImageFile_Id'] );?>" />
+		<input type="hidden" id="CSBannerFile_Name" value="<?=$CSDefaults['CSBannerFileName'];?>" />
+		<!-- END -->
+
+		<div style="margin-top: 0px;">
+			<img id="imgCSBanner" src="<?=$CSImageUrl;?>" style="height: 150px; width: 600px; margin-bottom: 10px; border: 1px solid #eee;" alt="Customer Service"/>
+		</div>
+
+		<div class="clearfix container-small">
+			<div class="left">
+				<a id="btnCSUploadPicture" class="btn-violet txt12White" href="#"><span><?=$trans["pages_button_choose_picture"];?></span></a>  
+			</div>
+		</div>
+		<div>
+			<label for="text-area" class="pre-margin-10 txt12Bold" style="display:block;"><?=$trans["cs_text_label"];?></label>
+			<div class="textarea_top_left">
+			   <div class="textarea_bottom_right">
+				   <div class="textarea_top_right">
+					   <div class="textarea_bottom_left">
+							<textarea id="CSText" name="CSText" class="txt-area" rows="8" cols="71"><?=$CSDefaults['CSText'];?></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<br/>
+		<!-- START: Divided main column div -->
+		<div style="width: 600px; height: 50px;">
+			<div class="clearfix left" style="width: 300px;">
+				<div class="clearfix input-text" style="display:block;">
+					<span><?=$trans["cs_text_telephone"];?></span>
+					<div><input type="text" id="CSPhone" name="CSPhone" maxlength="30" value="<?=$CSDefaults['CSPhone'];?>" /></div>
+				</div>
+			</div>
+			<div class="clearfix right" style="width: 300px;">
+				<div class="clearfix input-text right" style="display:block;">
+					<span><?=$trans["cs_text_visit"];?></span>
+					<div><input type="text" id="CSVisitingAddress" name="CSVisitingAddress" maxlength="150" value="<?=$CSDefaults['CSVisitingAddress'];?>" /></div>
+				</div>
+			</div>
+		</div>
+		<div style="width: 600px;  height: 50px; margin-top: 10px;">
+			<div class="clearfix left" style="width: 300px;">
+				<div class="clearfix input-text" style="display:block;">
+					<span><?=$trans["cs_text_mail"];?></span>
+					<div><input type="text" id="CSEmail" name="CSEmail" maxlength="100" value="<?=$CSDefaults['CSEmail'];?>" /></div>
+				</div>
+			</div>
+			<div class="clearfix right" style="width: 300px;">
+				<div class="clearfix input-text right" style="display:block;">
+					<span><?=$trans["cs_text_hours_of_operation"];?></span>
+					<div><input type="text" id="CSHoursOfOperation" name="CSHoursOfOperation" maxlength="30" value="<?=$CSDefaults['CSHoursOfOperation'];?>" /></div>
+				</div>
+			</div>
+		</div>
+		<!-- END: Divided main column div -->
+
+		<div class="clearfix container-small">
+			<div class="clearfix left">
+				<a class="btn-orange txt14White bold" href="javascript:void(0);" onclick="saveCS();">
+					<span><?=$trans["pages_button_save"];?></span>
+				</a>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="sub-sidebar-column">
+	<div class="help-sub-panel-location">
+		<div class="overview-info">
+			<div class="help-tile"><?=$trans["page_help"];?></div>
+			<div class="help-header">
+				<span id="span_help_id_cyb" class="txt16Orange bold"><?=$trans["pages_sub_custservice"];?></span>
+			</div>
+			<div class="help-content-panel corners-bottom">
+				<span class="txt14Bold"><?=$trans["pages_help_html_tags"];?></span><br/>
+				<span class="txt12"><?=$trans["pages_help_msg1"];?></span><br/>
+				<br/>
+				<span class="txt12"><?=$trans["pages_help_bold"];?>:</span><br/>
+				<span class="txt12">&lt;strong&gt;<?=$trans["pages_help_sample_bold"];?>&lt;/strong&gt;</span><br/>
+				<br/>
+				<span class="txt12"><?=$trans["pages_help_italic"];?>:</span><br/>	
+				<span class="txt12">&lt;em&gt;<?=$trans["pages_help_sample_italic"];?>&lt;/em&gt;</span><br/>
+				<br/>
+				<span class="txt12"><?=$trans["pages_help_bullets"];?>:</span><br/>
+				<span class="txt12">&lt;ul&gt;</span>&nbsp;<span class="arialGray"><?=$trans["pages_help_bullets_msg_start"];?></span><br/>
+				<span class="txt12">&lt;li&gt;<?=$trans["pages_help_bullets_item"];?>&nbsp;1&lt;/li&gt;</span><br/>
+				<span class="txt12">&lt;li&gt;<?=$trans["pages_help_bullets_item"];?>&nbsp;2&lt;/li&gt;</span><br/>
+				<span class="txt12">&lt;li&gt;<?=$trans["pages_help_bullets_item"];?>&nbsp;3&lt;/li&gt;</span><br/>
+				<span class="txt12">&lt;/ul&gt;</span>&nbsp;<span class="arialGray"><?=$trans["pages_help_bullets_msg_end"];?></span><br/>
+				<br/>
+				<span class="txt12"><?=$trans["pages_help_linking_a_text"];?>:</span><br/>
+				<span class="txt12">&lt;a href="http://www.lankadress.se"&gt;<u><?=$trans["pages_help_text_to_link"];?></u>&lt;/a&gt;</span><br/>
+			</div>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,36 @@
+<!-- inc_customer_info_page.html -->
+<div class="clearfix">
+	<h1 class="title">Bengtssons entreprenad AB</h1>
+</div>
+<!-- popup body section -->
+<div id="popup_main">
+	<div id="popup_content" class="popup_wrapper">
+		<!-- popup outer tab section -->
+		<ol id="popup_outer_tabs">
+			<li id="popup_tab1header" class="popup-current" ><a href="javascript:void(0);"><span><?=$trans["cu_nfo_gen"];?></span></a></li>
+			<li id="popup_tab2header"><a href="javascript:void(0);"><span><?=$trans["cu_nfo_cu_nfo"];?></span></a></li>
+			<li id="popup_tab3header"><a href="javascript:void(0);"><span><?=$trans["cu_nfo_accnt"];?></span></a></li>
+			<li id="popup_tab4header"><a href="javascript:void(0);"><span><?=$trans["cu_nfo_acts"];?></span></a></li>
+			<li id="popup_tab5header"><a href="javascript:void(0);"><span><?=$trans["cu_nfo_ads"];?></span></a></li>
+		</ol>
+		<div id="popup_main_content" class="clearfix">
+			<div id="popup_tab1" class="popup_tab_content">
+				<? include( "customer_info_general.php" ); ?>
+			</div>
+			<div id="popup_tab2" class="popup_tab_content">
+				Popup Tab 2
+				<!--? include( "customer_info_account.php" ); ? -->
+			</div>
+			<div id="popup_tab3" class="popup_tab_content">
+				Popup Tab 3
+			</div>
+			<div id="popup_tab4" class="popup_tab_content">
+				Popup Tab 4
+			</div>
+			<div id="popup_tab5" class="popup_tab_content">
+				Popup Tab 5
+			</div>
+		</div>
+		<div id="popup_main-bottom-curve">&nbsp;</div>
+	</div>
+</div>

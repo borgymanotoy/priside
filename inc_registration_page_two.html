@@ -1,0 +1,153 @@
+<style>
+.client-banner {
+	width: 285px;
+	color : #000;
+	border:2px solid #808285;
+	background: #808285;
+	padding:2px 5px;
+	margin-left: 10px;
+	margin-bottom:10px;
+	-moz-border-radius: 8px;
+	-webkit-border-radius: 8px;
+	-khtml-border-radius: 8px;
+	border-radius: 8px;
+	vertical-align: middle;
+	position: relative;
+	display: inline-block;
+	height:170px;
+}
+</style>
+
+<div id="content" class="wrapper">
+	<div id="main-content" class="clearfix">	
+		<div id="main-column">
+			<ul class="home-page-num">
+				<li><a href="javascript:void(0);" onclick="loadTabAjax('main', 'registration_page_one.php');">1</a></li>
+				<li><a id="active-pgnum"  href="javascript:void(0);" onclick="">2</a></li>
+				<li><a href="javascript:void(0);" onclick="loadTabAjax('main', 'registration_page_three.php');">3</a></li>
+			</ul>
+			<h1 class="title"><?=$trans["reg_pge_two_title"];?></h1>
+			<label for="text-area"><?=$trans["reg_pge_two_mission"];?> *</label>
+			<div class="textarea_top_left">
+			   <div class="textarea_bottom_right">
+				   <div class="textarea_top_right">
+					   <div class="textarea_bottom_left">
+							<textarea style="resize: vertical; border: 0; margin: 5px;" name="text-area" rows="10" cols="71">
+								<?=$trans["reg_pge_two_mission_text"];?>
+							</textarea>
+						</div>
+					</div>
+				</div>
+			</div>	
+			<div class="clearfix container-small">
+				<a class="btn-violet" href="#"><span><h3><?=$trans["reg_pge_two_attach"];?></h3></span></a>&nbsp;<img src="img/question_mark.png" />
+			</div>
+			<div class="clearfix container-small">
+				<ul class="files-upload">
+					<li><img src="img/clip.png"><?=$trans["reg_pge_two_attach_more"];?>:</li>
+					<li><img src="img/closeImage.png">Planritning.pdf </span></li>
+					<li><img src="img/closeImage.png">foto.jpg</span></li>
+				</ul>
+			</div>
+			<div class="clearfix container-small">
+				<div class="combo-box left">
+					<span><?=$trans["reg_pge_two_individual_text"];?></span>
+					<div>
+						<ul>
+							<li class="vline"></li>
+							<li></li>
+							<li class="arrow">&nbsp;</li>
+						</ul>
+						<input type="text" name="tb5" value="<?=$trans["reg_pge_two_individual"];?>"/>
+					</div>
+				</div>
+				<div class="combo-box right">
+					<span><?=$trans["reg_pge_two_mission_desc"];?></span>
+					<div>
+						<span class="arrow"></span><span class="vline"></span>
+						<input type="text" name="tb5" />
+					</div>
+				</div>
+			</div>
+			<div class="clearfix container-small">
+				<div class="input-text left">
+					<span><?=$trans["reg_pge_two_name"];?> *</span>
+					<div><input type="text" name="tb5" /></div>
+				</div>
+				<div class="input-text right">
+					<span><?=$trans["reg_pge_two_mail"];?> *</span>
+					<div><input type="text" name="tb5" /></div>
+				</div>
+			</div>
+			<div class="clearfix container-small">
+					<div class="input-text left">
+						<span><?=$trans["reg_pge_two_telephone"];?> *</span>
+						<div><input type="text" name="tb5" /></div>
+					</div>
+					<div class="input-text right">
+						<span><?=$trans["reg_pge_two_alternative_phone"];?> *</span>
+						<div><input type="text" name="tb5" /></div>
+					</div>
+			</div>
+			 <?=$trans["reg_pge_two_disconnect"];?>
+			<span>* <?=$trans["reg_pge_two_require_field"];?></span>
+			<div class="clearfix container-small"><input type="checkbox" /><?=$trans["reg_pge_two_disconnect"];?> <img src="img/question_mark.png" /></div>
+			<div class="clearfix container-small">						
+				<div class="combo-box left">
+					<span><?=$trans["reg_pge_two_individual_text"];?></span>
+					<div>
+						<ul>
+							<li class="vline"></li>
+							<li></li>
+							<li class="arrow">&nbsp;</li>
+						</ul>
+						<input type="text" name="tb5" />
+					</div>
+				</div>					
+				<div class="left" style="padding-top: 1.7em; padding-left:1em;">
+					<a class="btn-violet" href="#"><span><h3><?=$trans["reg_pge_two_create_new_proj"];?></h3></span></a>
+				</div>
+				
+			</div>
+			<div class="clearfix container-small">
+				<h3><?=$trans["reg_pge_two_enterprenuer_title"];?></h3>
+				<p><?=$trans["reg_pge_two_enterprenuer_text"];?></p>
+				<p><input type="checkbox" /><?=$trans["reg_pge_two_mediated"];?></p>
+				<p><input type="checkbox" /><?=$trans["reg_pge_two_invite"];?></p>
+				<div class="clearfix container-small">
+						<div class="input-text left">
+							<span><?=$trans["reg_pge_two_enter_enteprenuer"];?> *</span>
+							<div><input type="text" name="tb5" /></div>
+						</div>
+						<div class="input-text right">
+							<span><?=$trans["reg_pge_two_mail"];?> *</span>
+							<div><input type="text" name="tb5" /></div>
+						</div>
+				</div>
+				<div class="clearfix container-small">
+					<div class="left">
+						<b><?=$trans["reg_pge_two_invited"];?></b>
+						<br />
+						Logotypbolaget AB   |    sebastian.thulin@logotypebolaget.se
+						<br />
+						Logotypbolaget AB   |    sebastian.thulin@logotypebolaget.se
+					</div>
+					<div class="right">
+						<a class="btn-orange" href="#"><span><?=$trans["reg_pge_two_invited"];?></span></a>
+					</div>
+				</div>
+				<div class="left">
+					<a class="btn-orange" href="#"><span><?=$trans["reg_pge_two_back"];?></span></a>
+				</div>
+				<div class="right">
+					<a class="btn-orange" href="#"><span><?=$trans["reg_pge_two_request"];?></span></a>
+				</div>
+			</div>
+		</div>
+		<div id="sidebar-column">
+			<div class="client-banner"></div>
+			<? include( "info.php" ); ?>
+		</div>
+	</div>
+	<div id="main-bottom-curve">&nbsp;</div>
+</div>

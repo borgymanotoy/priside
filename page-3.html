@@ -1,0 +1,276 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+   <title>index</title>  
+   <link href="css/screen.css" type="text/css" rel="stylesheet" media="screen,projection" />
+   <script type="text/javascript" src="js/jquery-latest.js"></script>
+   
+   	<script type="text/javascript" src="js/events.js"></script>
+	<script type="text/javascript" src="js/dummy_data.js"></script>
+	<script type="text/javascript" src="js/priside-script.js"></script>
+
+   <script type="text/javascript">
+
+
+	   $(document).ready(function() {
+		
+		   $("#outer-tabs li").click(function() {
+				var headerId = $(this).attr("id");
+				if (headerId) {
+					if (headerId == 'tab1header') {
+						//
+					} else if (headerId == 'tab2header') {
+						//alert('tab2')
+					} else if (headerId == 'tab3header') {
+						//alert('tab3')
+					}
+					
+					$("#outer-tabs li").removeClass('current');
+					$(this).addClass("current");
+					$(".tab_content").hide();
+					var selected_tab = headerId.substring(0,4) // means tab1header to tab1
+					$("#"+selected_tab).fadeIn();
+				}
+		   });
+		   
+		   
+		   // javascript file for curve bottons
+		   var serviceRow = $('.serviceRequest');
+		   var attr_id = "";
+		   serviceRow.click(function() {
+				var id = $(this).attr('id');
+				if (id && id.split('-').length > 1) {
+					attr_id = id.split('-')[1]; 
+					$('#requestTableRowExpand-'+attr_id).toggle();
+				}
+		   });
+
+		
+
+	   }); // end document ready
+
+
+
+	</script>
+	<style type="text/css">
+	
+	/*
+		http://www.alistapart.com/articles/slidingdoors/
+		http://www.jankoatwarpspeed.com/post/2008/04/30/make-fancy-buttons-using-css-sliding-doors-technique.aspx
+	*/
+	
+
+	.tab_content {
+		display: none;
+		width:100%;
+	}
+	
+	
+	/*= css for this page */
+	#kontorsfytt{
+		float:left; 
+		height:100%; 
+		width:320px;
+	}
+	
+	#kontorsfytt h2{
+		text-align:center;
+	}
+	#kontorsfytt  img {
+		margin: 0 auto; 
+		display: block;
+	}
+	
+	#search-service {
+		float:left; 
+		width:630px; 
+		height:200px;
+	}
+	
+	#search-service h1{
+		color:#E66313;
+		margin-top:1.2em;
+	}
+	
+	
+	 					
+	.date { width:100px; }
+	.inquiry { width:280px; }
+	.municipality { width:100px;}
+	
+	
+
+	</style>
+</head>
+<body>
+		<!-- header section -->
+		<div id="branding">
+            <div class="wrapper">
+			
+				<ul id="menu">
+				  <li><a href="">Skapa en förfrågan</a></li>
+				  <li><a href="">Sök företag</a></li>
+				  <li><a href="">Anslut ditt företag</a></li>
+				  <li><a href="">Så fungerar Prisidé</a></li>
+				  <li><a href="">Kontakta oss</a>
+					<ul>
+						<li><a href="">Kundtjänst</a></li>
+						<li><a href="">Vanliga frågor</a></li>
+						<li><a href="">Lediga jobb</a></li>
+						<li><a href="">Pressnyheter</a></li>
+					</ul>
+				  </li>
+				  <li ><a class="menu-selected" href="">► Logga in</a>
+				  </li>
+				</ul>
+			
+                <h1 id="logo"><a href="./">Priside</a></h1>
+            </div>
+        </div>
+		<!-- header section -->
+		<style>
+			.client-banner {
+				width: 285px;
+				color : #000;
+				border:2px solid #808285;
+				background: #808285;
+				padding:2px 5px;
+				margin-left: 10px;
+				margin-bottom:10px;
+				-moz-border-radius: 8px;
+				-webkit-border-radius: 8px;
+				-khtml-border-radius: 8px;
+				border-radius: 8px;
+				vertical-align: middle;
+				position: relative;
+				display: inline-block;
+				height:170px;
+			}
+			
+
+		</style>
+		<!-- body section -->
+		<div id="main">
+			<div id="content" class="wrapper">
+				
+				<div id="main-content" class="clearfix">		
+					<div id="main-column">
+						<ul class="home-page-num">
+							<li><a href="#">1</a></li>
+							<li><a href="#">2</a></li>
+							<li><a id="active-pgnum" href="#">3</a></li>
+						</ul>
+						<h1 class="title">Bekräftelse</h1>
+						
+						
+						<p>Vänligen bekräfta din e-postadress (namn.efternamn@domain.com) genom att klicka på 
+bekräftelselänken i det mail vi skickat till dig.</p>
+						<p>Tack för att du använder Prisidé!</p>
+
+					</div>
+					<div id="sidebar-column">
+						<div class="client-banner"></div>
+						<div class="box-pane">
+							<h2>Så fungerar Prisidé</h2>
+							<div class="box-pane-content clearfix">
+								<div>
+									<ul class="checked">
+										<li><a href="#">Enkelt</a></li>
+										<li><a href="#">Tryggt</a></li>
+										<li><a href="#">Gratis</a></li>
+									</ul>
+									<ul>
+										<li>► Läs mer här</li>
+									</ul>
+								</div>
+								<img src="img/man_pic.png" />
+							</div>
+						</div>
+
+						<div class="box-pane">
+							<h2>Anslut ditt företag</h2>
+							<div class="box-pane-content" style="height:121px;">
+								<p>Vi hjälper ditt företag att växa!<img style="float:right;" src="img/line_graph.png" /></p>
+								<ul>
+									<li>► Läs om fördelarna med Prisidé här</li>
+								</ul>
+							</div>
+						</div>
+
+						<div class="box-pane">
+							<h2>Aktuella uppdrag</h2>
+							<div class="box-pane-content">
+								<ul>
+									<li><a href="#">Fönsterputs | Ljungby</a></li>
+									<li><a href="#">Rekond | Värnamo</a></li>
+									<li><a href="#">Mur & stensättning | Sjöbo</a></li>
+								</ul>
+								<ul>
+									<li>► Sök fer uppdrag här</li>
+								</ul>
+							</div>
+						</div>
+						
+					</div>
+				</div>
+				<div id="main-bottom-curve">&nbsp;</div>
+			</div>
+		</div>
+		
+		
+		
+		
+		<!-- footer section -->
+		<div id="footer">
+		
+			<div id="content-footer" class="wrapper">
+				<div id="main-content-footer" class="clearfix">
+					
+					<ul id="company-info">
+						<li>
+							<h3>PRISIDÉ.SE</h3>
+							<ul>
+								<li><a href="#">Så fungerar Prisidé</a></li>
+								<li><a href="#">Skapa en förfrågan</a></li>
+								<li><a href="#">Anslut ditt företag</a></li>
+								<li><a href="#">Anslutna företag</a></li>
+								<li><a href="#">Lediga jobb</a></li>
+								<li><a href="#">Kontakta oss</a></li>
+								<li><a href="#">Pressnyheter</a></li>
+							</ul>
+						</li>
+						<li>
+							<h3>KUNDTJÄNST</h3>
+							<ul>
+								<li><a href="#">040 - 67 14 422</a></li>
+								<li><a href="#">Vardagar 9-17</a></li>
+								<li><a href="#">info@priside.se</a></li>
+							</ul>
+						</li>
+						<li>
+							<h3>POSTADRESS</h3>
+							<ul>
+								<li><a href="#">Norra Vallgatan 98</a></li>
+								<li><a href="#">211 22 Malmö</a></li>
+							</ul>
+						</li>
+						<li>
+							<h3>REKOMENDERA PRISIDÈ</h3>
+							<ul>
+								<li><a href="#"></a></li>
+								<li><a href="#"></a></li>
+								<li><a href="#"></a></li>
+								<li><a href="#"></a></li>
+							</ul>
+						</li>
+					</ul>
+					
+					<p>Copyright © 2011 Goda affärer på nätet AB  |  Cookies</p>
+				</div>
+				<div id="main-bottom-footer">&nbsp;</div>
+			</div>
+		</div>
+		
+</body>
+</html>

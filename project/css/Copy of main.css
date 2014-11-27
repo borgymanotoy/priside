@@ -1,0 +1,82 @@
+@CHARSET "ISO-8859-1";
+
+@import url(reset.css); 
+
+body { width:100%; background:#fff }
+.container { width:100%; auto; }
+
+/********** header **********/
+.header { background:red;}
+.header-container { margin:0 auto; width:1000px; height:100px;}
+
+/********** body ************/
+.body {padding: 0 0 1em 0;}
+.body-container { width:1000px; margin:0 auto; padding:0 0 40px 0; background:#fff; min-height:500px;}
+
+/********** footer **********/
+
+.footer {
+	position:fixed;
+	bottom:0;
+	z-index:999;
+	width:100%;
+	background: #2e2e2e;
+	border-top:1px solid #444;
+	padding:10px 0;
+	margin-top: 1em;
+}
+
+.footer .footer-container { width:1000px; color:#7f7f7f; font:normal 11px Tahoma, Geneva, sans-serif; text-align: left; margin:0 auto; }
+.footer .footer-container img { float:right; }
+p.clr,
+.clr { clear:both; padding:0; margin:0; background:none; }
+
+
+
+
+
+
+table.tableName
+{
+	border: 1px solid black;
+	table-layout:fixed;
+	width: 100%;
+	border-collapse:collapse;
+	font-size: 10px;
+	font-family:Arial, Helvetica, sans-serif;
+	margin: 1em 0 1em 0;
+}
+
+table.tableName thead 
+{
+	text-align:left;
+		color:#fff;
+}
+
+table.tableName thead tr th 
+{
+	border-bottom: 1px solid #000000;
+	background:#2e2e2e;
+	font-weight: bold;
+	font-size:11px;
+}
+
+table.tableName tbody tr td, table.tableName thead tr th
+{
+	padding-left: 1em;
+}
+
+tr.bgColor{
+	background: #CCCCCC;
+}
+
+tr.hghColor{
+	background: #000;
+	color: #ffffff;
+	cursor: pointer;
+}
+
+
+.dblinks {
+	text-align:right;	
+}

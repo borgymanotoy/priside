@@ -1,0 +1,125 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!-- DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" -->
+
+<!-- inc_admin_panel.html -->
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"/>
+	<title>index</title>  
+	<link href="../css/screen.css" type="text/css" rel="stylesheet" media="screen,projection" />
+	<script type="text/javascript" src="../js/jquery-latest.js"></script>
+	<script type="text/javascript" src="../js/priside-common-script.js"></script>
+	<script type="text/javascript" src="../js/events.js"></script>
+	<script type="text/javascript" src="js/admin-priside-script.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			//jQuery.noConflict();
+			
+			// Position modal box in the center of the page
+			jQuery.fn.center = function () {
+				this.css("position","absolute");
+				this.css("top", ( jQuery(window).height() - this.height() ) / 2+jQuery(window).scrollTop() + "px");
+				this.css("left", ( jQuery(window).width() - this.width() ) / 2+jQuery(window).scrollLeft() + "px");
+				return this;
+			}
+			
+			jQuery(".modal-profile").center();
+			
+			// Set height of light out div	
+			jQuery('.modal-lightsout').css("height", jQuery(document).height());
+
+			// closes modal box if the lights out divis clicked
+			jQuery('a.modal-close-profile, .modal-lightsout').click(function() {
+				jQuery('.modal-profile').fadeOut("slow");
+				jQuery('.modal-lightsout').fadeOut("slow");
+			});
+			initAdminComponents();
+		});
+	</script>
+	<style type="text/css">
+	.tab_content, .tab_content_inner {
+		display: none;
+		width:100%;
+	}
+	
+	#main-column {	
+	}
+	
+	#main-column {
+		height: 100%;
+		width:650px; /*650*/ /*970*/
+		float:left;
+	}
+	
+	#sidebar-column {
+		height: 100%;
+		width:320px;
+		float:left;
+	}
+					
+	.date { width:100px; }
+	.inquiry { width:280px; }
+	.municipality { width:100px;}
+	</style>
+</head>
+<body>
+
+	<? include( "../header.php" ); ?>
+
+	<!-- body section -->
+	<div id="main">
+		<div id="content" class="wrapper">
+
+			<!-- outer tab section -->
+
+			<ol id="outer-tabs">
+				<li id="tab1header" class="current" ><a href="javascript:void(0);"><span><?=$trans["tab_overview"];?></span></a></li>
+				<li id="tab2header"><a href="javascript:void(0);"><span><?=$trans["tab_pages"];?></span></a></li>
+				<li id="tab3header"><a href="javascript:void(0);"><span><?=$trans["tab_cust_users"];?></span></a></li>
+				<li id="tab4header"><a href="javascript:void(0);"><span><?=$trans["tab_inquiries"];?></span></a></li>
+				<li id="tab5header"><a href="javascript:void(0);"><span><?=$trans["tab_mail"];?></span></a></li>
+				<li id="tab6header"><a href="javascript:void(0);"><span><?=$trans["tab_ads"];?></span></a></li>
+			</ol>
+
+			<div id="main-content" class="clearfix">
+				<div id="tab1" class="tab_content">
+					<? include( "admin_panel_overview.php" ); ?>
+				</div>
+				<div id="tab2" class="tab_content">
+					<? include( "admin_panel_pages.php" ); ?>
+				</div>
+				<div id="tab3" class="tab_content">
+					<? include( "admin_panel_cu.php" ); ?>
+				</div>
+				<div id="tab4" class="tab_content">
+					<? include( "admin_panel_inquiries.php" ); ?>
+				</div>
+				<div id="tab5" class="tab_content">
+					<? include( "admin_panel_mail.php" ); ?>
+				</div>
+				<div id="tab6" class="tab_content">
+					<? include( "admin_panel_ads.php" ); ?>
+				</div>
+			</div>
+
+			<div id="main-bottom-curve">&nbsp;</div>
+		</div>
+	</div>
+
+	<? include( "../footer.php" ); ?>
+
+<!-- START: Generic popup window -->
+	<div id="div_modal_popup">
+		<div class="modal-lightsout"></div>
+		<div class="modal-profile">
+			<a href="#" title="Close profile window" class="modal-close-profile"><img src="/img/closeImage.png" border="0" alt="Close window" /></a>
+			<div id="div_contents">
+				<? include( "customer_info_page.php" ); ?>
+			</div>
+		</div>
+	</div>
+<!-- END: Generic popup window -->
+
+</body>
+</html>

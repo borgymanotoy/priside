@@ -1,0 +1,527 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<title>index</title>  
+	<link href="css/screen.css" type="text/css" rel="stylesheet" media="screen,projection" />
+	<script type="text/javascript" src="js/jquery-latest.js"></script>
+	<script type="text/javascript">
+		   
+		   
+	   $(document).ready(function() {
+		
+		   $("#outer-tabs li").click(function() {
+				var headerId = $(this).attr("id");
+				if (headerId) {
+					if (headerId == 'tab1header') {
+						//
+					} else if (headerId == 'tab2header') {
+						//alert('tab2')
+					} else if (headerId == 'tab3header') {
+						//alert('tab3')
+					}
+					
+					$("#outer-tabs li").removeClass('current');
+					$(this).addClass("current");
+					$(".tab_content").hide();
+					var selected_tab = headerId.substring(0,4) // means tab1header to tab1
+					$("#"+selected_tab).fadeIn();
+				}
+		   });
+		
+		   var rtrcc = $('.serviceRequest');
+		   var attr_id = "";
+		   rtrcc.click(function() {
+				var id = $(this).attr('id');
+				if (id && id.split('-').length > 1) {
+					attr_id = id.split('-')[1]; 
+					$('#requestTableRowExpand-'+attr_id).toggle();
+				}
+		   });
+
+		
+
+	   }); // end document ready
+		   
+			
+
+	</script>
+	<style>
+	
+	/*
+		http://www.alistapart.com/articles/slidingdoors/
+		http://www.jankoatwarpspeed.com/post/2008/04/30/make-fancy-buttons-using-css-sliding-doors-technique.aspx
+	*/
+	
+
+	.tab_content {
+		display: none;
+		width:100%;
+	}
+
+	#main-column {
+		height: 100%;
+		width:650px; /*650*/ /*970*/
+		float:left;
+	}
+	
+	#sidebar-column {
+		height: 100%;
+		width:320px;
+		float:left;
+	}
+					
+
+
+	
+						
+	.date { width:100px; }
+	.inquiry { width:280px; }
+	.municipality { width:100px;}
+	</style>
+</head>
+<body>
+		<!-- header section -->
+		<div id="branding">
+            <div class="wrapper">
+				<ul id="menu">
+				  <li><a href="">Skapa en förfrågan</a></li>
+				  <li><a href="">Sök företag</a></li>
+				  <li><a href="">Anslut ditt företag</a></li>
+				  <li><a href="">Så fungerar Prisidé</a></li>
+				  <li><a href="">Kontakta oss</a>
+					<ul>
+						<li><a href="">Kundtjänst</a></li>
+						<li><a href="">Vanliga frågor</a></li>
+						<li><a href="">Lediga jobb</a></li>
+						<li><a href="">Pressnyheter</a></li>
+					</ul>
+				  </li>
+				  <li ><a class="menu-selected" href="">► Logga in</a>
+				  </li>
+				</ul>
+                <h1 id="logo"><a href="./">Priside</a></h1>
+            </div>
+        </div>
+		<!-- header section -->
+		
+		<!-- body section -->
+		<div id="main">
+			<div id="content" class="wrapper">
+		
+				<ol id="outer-tabs">
+					<li class="current" id="tab1header"><a href="javascript:void(0);"><span>Förfrågningar</span></a></li>
+					<li id="tab2header"><a href="javascript:void(0);"><span>Mina projekt</span></a></li>
+					<li id="tab3header"><a href="javascript:void(0);"><span>Meddelandecenter</span></a></li>
+					<li id="tab4header"><a href="javascript:void(0);"><span>Mitt konto</span></a></li>
+					<li id="tab5header"><a href="javascript:void(0);"><span> Min företagsprofl</span></a></li>
+				</ol>
+
+				<div id="main-content" class="clearfix">
+				
+					<div id="tab1" class="tab_content">
+							<div id="main-column">
+								<p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Nam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming id quod mazim placerat facer possim assum. Typi non habent claritatem insitam; est usus legentis in iis qui facit eorum claritatem. Investigationes demonstraverunt lectores legere me lius quod ii legunt saepius. Claritas est etiam processus dynamicus, qui sequitur mutationem consuetudium lectorum. Mirum est notare quam littera gothica, quam nunc putamus parum claram, anteposuerit litterarum formas humanitatis per seacula quarta decima et quinta decima. Eodem modo typi, qui nunc nobis videntur parum clari, fiant sollemnes in futurum.</p>
+							</div>
+							
+							<div id="sidebar-column">
+									<div class="box-pane">
+										<h2>Så fungerar Prisidé</h2>
+										<ul>
+											<li><a href="#">► Eric</a></li>
+											<li><a href="#">Fredrik</a></li>
+											<li><a href="#">Jefrik</a></li>
+										</ul>
+									</div>
+									<div class="box-pane">
+										<h2>Anslut ditt företag</h2>
+										<ul>
+											<li><a href="#">Eric</a></li>
+											<li><a href="#">Fredrik</a></li>
+											<li><a href="#">Jefrik</a></li>
+										</ul>
+									</div>
+									<div class="box-pane">
+										<h2>Aktuella uppdrag</h2>
+										<ul>
+											<li><a href="#">Eric</a></li>
+											<li><a href="#">Fredrik</a></li>
+											<li><a href="#">Jefrik</a></li>
+										</ul>
+									</div>
+							</div>
+							
+
+									<td><a class="btn-orange" href="#"><span>◄ Gå vidar</span></a> </td>
+									<td><a class="btn-orange" href="#"><span>◄ Bjud in företagare</span></a>  </td>
+
+							<a class="btn-violet" href="#"><span>◄ Bjud in företagare</span></a>
+							<a class="btn-white" href="#"><span>◄ Bjud in företagare</span></a>  
+							
+							
+							
+							
+							
+							
+							
+					</div>
+					
+					
+					<div id="tab2" class="tab_content">
+									<div class="box-pane">
+										<h2>Så fungerar Prisidé</h2>
+										<ul>
+											<li><a href="#">Eric</a></li>
+											<li><a href="#">Fredrik</a></li>
+											<li><a href="#">Jefrik</a></li>
+										</ul>
+									</div>
+
+									<div class="box-pane">
+										<h2>Anslut ditt företag</h2>
+										<ul>
+											<li><a href="#">Eric</a></li>
+											<li><a href="#">Fredrik</a></li>
+											<li><a href="#">Jefrik</a></li>
+										</ul>
+									</div>
+
+									<div class="box-pane">
+										<h2>Aktuella uppdrag</h2>
+										<ul>
+											<li><a href="#">Eric</a></li>
+											<li><a href="#">Fredrik</a></li>
+											<li><a href="#">Jefrik</a></li>
+										</ul>
+									</div>
+					</div>
+					
+					<div id="tab3" class="tab_content">
+							<div id="main-column">
+								<div class="box-pane">
+										<h2>Så fungerar Prisidé</h2>
+										<ul>
+											<li><a href="#">Eric</a></li>
+											<li><a href="#">Fredrik</a></li>
+											<li><a href="#">Jefrik</a></li>
+										</ul>
+									</div>
+
+									<div class="box-pane">
+										<h2>Anslut ditt företag</h2>
+										<ul>
+											<li><a href="#">Eric</a></li>
+											<li><a href="#">Fredrik</a></li>
+											<li><a href="#">Jefrik</a></li>
+										</ul>
+									</div>
+							</div>
+							<div id="sidebar-column">
+								<p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Nam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming id quod mazim placerat facer possim assum. Typi non habent claritatem insitam; est usus legentis in iis qui facit eorum claritatem. Investigationes demonstraverunt lectores legere me lius quod ii legunt saepius. Claritas est etiam processus dynamicus, qui sequitur mutationem consuetudium lectorum. Mirum est notare quam littera gothica, quam nunc putamus parum claram, anteposuerit litterarum formas humanitatis per seacula quarta decima et quinta decima. Eodem modo typi, qui nunc nobis videntur parum clari, fiant sollemnes in futurum.</p>
+							</div>
+					</div>
+					
+					
+					
+					<div id="tab4" class="tab_content">
+					<div id="main-column">
+				
+					   <div class="pagging-links">
+						   <a href="#">◄ Föregående</a> 
+						   <a href="#">1</a>
+						   <a href="#">2</a>
+						   <a href="#">3</a>
+						   <a href="#">4</a>
+						   <a href="#">5</a>
+						   <a href="#">6</a>
+						   <a href="#">7</a>
+						   <a href="#">8</a>
+						   <a href="#">9</a>
+						   <a href="#">Nästa ►</a>
+					   </div>
+					   
+					   <div class="requestsHeader">
+						   <div class="serviceheadercontainer_top_left">
+							   <div class="serviceheadercontainer_bottom_right">
+								   <div class="serviceheadercontainer_top_right">
+									  <div class="serviceheadercontainer_bottom_left">
+										  <table>
+											<thead>
+												<th>
+													<td class="date">DATUM</td>
+													<td class="inquiry">FÖRFRÅGAN</td>
+													<td class="municipality">KOMMUN</td>
+													<td>STATUS</td>
+													<td>&nbsp;</td>
+												</th>
+											</thead>											
+										  </table>
+									  </div>
+								   </div>
+							   </div>
+						   </div>
+					   </div>
+						   
+						      <!-- Rows -->
+						 
+						
+						<div id="serviceRequestRow-1" class="serviceRequest odd">
+						   <div class="servicecontainer_top_left">
+						   <div class="servicecontainer_bottom_right">
+							   <div class="servicecontainer_top_right">
+							   <div class="servicecontainer_bottom_left">
+
+										  <table>
+											<tr>
+												<td class="date">2011-12-15</td>
+												<td class="inquiry">Administration<br>
+													<h3><span id="arrow-1">►</span> Bokföringsuppdrag till frma i...</h3>
+												</td>
+												<td class="municipality">Lund</td>
+												<td>													   
+														<img src="img/request_replied.png" width="16" height="20">
+														
+														 <img src="img/request_replyicon.png" width="13" height=18">
+														  <img src="img/request_replyicon.png" width="13" height=18">
+														
+												</td>
+												<td><img id="deleteRequestRow-1" src="img/row_delete.png" width="8" height="8"></td>
+											</tr>
+											</table>
+											
+
+											<table id="requestTableRowExpand-1" class="hide">
+												<tr>
+													<td width="50%">
+														<strong>Utföres åt:</strong> Företag <br />
+														<strong>När:</strong> Inom 3 månader <br />
+														<strong>Beskrivning:</strong> Vi behöver bokföringshjälp till vårt 
+														familjeföretag med 5 anställda. Företaget jobbar 
+														inom städbranschen. Uppdraget gäller ett år till att 
+														börja med då vår ordinarie ekonomiansvarige gått 
+														på föräldraledighet.
+													</td>
+													<td width="50%">
+														<strong style="color:#ff6600;">Kontaktuppgifter</strong> <br />
+														<strong>Namn:</strong> Maria <br />
+														<strong>Telefon:</strong> 0700-12 34 56 <br />
+														<strong>E-post:</strong> namn.efternamn@mail.se<br />
+														<a class="btn-violet" href="#"><span><h3>◄ Bjud in företagare</h3></span></a>  
+													</td>
+												</tr>
+											</table>
+
+							   </div>
+							   </div>
+							</div>
+							</div>
+						  </div>
+							
+						  
+						  <div id="serviceRequestRow-2" class="serviceRequest even">
+						   <div class="servicecontainer_top_left">
+						   <div class="servicecontainer_bottom_right">
+							   <div class="servicecontainer_top_right">
+							   <div class="servicecontainer_bottom_left">
+								
+										  <table>
+											<tr>
+											<td class="date">2011-12-15</td>
+											<td class="inquiry">Administration<br>
+												<h3><span id="arrow-2">►</span> Bokföringsuppdrag till frma i...</h3>
+											</td>
+											<td class="municipality">Lund</td>
+											<td>													   
+													<img src="img/request_replied.png" width="16" height="20">
+													<!-- Hack to keep images together
+													   --><img src="img/request_replyicon.png" width="13" height=18"><!--
+													   --><img src="img/request_replyicon.png" width="13" height=18"><!--
+													-->
+										    </td>
+											<td><img id="deleteRequestRow-2" class="notShown" src="img/row_delete.png" width="8" height="8"></td>
+											</tr>
+											<tr>
+												<table id="requestTableRowExpand-2" class="hide">
+													<tr>
+														<td width="50%">
+															<strong>Utföres åt:</strong> Företag <br />
+															<strong>När:</strong> Inom 3 månader <br />
+															<strong>Beskrivning:</strong> Vi behöver bokföringshjälp till vårt 
+															familjeföretag med 5 anställda. Företaget jobbar 
+															inom städbranschen. Uppdraget gäller ett år till att 
+															börja med då vår ordinarie ekonomiansvarige gått 
+															på föräldraledighet.
+														</td>
+														<td width="50%">
+															<strong style="color:#ff6600;">Kontaktuppgifter</strong> <br />
+															<strong>Namn:</strong> Maria <br />
+															<strong>Telefon:</strong> 0700-12 34 56 <br />
+															<strong>E-post:</strong> namn.efternamn@mail.se
+														</td>
+													</tr>
+												</table>
+											</tr>
+										  </table>
+								
+							   </div>
+							   </div>
+							</div>
+							</div>
+						  </div> <!-- END row (<div class="tableRow">) -->
+						 
+						 
+						  <div class="pagging-links">
+						   <a href="#">◄ Föregående</a> 
+						   <a href="#">1</a>
+						   <a href="#">2</a>
+						   <a href="#">3</a>
+						   <a href="#">4</a>
+						   <a href="#">5</a>
+						   <a href="#">6</a>
+						   <a href="#">7</a>
+						   <a href="#">8</a>
+						   <a href="#">9</a>
+						   <a href="#">Nästa ►</a>
+						 </div>
+      
+					</div>
+
+					<div id="sidebar-column">
+									<div class="box-pane">
+										<h2>Så fungerar Prisidé</h2>
+										<ul>
+											<li><a href="#">► Eric</a></li>
+											<li><a href="#">Fredrik</a></li>
+											<li><a href="#">Jefrik</a></li>
+										</ul>
+									</div>
+									<div class="box-pane">
+										<h2>Anslut ditt företag</h2>
+										<ul>
+											<li><a href="#">Eric</a></li>
+											<li><a href="#">Fredrik</a></li>
+											<li><a href="#">Jefrik</a></li>
+										</ul>
+									</div>
+									<div class="box-pane">
+										<h2>Aktuella uppdrag</h2>
+										<ul>
+											<li><a href="#">Eric</a></li>
+											<li><a href="#">Fredrik</a></li>
+											<li><a href="#">Jefrik</a></li>
+										</ul>
+									</div>
+							</div>
+					</div>
+					
+					
+					
+					
+					<div id="tab5" class="tab_content">
+					<div id="main-column">
+						<div class="requestsHeader">
+							<div class="serviceheadercontainer_top_left">
+							   <div class="serviceheadercontainer_bottom_right">
+								   <div class="serviceheadercontainer_top_right">
+									  <div class="serviceheadercontainer_bottom_left">
+										
+											  <table>
+												<thead>
+													<th>
+														<td class="date">DATUM</td>
+														<td class="inquiry">FÖRFRÅGAN</td>
+														<td class="municipality">KOMMUN</td>
+														<td>STATUS</td>
+														<td>&nbsp;</td>
+													</th>
+												</thead>											
+											  </table>
+									   </div>		  
+									</div>
+								</div>
+							</div>			
+
+						   </div>
+						   
+						   <div class="servicecontainer_top_left">
+						   <div class="servicecontainer_bottom_right">
+							   <div class="servicecontainer_top_right">
+							   <div class="servicecontainer_bottom_left">
+										 <table>
+											<tbody>
+												<tr>
+														<td class="date">DATUM</td>
+														<td class="inquiry">FÖRFRÅGAN</td>
+														<td class="municipality">KOMMUN</td>
+														<td>STATUS</td>
+														<td>&nbsp;</td>
+												</tr>
+												
+											</tbody>
+										 </table>
+							   </div>
+						       </div>   
+						   </div>   
+						   </div>    
+							   
+					</div>
+					</div>
+
+				</div>
+				<div id="main-bottom-curve">&nbsp;</div>
+			</div>
+		</div>
+		
+		
+		
+		
+		<!-- footer section -->
+		<div id="footer">
+			<div id="content-footer" class="wrapper">
+				<div id="main-content-footer" class="clearfix">
+					<ul id="company-info">
+						<li>
+							<h3>PRISIDÉ.SE</h3>
+							<ul>
+								<li><a href="#">Så fungerar Prisidé</a></li>
+								<li><a href="#">Skapa en förfrågan</a></li>
+								<li><a href="#">Anslut ditt företag</a></li>
+								<li><a href="#">Anslutna företag</a></li>
+								<li><a href="#">Lediga jobb</a></li>
+								<li><a href="#">Kontakta oss</a></li>
+								<li><a href="#">Pressnyheter</a></li>
+							</ul>
+						</li>
+						<li>
+							<h3>KUNDTJÄNST</h3>
+							<ul>
+								<li><a href="#">040 - 67 14 422</a></li>
+								<li><a href="#">Vardagar 9-17</a></li>
+								<li><a href="#">info@priside.se</a></li>
+							</ul>
+						</li>
+						<li>
+							<h3>POSTADRESS</h3>
+							<ul>
+								<li><a href="#">Norra Vallgatan 98</a></li>
+								<li><a href="#">211 22 Malmö</a></li>
+							</ul>
+						</li>
+						<li>
+							<h3>REKOMENDERA PRISIDÈ</h3>
+							<ul>
+								<li><a href="#"></a></li>
+								<li><a href="#"></a></li>
+								<li><a href="#"></a></li>
+								<li><a href="#"></a></li>
+							</ul>
+						</li>
+					</ul>
+					<p>Copyright © 2011 Goda affärer på nätet AB  |  Cookies</p>
+				</div>
+				<div id="main-bottom-footer">&nbsp;</div>
+			</div>
+		</div>
+		
+</body>
+</html>

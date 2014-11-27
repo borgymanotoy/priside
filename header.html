@@ -1,0 +1,69 @@
+<!-- header section -->
+<div id="branding">
+	<div class="wrapper">
+		<ul id="menu">
+		  <!--
+		  <li><a href="javascript:void(0);"><?=$trans["header_make_query"];?></a></li>
+		  -->
+		  <li><a href="/search_affilates.php"><?=$trans["header_search_companies"];?></a></li>
+		  <li><a href="/connect_your_company.php"><?=$trans["header_connect_your_company"];?></a></li>
+		  <li><a href="/how_it_works.php"><?=$trans["header_how_priside"];?></a></li>
+		  <li><a href="javascript:void(0);"><?=$trans["header_contact_us"];?></a>
+			<ul style="z-index: 99;">
+				<li><a href="/contact_us_main.php"><?=$trans["header_customer_service"];?></a></li>
+				<li><a href="/contact_us_main.php?page_type=faqs"><?=$trans["header_faqs"];?></a></li>
+				<li><a href="/contact_us_main.php?page_type=press"><?=$trans["header_press_news"];?></a></li>
+				<li><a href="/contact_us_main.php?page_type=vcnt"><?=$trans["header_vacancies"];?></a></a></li>
+			</ul>
+		  </li>
+		  <li>
+			<? 
+				//Set default link and label and then check if session exist and currently logged in.
+				$link_url = "/login";
+				$link_label = $trans["header_login"];
+				$welcome_msg = "";
+				$image_url = "";
+				$home_url = "";
+				if( ! empty( $_SESSION ) ){
+
+					$IsPrisideAdmin = $_SESSION['User']['IsPrisideAdmin'];
+					if( $IsPrisideAdmin > 0){
+						$home_url = "/admin/index.php";
+					}
+					else{
+						$home_url = "/users_panel_main.php";
+					}
+
+					if( !empty($_SESSION["User"]["Name"]) ) $welcome_msg = "Welcome " . $_SESSION["User"]["Name"] . "!";
+					$link_url = "/login/logout.php";
+					$link_label = $trans["header_logout"];
+					
+					if( ! empty( $_SESSION["User"]["ProfilePhotoFile_Id"] ) ){
+						$image_url = "/libs/get_file.php?file=".$_SESSION["User"]["ProfilePhotoFile_Id"].":".CheckSum( $_SESSION["User"]["ProfilePhotoFile_Id"] )."&disposition=inline&" . time();
+					}
+					else{
+						$image_url = "/img/user-icon.png";
+					}
+				} 
+				else{
+					$link_label = $trans["header_login"];
+				}
+			?>
+			<a class="menu-selected" href="<?=$link_url;?>"><span style="color:#ffffff;"><?=$link_label;?></span><img src="/img/login_triangle.png" border="0"></a>
+		  </li>
+		</ul>
+
+		<div class="home-button txt12White bold" style="position: absolute; bottom: 10px; right: 10px; padding: 0; height: 22px;" valign="middle">
+			<a href="<?=$home_url;?>" class="txt12White bold" style="text-decoration: none;">
+				<img src="<?= !empty($welcome_msg)? $image_url : "";?>" height="21px" width="25px" style="margin-right: 5px;"/>
+				<span style="position:relative; bottom: 5px; right: 5px;"><?= $welcome_msg; ?></span>
+			<a/>
+		</div>
+
+
+		<h1 id="logo"><a href="javascript:void(0);">Priside</a></h1>
+		<div style="background: url('/img/transparent_logo.png') repeat-y; height:106px; width:323px; position: relative; top: -120px; cursor: pointer;" onclick="window.location = '../'">&nbsp;</div>
+	</div>
+	
+</div>
+<!-- header section -->

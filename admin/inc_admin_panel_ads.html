@@ -1,0 +1,211 @@
+<!-- inc_admin_panel_ads.html -->
+<script type="text/javascript">
+	<?
+		$records = 10;
+		$page    = 1;
+	?>
+	var recordsPerPage = '<?=$records?>';
+	var startPage      = '<?=$page?>';
+	var selectedStatus = new Array();
+
+	$(document).ready(function(){
+		$('#txtAdSearch').keyup(function(e){
+			if (e.keyCode == $.ui.keyCode.ENTER) {
+				searchAdvertisement();
+			}
+		});
+
+		$("#txtAdSearch").focus(function() {
+			$(this).val("");
+			$(this).removeClass("txt12Default").addClass("txt12");
+		});
+
+		$("#navBarTopAdvertisements").html($("#navBarBottomAdvertisements").html());
+	});
+
+	function checkStatusIfExists(status_code){
+		for(var idx in selectedStatus){
+			if (status_code == selectedStatus[idx]) return true;
+		}
+		return false;
+	}
+
+	function searchAdvertisement(){
+		//if(selectedStatus.length > 0)
+			//showStatusMessageBox("advertisements_error_msg", "<?=$trans["pads_no_selected_Status"];?>", true);
+			ajaxReloadAdvertisementLists( recordsPerPage, 1, "<?=CheckSum( "10"."1" );?>" );
+	}
+
+	function loadAdvertisements( records, page, checksum ){
+		ajaxReloadAdvertisementLists( records, page, checksum );
+	}
+
+	function ajaxReloadAdvertisementLists( records, page, checksum ){
+		var searchKey = $("#txtAdSearch").val();
+		searchKey = (searchKey == "<?=$trans["ads_default_search_text"];?>") ? "" : searchKey;
+		$.ajax({
+			type : "GET",
+			url : "/admin/admin_panel_ads.php",
+			data : {
+				"ajaxRequest" 	: "ajaxReloadAdvertisementLists",
+				"searchKey"  	: searchKey,
+				"statusKeys"  	: selectedStatus.join(","), //Note: statuskeys are joined with a comma so that it can be used directly in the WHERE IN clause of the Ads List SQL
+				"records"		: records,
+				"page"			: page,
+				"checksum"		: checksum
+			},
+			success: function(data){
+				$("#AdvertisementListHTML").html(data);
+				$("#navBarTopAdvertisements").html($("#navBarBottomAdvertisements").html());
+			},
+			error: function(xhr){
+				showStatusMessageBox("advertisements_error_msg", xhr.statusText, true);
+			}
+		});
+	}
+
+	function addRemoveStatus(obj){
+		if(!obj) return;
+		var status_code = obj.value;
+		if(obj.checked){
+			if( !checkStatusIfExists(status_code) ) selectedStatus.push(status_code);
+		}
+		else{
+			for(var idx in selectedStatus){
+				if(selectedStatus[idx] == status_code) selectedStatus.splice(idx, 1);
+			}
+		}
+		searchAdvertisement();
+	}
+
+	function showCustomerAdsPopupModal(){
+		jQuery('.modal-profile').fadeIn(1);
+		jQuery('.modal-lightsout').fadeTo(1, .5);
+	}
+
+	function crossLoadCustomerAdvertisements(accountIdChecksum, customerIdChecksum){
+		if(!customerIdChecksum){
+			showStatusMessageBox("advertisements_error_msg", "<?=$trans["pads_no_selected_customer"];?>", true);
+		}
+		else{
+			$.ajax({
+				type : "GET",
+				url : "/admin/customer_info_ads_advertisement.php",
+				data : {
+					"ajaxRequest" 			: "crossLoadCustomerAdvertisements",
+					"accountIdChecksum"		: accountIdChecksum,
+					"customerIdChecksum"	: customerIdChecksum
+				},
+				success: function(responseText){
+					$("#div_popup_contents").html(responseText);
+					//$("#navBarTopCustomerAds").html($("#navBarBottomCustomerAds").html());
+					showCustomerAdsPopupModal();
+				},
+				error: function(xhr){
+					showStatusMessageBox("advertisements_error_msg", xhr.statusText, true);
+				}
+			});
+		}
+	}
+</script>
+
+<div id="main">
+	<div id="content" class="wrapper">
+		<div id="main-column">
+			<div class="clearfix" style="padding: 10px;">
+				<h1 class="title"><?=$trans["ads_title"];?></h1>
+				<div style="margin-top: 10px; margin-bottom: 10px; width: 555px;" class="clearfix">
+					<!-- START: Status Message Box -->
+					<div id="advertisements_error_msg" class="status-msg-box" style="display:none">
+					<?if(!empty($ErrMsg)){?>
+						<script type="text/javascript">
+							showStatusMessageBox("advertisements_error_msg","<?=$ErrMsg?>", true);
+						</script>
+					<?}?>
+					<?if(!empty($OkMsg)){?>
+							<script type="text/javascript">
+								showStatusMessageBox("advertisements_error_msg","<?=$OkMsg?>", false);
+							</script>
+					<?}?>
+					</div>
+					<!-- END -->
+				</div>
+				<div class="textarea_top_left">
+					<div class="textarea_bottom_right">
+						<div class="textarea_top_right">
+							<div class="textarea_bottom_left">
+								<div style="position: relative">
+									<input type="text" id="txtAdSearch" class="txt12Default" style="width: 600px; border:none; margin:5px 5px 5px 5px" value="<?=$trans["ads_default_search_text"];?>" />
+									<div style="position: absolute; height: 20px; width: 30px; top: 5px; right: 7px; background: url(/img/search_button_help.png) no-repeat;" onkeydown="if(e.keyCode == 13){ searchAdvertisement(); }" onclick="searchAdvertisement();"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="clearfix right" style="position: relative; top: 4px; left: 10px;">
+					<img src="/img/question_mark.png" style="width: 20px; height: 20px;" onclick="alert('Show Ads Help.');" />
+				</div>
+				<div style="height: 20px; padding-top: 5px;">
+					<input type="checkbox" id="chk_status_active" value="2" onchange="addRemoveStatus(this);" /><label for="chk_status_active"><?=$trans["ads_active_ads"];?></label>
+					<input type="checkbox" id="chk_status_added"  value="1" onchange="addRemoveStatus(this);" /><label for="chk_status_added"><?=$trans["ads_pickled"];?></label>
+					<input type="checkbox" id="chk_status_booked" value="3" onchange="addRemoveStatus(this);" /><label for="chk_status_booked"><?=$trans["ads_booked"];?></label>
+					<input type="checkbox" id="chk_status_closed" value="4" onchange="addRemoveStatus(this);" /><label for="chk_status_closed"><?=$trans["ads_completed"];?></label>
+				</div>
+				<br/>
+				<div class="clearfix" style="width: 900px;">
+
+					<div class="pagging-links clearfix" style="margin-left: 5px;">
+						<span id="navBarTopAdvertisements">
+							<!--copy from navBarBottom!-->
+						</span>
+					</div>
+
+					<!-- START: Header -->
+					<div class="requestsHeader">
+					   <div class="serviceheadercontainer_top_left">
+						   <div class="serviceheadercontainer_bottom_right">
+							   <div class="serviceheadercontainer_top_right">
+								  <div class="serviceheadercontainer_bottom_left">
+									  <table border="0">
+										  <thead>
+											<tr>
+												<th class="pre-padding-5 txt10ArialWhiteBold" style="text-align:left; width: 70px;"><?=$trans["ads_annonsnr"];?>.</th>
+												<th class="pre-padding-5 txt10ArialWhiteBold" style="text-align:left; width: 170px;"><?=$trans["ads_customer"];?></th>
+												<th class="pre-padding-5 txt10ArialWhiteBold" style="text-align:left; width: 170px;"><?=$trans["ads_investment"];?></th>
+												<th class="pre-padding-5 txt10ArialWhiteBold" style="text-align:left; width: 70px;"><?=$trans["ads_start"];?></th>
+												<th class="pre-padding-5 txt10ArialWhiteBold" style="text-align:left; width: 70px;"><?=$trans["ads_end"];?></th>
+												<th class="pre-padding-5 txt10ArialWhiteBold" style="text-align:left; width: 80px;"><?=$trans["ads_screenings"];?></th>
+												<th class="pre-padding-5 txt10ArialWhiteBold" style="text-align:left; width: 100px;"><?=$trans["ads_unique_impr"];?></th>
+												<th class="pre-padding-5 txt10ArialWhiteBold" style="text-align:left; width: 100px;"><?=$trans["ads_click"];?></th>
+												<th class="pre-padding-5 txt10ArialWhiteBold" style="text-align:left; width: 70px;"><?=$trans["ads_status"];?></th>
+											</tr>
+										  </thead>
+									  </table>
+								  </div>
+							   </div>
+						   </div>
+					   </div>
+					</div>
+					<!-- END: Header -->
+
+					<!-- START: Rows -->
+					<div id="AdvertisementListHTML">
+						<?=$AdvertisementListHTML;?>
+					</div>
+					<!-- END: Rows -->
+
+				</div>
+			</div>
+			
+			<!-- START: Legends -->
+			<div class="clearfix" style="padding: 20px;">
+				<span style="background-color: #40ae49; width: 15px; height: 15px; display: inline-block;">&nbsp;</span>&nbsp;<?=$trans["ads_active"];?>&nbsp;&nbsp;
+				<span style="background-color: #fff101; width: 15px; height: 15px; display: inline-block;">&nbsp;</span>&nbsp;<?=$trans["ads_added"];?>&nbsp;&nbsp;
+				<span style="background-color: #412467; width: 15px; height: 15px; display: inline-block;">&nbsp;</span>&nbsp;<?=$trans["ads_booked"];?>&nbsp;&nbsp;
+				<span style="background-color: #d1232a; width: 15px; height: 15px; display: inline-block;">&nbsp;</span>&nbsp;<?=$trans["ads_closed"];?>&nbsp;&nbsp;
+			</div>
+			<!-- END: Legends -->
+			
+		</div>
+	</div>
+</div>

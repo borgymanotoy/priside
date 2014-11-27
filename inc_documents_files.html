@@ -1,0 +1,70 @@
+<!--inc_documents_files.html-->
+<script type="text/javascript">
+	$(document).ready(function(){
+		$("#btnDocFilesUpload").css({"position" : "relative" ,"top" : "0px"}).fileuploader({"FlashVars" : "fname=1,mname=2,lname=3"});
+	});
+	function LoadProjectFiles( ProjectId, CheckSum ){
+	$.ajax({
+		type : 'POST',
+		url  : 'documents_files.php',
+		data : {
+			"ajaxRequest" : "LoadProjectFiles",
+			"pid" : ProjectId,
+			"checksum" : CheckSum
+		},
+		success: function(data) {
+			$("#documents_files_reload_div").html(data);
+		},
+		error: function(xhr){
+			showStatusMessageBox("documents_files_statusmsg",xhr.statusText, true);
+		}
+	});
+}
+</script>
+
+<div id="main-column-2">
+	<div id="documents_files_statusmsg" class="status-msg-box" style="display:none;">
+	<?if(!empty($ErrMsg)){?> 
+		<script type="text/javascript">
+		 showStatusMessageBox("documents_files_statusmsg","<?=$ErrMsg;?>", true);
+		</script>
+	<?} if(!empty($OkMsg)){?>
+		 <script type="text/javascript">
+		  showStatusMessageBox("documents_files_statusmsg","<?=$OkMsg;?>", false);
+		 </script>
+	<?}?>
+   </div>
+	
+		<h1 class="title"><?=$trans["document_files_document_files"];?></h1>
+		<div class="clearfix container-small">
+			<div class="combobox-container left">
+				<input type="hidden" id="default_project" value="<?=$trans["document_files_select_project"];?>" />
+				<span id="spn_doc_file_location" class="cmb_sel_item_value italic" style="margin-left: 5px; width: 210px;"><?=$trans["document_files_select_project"];?></span>
+				<span class="site-color arrow-down-button" style="width: 25px; height: 18px; border-left: 2px solid #412467;" onclick=""></span>
+				<span class="combobox-arrow" style="margin-left: 8px;" onclick="showHideComboboxItems('div_doc_file_location');"></span>
+				<div id="div_doc_file_location" class="combox-search-container comboBox combo-list-container">
+					<div id="divClose" align="right" onclick="closeListBox('div_doc_file_location');"><img src="../img/closeImage.png" alt="Close" /></div>
+					<ul class="combobox-list">
+					<?=GetComboboxProjectItems( "div_doc_file_location", "spn_doc_file_location" );?>
+					</ul>
+				</div>
+			</div>
+		</div>
+	
+	<div id="documents_files_reload_div">
+	</div>
+	
+</div>
+
+<div id="sidebar-column">
+	<div class="info-pane">
+		<span class="help-user-tile" style="display:block;"><?=$trans["document_files_help"];?></span>
+		<div class="help-user-title"><?=$trans["document_files_document_files"];?></div>
+		<div class="info-pane-content clearfix" style="margin-top: 45px;">
+			<div class="txt12" style="margin-top: 5px; margin-left: 50px; width: 240px;"><?=$trans["document_files_document_files_text1"];?></div>
+			<div class="txt12" style="margin-top: 5px; margin-left: 50px; width: 240px;"><?=$trans["document_files_document_files_text2"];?></div>
+		</div>
+		<? include( "inc_users_panel_client_banner.html" ); ?>
+	</div>
+</div>
+

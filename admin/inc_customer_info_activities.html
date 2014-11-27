@@ -1,0 +1,28 @@
+<script type="text/javascript">
+	$('document').ready( function() { loadTabAjax( 'actv_tab_answered', 'customer_info_actv_replied.php' ); showHideActivitiesContent('answered', true); } );
+
+	function loadTabAjax( target, page ){
+		var lang = $("#loaded_langugage").val();
+		$('#'+target).load( page, { lang:lang, ajaxRequest:'loadData',  accountId:'<?=$accountId?>', customerId:'<?=$customerId?>' , checksum:'<?=$checksum?>'});
+	}
+</script>
+
+<div class="clearfix" style="width:570px; padding: 5px;">
+	<input type="hidden" id="loaded_actv_tab" value="" />
+	<ul id="actv_sub_list" class="submenu">
+		<li id="cust_actv_subtab_answered"><a class="actv-current" href="javascript:void(0);" onclick="loadTabAjax( 'actv_tab_answered', 'customer_info_actv_replied.php' ); showHideActivitiesContent('answered', true);"><span><?=$trans["cust_nfo_actv_ans_inquiries"];?></span></a>|</li>
+		<li id="cust_actv_subtab_completed"><a href="javascript:void(0);" onclick="loadTabAjax( 'actv_tab_completed', 'customer_info_actv_completed.php' ); showHideActivitiesContent('completed', true);"><span><?=$trans["cust_nfo_actv_comp_inquiries"];?></span></a>|</li>
+		<li id="cust_actv_subtab_inquiries"><a href="javascript:void(0);" onclick="loadTabAjax( 'actv_tab_inquiries', 'customer_info_actv_inquiries.php' ); showHideActivitiesContent('inquiries', true);"><span><?=$trans["cust_nfo_actv_inquiries"];?></span></a></li>
+	</ul>
+	<div>
+		<div id="actv_tab_answered" class="actv_tab_content">
+			<!-- ? include( "customer_info_actv_replied.php" ); ? -->
+		</div>
+		<div id="actv_tab_completed" class="actv_tab_content">
+			<!-- ? include( "customer_info_actv_completed.php" ); ? -->
+		</div>
+		<div id="actv_tab_inquiries" class="actv_tab_content">
+			<!-- ? include( "customer_info_actv_inquiries.php" ); ? -->
+		</div>
+	</div>
+</div>

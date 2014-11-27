@@ -1,0 +1,1328 @@
+<!-- name: inc_message_center.html-->
+<style>
+	.coversation{
+		margin-bottom:1em; margin-top:1em;
+		width: 595px;
+	}
+	.comments {
+		margin:1em;
+		width:560px;
+	}
+	
+	.mainConversation {
+		/*
+		text-overflow: ellipsis;
+		-o-text-overflow: ellipsis;
+		-webkit-text-overflow: ellipsis;
+		max-width: 350px;
+		max-height:200px;
+		white-space: nowrap;
+		*/
+		overflow: hidden;
+	}
+	
+	.commentToggle{
+		padding-left:12px;
+		cursor:pointer;
+		position:relative;
+		float:right;
+		left:8px;
+		font-weight:bold;
+		text-align:center;
+		background-image:url('img/cb_arrow_right.png');
+		background-repeat:no-repeat;
+		background-position:left center;
+	}
+	
+	.commentCounter {
+		padding-left:2px;
+		cursor:pointer;
+		position:relative;
+		float:right;
+		left:10px;
+		width:37px;
+		height:21px;
+		color:#ffffff;
+		font-weight:bold;
+		text-align:center;
+		background-image:url('img/comment.png');
+		background-repeat:no-repeat;
+	}
+	
+	.readMore {
+		padding-left:12px;
+		cursor:pointer;
+		position:relative;
+		float:left;
+		left:0px;
+		font-weight:bold;
+		text-align:center;
+		background-image:url('img/cb_arrow_right.png');
+		background-repeat:no-repeat;
+		background-position:left center;
+	}
+	
+	
+	.messageSender{
+		position:relative;
+		float:left;
+	}
+	
+	.messageText {
+		position:relative;
+		float:left;
+	}
+	
+	.replyTextArea {
+		 resize: vertical; 
+		 border: 0; 
+		 margin: 5px;
+		 height:35px;
+		 min-height:35px;
+		 overflow: hidden;
+	}
+	
+	.close-icon {
+		background-image: url("../css/images/ui-icons_222222_256x240.png");
+		background-position: -96px -128px;
+		height: 16px;
+		width: 16px;	
+	}
+</style>
+<script type="text/javascript">
+   <? include_once( $_SERVER['DOCUMENT_ROOT']."/js/lib_notes.js" ); ?>
+   $(document).ready( function() {
+		CreateDialog( 'messageCenter_', 'noteDialogContainer', '<?=$trans["project_overview_notes"];?>', 500, '<?=$trans["project_overview_notesave"];?>', '<?=$trans["project_overview_notecancel"];?>' );
+   });
+  </script>
+<script type="type/javascript" src="/js/messages.js"></script>
+<script type="text/javascript">
+	//globals
+	var userId       = "<?=$_SESSION['User']['Id']?>";
+	var checksum     = "<?=CheckSum($_SESSION['User']['Id'])?>";
+	var attachmentId = 1;
+	
+	$(document).ready(function(){
+		$("#btnNewConversationAttachment").css({"position" : "relative","width" : "75px", "height" : "45px"}).fileuploader({
+			"onComplete" : function(filename){
+				//we need to rename the file because there are multiple conversations
+				var filenameInServer =  "messageCenterAttachment_0";
+				$.ajax({
+					type : "POST",
+					url  : 'message_center.php',
+					data : {
+						"ajaxRequest"      : "renameAttachment",
+						"filenameInServer" : filenameInServer
+					},
+					success: function(data) {
+						//NO ERRORS
+					},
+					error: function(xhr){
+						alert(xhr.statusText);
+					}
+				});
+				$("#newConversationAttachmentSpan").html('<a href="javascript:void(0)" style="text-decoration:none;" filenameInServer="' + filenameInServer + '">' + filename + '</a><span class="close-icon" style="cursor:default;" onclick="deleteAttachment(this)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>');
+			},
+			"onError" : function(error){
+				$("#newConversationAttachmentSpan").html('');
+				alert(error)
+			},
+			"onCancel" : function(control){
+				$("#newConversationAttachmentSpan").html('');
+			},
+			"useExternProgressHandler" : true, 
+			"ButtonStateCancel"        : "<?=$trans["message_center_attach_file"];?>",
+			'FlashVars'                : "SavePath=<?=$SavePathAttachment?>",
+			'filters'                  : "All Files:*.*"
+		});
+		
+		loadConversations(1,20,null,null,null);		
+		
+		//attach an event to txtNewConversation when it receives and losts focus
+		$("#txtNewConversation").focus(function(){
+			if($(this).val() == "<?=$trans["message_center_conversation_text"];?>"){
+				$(this).val("");
+			}
+		}).blur(function(){
+			if($(this).val().length == 0){
+				$(this).val("<?=$trans["message_center_conversation_text"];?>");
+			}
+		});
+		loadRecipients();
+	});
+
+	function filterByProject(object){
+		displaySelectedItem('div_inquiry', 'spn_inquiry', '<?=$trans["message_center_select_request"]?>');
+		displaySelectedItem('div_sel_contact', 'spn_sel_contact', '<?=$trans["message_center_select_contact"]?>');
+		//reposition the new conversation uploader
+		$("#btnNewConversationAttachment").fileuploader("resize");
+		
+		var id = $(object).attr("id");
+		if(id == "divProject-1"){
+			$("#relatedFilesTable").html("");
+			$("#pagingFilesNavigationBottom").html("");
+			$("#ulContactInfo").hide();
+			$("#divProjectDetails").hide();
+			$("#divInquiryDetails").hide();
+			loadConversations(1,20,null,null,null);
+			return;
+		}
+		id = id.substring(id.indexOf("_") + 1);
+		loadConversations(1,20,id,null,null);
+		loadContactInfo(id,null,null);	
+		loadFiles(1,5,id,null,null);
+		loadProjectInquiryDetails(id,null);
+	}
+	
+	function filterByInquiry(object){
+		displaySelectedItem('div_project', 'spn_project', '<?=$trans["message_center_select_project"]?>');
+		displaySelectedItem('div_sel_contact', 'spn_sel_contact', '<?=$trans["message_center_select_contact"]?>');
+		//reposition the new conversation uploader
+		$("#btnNewConversationAttachment").fileuploader("resize");
+		
+		var id = $(object).attr("id");
+		if(id == "divInquiry-1"){
+			$("#relatedFilesTable").html("");
+			$("#pagingFilesNavigationBottom").html("");
+			$("#ulContactInfo").hide();
+			$("#divProjectDetails").hide();
+			$("#divInquiryDetails").hide();
+			loadConversations(1,20,null,null,null);
+			return;
+		}	
+		id = id.substring(id.indexOf("_") + 1);
+		loadConversations(1,20,null,id,null);
+		loadContactInfo(null,id,null);
+		loadFiles(1,5,null,id,null);
+		loadProjectInquiryDetails(null,id);
+	}
+	
+	function filterByContact(object){
+		displaySelectedItem('div_project', 'spn_project', '<?=$trans["message_center_select_project"]?>');
+		displaySelectedItem('div_inquiry', 'spn_inquiry', '<?=$trans["message_center_select_request"]?>');
+		$("#divProjectDetails").hide();
+		$("#divInquiryDetails").hide();
+		//reposition the new conversation uploader
+		$("#btnNewConversationAttachment").fileuploader("resize");
+				
+		var id = $(object).attr("id");
+		if(id == "divContact-1"){
+			$("#relatedFilesTable").html("");
+			$("#pagingFilesNavigationBottom").html("");
+			$("#ulContactInfo").hide();
+			loadConversations(1,20,null,null,null);
+			return;
+		}
+		id = id.substring(id.lastIndexOf("_") + 1);
+		loadConversations(1,20,null,null,id);
+		loadContactInfo(null,null,id);
+		loadFiles(1,5,null,null,id);
+	}
+	
+	function loadContactInfo(projectId,inquiryId,contactId){
+		$.ajax({
+			type : "POST",
+			url  : "message_center.php",
+			data : {
+				"ajaxRequest" : "getContactInfo",
+				"projectId"   : projectId,
+				"inquiryId"   : inquiryId,
+				"contactId"   : contactId
+			},
+			success: function(data) {
+				for(var row in data){
+					$("#ulContactInfo").find("#" + row).text(data[row]);
+				}
+				$("#ulContactInfo").show();
+			},
+			error: function(xhr){
+				alert(xhr.statusText);
+			}
+		});
+	}
+	
+	function loadProjectInquiryDetails(projectId,inquiryId){
+		$.ajax({
+			type : "POST",
+			url  : "message_center.php",
+			data : {
+				"ajaxRequest" : projectId != null ? "getProjectDetails" : "getInquiryDetails",
+				"id"          : projectId != null ? projectId : inquiryId,
+			},
+			success: function(data) {
+				var container = projectId != null ? "divProjectDetails" : "divInquiryDetails";
+				
+				for(var row in data){
+					if(row == "InquiryFiles"){
+						$("#" + container).find("#" + row).html("");
+						var attachments = "";
+						if(data[row].length > 0){
+							for(var file in data[row]){
+								attachments+= '<a href="' + data[row][file]["url"] + '">' + data[row][file]["filename"] + '</a>&nbsp;&nbsp;|&nbsp;&nbsp;';
+							}
+							if(attachments.length > 0){
+								attachments = attachments.substring(0,attachments.lastIndexOf("&nbsp;&nbsp;|&nbsp;&nbsp;"));
+							}
+							$("#" + container).find("#" + row).html("<img src='img/clip.png' style='padding-right:4px;position:relative;top:4px'><b><?=$trans["message_center_inquiry_attached_files"]?></b> " + attachments + "<br><br>");
+						}
+					}
+					else{
+						if(row == "InquiryStatus"){
+							$("#" + container).find("#" + row).addClass("request_status_" + data[row]);
+						}
+						$("#" + container).find("#" + row).html(data[row]);
+					}
+				}
+				
+				if(projectId != null){
+					$("#divProjectDetails").show();
+					$("#divInquiryDetails").hide();
+				}
+				else{
+					$("#divProjectDetails").hide();
+					$("#divInquiryDetails").show();
+				}
+				//reposition the new conversation uploader
+				$("#btnNewConversationAttachment").fileuploader("resize");
+			},
+			error: function(xhr){
+				alert(xhr.statusText);
+			}
+		});
+	}
+	
+	function loadFiles(page,records,projectId,inquiryId,contactId){
+		if(!page){
+			page = 1;
+		}
+		
+		if(!records){
+			records = 20;
+		}
+		var offset = (page - 1) * records;
+		priside.messageManager.getFilesCount({
+			projectId : projectId,
+			inquiryId : inquiryId,
+			contactId : contactId,
+			userId    : userId, 
+			checksum  : checksum,
+			success   : function(data){
+				getFilesRenderPaging(projectId,inquiryId,contactId,page,offset,records,parseInt(data));
+			}
+		});
+	}
+	
+	function getFilesRenderPaging(projectId,inquiryId,contactId,currentPage,offset,recordsPerPage,totalRecords){
+		priside.messageManager.getFiles({
+			projectId : projectId,
+			inquiryId : inquiryId,
+			contactId : contactId,
+			userId    : userId, 
+			checksum  : checksum,
+			offset    : offset,
+			max       : recordsPerPage,
+			success   : function(data){
+				$("#relatedFilesTable").html("");
+				for(var row in data){
+					var tr = $("<tr></tr>");
+					var td = $("<td></td>");
+					$(td).append(data[row]["File_CreationDate"] + '<br>');
+					$(td).append('<img src="img/clip.png"/>&nbsp;');
+					$(td).append('<a href="/libs/get_file.php?file=' + data[row]["idAndChecksum"] + '&disposition=attachment" style="text-decoration: none;">' + data[row]["name"] + '</a>');
+					$(td).append(" - " + data[row]["FileCreator_FirstName"] + ", " + data[row]["FileCreator_Business_Name"]);
+					$(tr).append(td);
+					$("#relatedFilesTable").append(tr);
+				}
+				
+				var totalPages = Math.ceil(totalRecords / recordsPerPage);
+				//render paging links
+				$("#pagingFilesNavigationBottom").html("");
+				if(totalPages > 1){
+					var prevImg = $("<img/>");
+					prevImg.attr("src","/img/cb_arrow_left.png");
+					
+					var prev = $("<a></a>");
+					prev.attr("href","javascript:void(0);");
+					prev.attr("onclick","loadFiles(" + (currentPage - 1) + "," +  recordsPerPage + "," + projectId + "," + inquiryId + "," + contactId + ")");
+					prev.append(prevImg);
+					prev.append("&nbsp;<?=$trans["lang_previous"];?>");
+					
+					var nextImg = $("<img/>");
+					nextImg.attr("src","/img/cb_arrow_right.png");
+					
+					var next = $("<a></a>");
+					next.attr("href","javascript:void(0);");
+					next.attr("onclick","loadFiles(" + (currentPage + 1) + "," +  recordsPerPage + "," + projectId + "," + inquiryId + "," + contactId + ")");
+					next.append("&nbsp;<?=$trans["lang_next"];?>&nbsp;");
+					next.append(nextImg);
+					
+					if(currentPage > 1){
+						$("#pagingFilesNavigationBottom").append(prev);
+					}
+					
+					for(var page = 1; page <= totalPages; page++){
+						var links = $("<a></a>");
+						if(page == currentPage){
+							links.css("color","#E66313");
+						}
+						else{
+							links.attr("onclick","loadFiles(" + page + "," +  recordsPerPage + "," + projectId + "," + inquiryId + "," + contactId + ")");
+						}
+						links.attr("href","javascript:void(0);");
+						links.text(page);
+						$("#pagingFilesNavigationBottom").append(links);
+					}
+					
+					if(currentPage < totalPages){
+						$("#pagingFilesNavigationBottom").append(next);
+					}
+				}
+			}
+		});
+	}
+	
+	function loadConversations(page,records,projectId,inquiryId,contactId){
+		if(!page){
+			page = 1;
+		}
+		
+		if(!records){
+			records = 20;
+		}
+		
+		var offset = (page - 1) * records;
+		priside.messageManager.getConversationsCount({
+			projectId : projectId,
+			inquiryId : inquiryId,
+			userId    : userId, 
+			checksum  : checksum,
+			success   : function(count){
+				getConversationRenderPaging(projectId,inquiryId,contactId,page,offset,records,parseInt(count));
+			}
+		});
+	}
+	
+	//this function will load the messages and will dynamically map it to the corresponding fields
+	function getConversationRenderPaging(projectId,inquiryId,contactId,currentPage,offset,recordsPerPage,totalRecords){
+		//load and render conversations
+		var rows = 0;
+		priside.messageManager.getConversations({
+			projectId : projectId,
+			inquiryId : inquiryId,
+			contactId : contactId,
+			userId    : userId, 
+			checksum  : checksum,
+			offset    : offset,
+			max       : recordsPerPage,
+			success   : function(data){
+				$("#allConversations").html("");
+				for(var row in data){
+					var id = data[row]["Conversation_Id"];
+					var template = $("#conversationTemplate").clone();
+					$(template).attr("id","conversation_" + id);			
+					
+					//rename the template's subconversation
+					$(template).find("#subconversation").attr("id","subconversation_" + id);
+					
+					//rename the template's messages container
+					$(template).find("#allMessages").attr("id","allMessages_" + id);
+					
+					//rename the template's reply textbox
+					$(template).find("#messageReplyTemplate").attr("id","messageReply_" + id);
+					
+					//rename the template's "readMore" text
+					$(template).find("#readMore").attr("id","readMore_" + id);
+					
+					//rename the template's reply textarea and attach callback to dynamically change height based on contents
+					$(template).find("#txtReply").attr("id","txtReply_" + id).keyup(function(){
+						$(this).css("height","0px"); // this is necessary to make it shrink when deleting
+						$(this).css("height", + $(this).get(0).scrollHeight + "px");
+					});
+					
+					//this will hold all the recipients
+					var recipientIds  = new Array();
+								
+					for(var property in data[row]){
+						if(property == "Recipients"){
+							var recipients = "";
+							for(var recipient in data[row][property]){
+								recipients += data[row][property][recipient]["Name"] + " ,";
+								recipientIds.push(data[row][property][recipient]["Id"]);
+							}
+							recipients = recipients.substring(0,recipients.length - 1);
+							$(template).find("#" + property).html(recipients);
+						}
+						else if(property == "Tags"){
+							var tags = "";
+							for(var tag in data[row][property]){
+								tags += "#" + data[row][property][tag]["Tag"] + " ";
+							}
+							tags = tags.substring(0,tags.length - 1);
+							$(template).find("#" + property).html(tags);
+						}
+						else if(property == "MessageCount"){
+							//attach function to load messages
+							//subtract 1 to exclude the main conversation
+							$(template).find("#" + property).attr("id","MessageCount_" + id).attr("onclick","getMessages(" + data[row]["Conversation_Id"] + ")").html(parseInt(data[row][property]) - 1);
+							$(template).find("#commentToggle").attr("id","commentToggle_" + id).attr("onclick","getMessages(" + data[row]["Conversation_Id"] + ")");
+						}
+						else if(property == "Sender_ProfileImage"){
+							var imageURL = "img/person-pic.png";
+							if(data[row]["Sender_PhotoFile_Id"] != 0){
+								imageURL     = "/libs/get_file.php?file=" + data[row]["Sender_ProfileImage"] +"&disposition=inline&" + new Date().getSeconds();
+							}
+							$(template).find("#" + property).attr("src",imageURL);
+						}
+						else if(property == "Text"){
+							//sender name | message
+							var mainConversation = $(template).find("#" + property).attr("id","Text_" + id).html("<b>" + data[row]["Sender_Name"] + "</b> | " + convertToHTML(data[row][property]));
+							//show / hide the read more button
+							if(data[row][property].length > 600){
+								$(mainConversation).css("height","155px");
+								//show all the messages
+								$(template).find("#readMore_" + id).attr("onclick","toggleReadMore(" + id + ");").show();;
+							}
+							else{
+								$(mainConversation).css("height","auto");
+								$(template).find("#readMore_" + id).hide();
+							}
+						}
+						else if(property == "Attached_File"){
+							if(data[row][property]["name"] != null){
+								var fileUrl = "/libs/get_file.php?file=" + data[row][property]["id"] +"&disposition=inline&" + new Date().getSeconds();
+								$(template).find("#ConversationAttacment").attr("id","ConversationAttacment_" + id).html('Attachment: <a href="' + fileUrl + '">' + data[row][property]["name"] + '</a>');
+							}
+						}
+						else{
+							$(template).find("#" + property).html(data[row][property]);
+						}
+					}
+					//rename the template's send button and attach onclick handler fo sending messages
+					//we place it here because we want to ensure that the recipientIds array was populated
+					$(template).find("#btnSendReply").attr("id","btnSendReply_" + id).attr("onclick","sendReply(" + id + ",'" + recipientIds.toString() + "')");
+					
+					//rename the template's upload button 
+					$(template).find("#btnAttachFile").attr("id","btnAttachFile_" + id);
+					
+					//rename the template's upload container
+					$(template).find("#spnUploadContainer").attr("id","spnUploadContainer_" + id);
+					
+					$(template).show();
+					$("#allConversations").append(template);
+					rows++;
+				}
+				
+				//render paging
+				var totalPages = Math.ceil(totalRecords / recordsPerPage);
+				var start      = offset + 1;
+				var end        = rows + offset;
+				
+				if(totalRecords == 0) {
+					//no records found
+					$("#pagingConversationsTextTop").text("No conversations found.");
+					//copy pagingConversationsTextTop to pagingConversationsTextBottom
+					$("#pagingConversationsTextBottom").text("");
+					return;
+				}
+				
+				$("#pagingConversationsTextTop").text(start + "-" + end + " of " + totalRecords + " conversations.");
+				//copy pagingConversationsTextTop to pagingConversationsTextBottom
+				$("#pagingConversationsTextBottom").text($("#pagingConversationsTextTop").text());
+				
+				//render paging links
+				$("#pagingConversationNavigationTop").html("");
+				$("#pagingConversationNavigationBottom").html("");
+				if(totalPages > 1){
+					var prevImg = $("<img/>");
+					prevImg.attr("src","/img/cb_arrow_left.png");
+					
+					var prev = $("<a></a>");
+					prev.attr("href","javascript:void(0);");
+					prev.attr("onclick","loadConversations(" + (currentPage - 1) + "," +  recordsPerPage + ")");
+					prev.append(prevImg);
+					prev.append("&nbsp;<?=$trans["lang_previous"];?>");
+					
+					var nextImg = $("<img/>");
+					nextImg.attr("src","/img/cb_arrow_right.png");
+					
+					var next = $("<a></a>");
+					next.attr("href","javascript:void(0);");
+					next.attr("onclick","loadConversations(" + (currentPage + 1) + "," +  recordsPerPage + ")");
+					next.append("&nbsp;<?=$trans["lang_next"];?>&nbsp;");
+					next.append(nextImg);
+					
+					if(currentPage > 1){
+						$("#pagingConversationNavigationTop").append(prev);
+					}
+					
+					for(var page = 1; page <= totalPages; page++){
+						var links = $("<a></a>");
+						if(page == currentPage){
+							links.css("color","#E66313");
+						}
+						else{
+							links.attr("onclick","loadConversations(" + page + "," +  recordsPerPage + ")");
+						}
+						links.attr("href","javascript:void(0);");
+						links.text(page);
+						$("#pagingConversationNavigationTop").append(links);
+					}
+					
+					if(currentPage < totalPages){
+						$("#pagingConversationNavigationTop").append(next);
+					}
+					//copy to pagingNavigationBottom
+					$("#pagingConversationNavigationBottom").html($("#pagingConversationNavigationTop").html());
+					
+				}
+			}
+		});
+	}
+	
+	/*
+		@override - flag to indicate that we want to load the data, 
+		   		    if set to false we will just hide the div when its already open other wise load the data
+	*/ 
+	function getMessages(conversationId,override){
+		if(!override || override == false){
+			if($("#subconversation_" + conversationId).is(":visible")){
+				//its already visible, just hide it
+				$("#subconversation_" + conversationId).hide();
+				return;
+			}
+		}
+		var container = $("#allMessages_" + conversationId);
+		
+		createUploader(conversationId);
+		
+		priside.messageManager.getMessagesInConversation({
+			userId         : userId,
+			checksum       : checksum,
+			conversationId : conversationId,
+			success        : function(messages){
+				$(container).html("");
+				//start with 1 to exclude the main conversation
+				for(var row = 1; row < messages.length; row++){
+					var message  = messages[row];
+					var template = $("#conversationTemplate").find("#messageTemplate").clone();
+					var id       = message.getConversationId();
+					$(template).attr("id","message_" + id);
+					$(template).find("#MessageSendDate").attr("id","MessageSendDate_" + id).html(message.getSentDate());
+					//sender | message
+					$(template).find("#MessageText").attr("id","MessageText" + id).html("<b>" + message.getSenderFullName() + "</b> | " + convertToHTML(message.getText()));
+					//sender photo
+					var imageURL = "img/person-pic.png";
+					if(message.getSenderProfilePhotoFileId() != 0){
+						var image    = message.getSenderProfileImage();
+						imageURL = "/libs/get_file.php?file=" + image +"&disposition=inline&" + new Date().getSeconds();
+					}
+					$(template).find("#MessageSenderPhoto").attr("id","MessageSenderPhoto" + id).attr("src",imageURL);
+					
+					var attachment = message.getAttachedFile();
+					if(attachment.name != null){
+						var a = $("<a></a>");
+						$(a).attr("href","/libs/get_file.php?file=" + attachment.id + "&disposition=attachment");
+						$(a).css("text-decoration","none");
+						$(a).text(attachment.name);
+						$(template).find("#MessageAttachment").attr("id","MessageAttachment" + id).append("Attachment : ").append(a);
+					}
+					$(template).show();
+					$(container).append(template);
+				}
+				//update comment count 
+				$("#MessageCount_" + conversationId).html((messages.length - 1));
+				$("#subconversation_" + conversationId).show();
+			}
+		});		
+	}
+	
+	function sendReply(conversationId,recipientIds){
+		var text = $("#txtReply_" + conversationId).val();
+		
+		if(text.length == 0){
+			alert("<?=$trans["message_center_specify_message"]?>");
+			return;
+		}
+		
+		priside.messageManager.sendMessage({
+			text           : text,
+			conversationId : conversationId,
+			recipientIds   : recipientIds.split(","),
+			files          : getAttachment(conversationId),
+			userId         : userId,
+			checksum       : checksum,
+			success        : function(){
+				//reload the comments
+				$("#txtReply_" + conversationId).val("").trigger("keyup");
+				$("#spnUploadContainer_" + conversationId).html("");
+				getMessages(conversationId,true);
+			}
+		});
+	}
+	
+	function createUploader(conversationId){
+		//set up the upload control
+		$("#btnAttachFile_" + conversationId).css({"position" : "absolute", "width" : "85px","height" : "60px"}).fileuploader({
+			"onComplete" : function(filename){
+				//we need to rename the file because there are multiple conversations
+				var filenameInServer =  "messageCenterAttachment_" + conversationId;// + "_" + attachmentId;
+				$.ajax({
+					type : "POST",
+					url  : 'message_center.php',
+					data : {
+						"ajaxRequest"      : "renameAttachment",
+						"filenameInServer" : filenameInServer
+					},
+					success: function(data) {
+						//NO ERRORS
+					},
+					error: function(xhr){
+						alert(xhr.statusText);
+					}
+				});
+				$("#spnUploadContainer_" + conversationId).html('<a href="javascript:void(0)" style="text-decoration:none;" filenameInServer="' + filenameInServer + '">' + filename + '</a><span class="close-icon" style="cursor:default;" onclick="deleteAttachment(this)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>');
+				//we will use this variable for multiple uploads : attachmentId++;
+				setTimeout(function(){
+					 //recreate uploader
+					 createUploader(conversationId);
+				},100);
+			},
+			"onError" : function(error){
+				$("#spnUploadContainer_" + conversationId).html('');
+				alert(error)
+			},
+			"onCancel" : function(control){
+				$("#spnUploadContainer_" + conversationId).html('');
+			},
+			"useExternProgressHandler" : true, 
+			"ButtonStateCancel"        : "<?=$trans["message_center_attach_file"];?>",
+			'FlashVars'                : "SavePath=<?=$SavePathAttachment?>",
+			'filters'                  : "All Files:*.*"
+		});
+		//we need this to properly align the  uploader
+		$("#btnAttachFile_" + conversationId + "_swf").css({
+			"position" : "relative",
+			"top"      : "-15px"
+		});
+	}
+	
+	function deleteAttachment(object){
+		$.ajax({
+			type : "POST",
+			url  : 'message_center.php',
+			data : {
+				"ajaxRequest"      : "deleteAttachment",
+				"filenameInServer" : $(object).parent().find("a").attr("filenameInServer").replace(/\s/g, "")
+			},
+			success: function(data) {
+				$(object).parent().html("");
+				//NO ERRORS
+			},
+			error: function(xhr){
+				alert(xhr.statusText);
+			}
+		});
+	}
+	
+	function getAttachment(conversationId){
+		var object = $("#spnUploadContainer_" + conversationId);
+		if($(object).html().length == 0){
+			return null;
+		}
+		object                = $(object).find("a");
+		var files             = new Array();
+		var file              = new Object();
+		file.filenameInServer = $(object).attr("filenameInServer");
+		file.actualFilename   = $(object).text();
+		files.push(file);
+		return files;
+	}
+	
+	//expands the main conversations
+	function toggleReadMore(id){
+		if($("#Text_" + id).css("height") != "155px"){
+			$("#Text_" + id).css("height","155px");
+		}
+		else{
+			$("#Text_" + id).css("height","auto");
+		}
+	}
+	
+	//replace all \r \n (carriage returns,newline) to the appropriate html (<br> and etc.)
+	function convertToHTML(text){
+		return text.replace(/\r?\n|\r/g, "<br>").replace(/&amp;/g, "&").replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&quot;/g, "\"");
+	}
+	
+	/*
+		MAIN CONVERSATION FUNCTIONS
+	*/
+	//this function will open a dialog that will allow the user to select the recipients of a new conversation
+	function loadRecipients(open){
+		$("#dialogSelectRecipient").dialog({
+			modal	  : true,
+			resizable : false,
+			draggable : false,
+			autoOpen  : false,
+			open      : function(event, ui) {
+				$("#dialogSelectRecipientContent").html("");
+				$("#div_sel_contact li").each(function(){
+					var id   = $(this).attr("id").substring($(this).attr("id").lastIndexOf("_") + 1);
+					var text = $(this).text();
+					
+					if(id.indexOf("-1")  == -1){
+						var checkbox = $("<input></input>");
+						checkbox.attr("type","checkbox");
+						checkbox.attr("id",text + "_" + id);
+						checkbox.val(id);
+						
+						var label = $("<label></label>");
+						label.attr("for",text + "_" + id);
+						label.text(text);
+						$("#dialogSelectRecipientContent").append(checkbox);
+						$("#dialogSelectRecipientContent").append(label);
+						$("#dialogSelectRecipientContent").append("<br>");
+					}
+				});
+				
+				if($("#dialogSelectRecipientContent").html().length == 0){
+					var a = $("<a></a>");
+					$(a).attr("href","javascript:void(0);");
+					$(a).text("here");
+					$(a).click(function(){
+						$("#dialogSelectRecipient").dialog("close");
+						$("#subtab2MsgCenterMainheader a").click();
+					});
+					
+					var p = $("<p></p>");
+					$(p).css("text-align","center");
+					$(p).append("You do not have any contacts, click ");
+					$(p).append(a);
+					$(p).append(" to invite contacts");
+					$("#dialogSelectRecipientContent").append(p);
+				}
+				else{
+					var a = $("<a></a>");
+					$(a).attr("href","javascript:void(0);");
+					$(a).text("here");
+					$(a).click(function(){
+						$("#dialogSelectRecipient").dialog("close");
+						$("#subtab2MsgCenterMainheader a").click();
+					});
+					
+					var p = $("<p></p>");
+					$(p).css("text-align","center");
+					$(p).append("click ");
+					$(p).append(a);
+					$(p).append(" to invite more contacts");
+					$("#dialogSelectRecipientContent").append(p);
+				}
+				$("#dialogSelectRecipient").dialog("option", "position", "center");
+				
+				$(window).scroll(function(){
+					if($("#dialogSelectRecipient").dialog("isOpen")){
+						$("#dialogSelectRecipient").dialog("option", "position", "center");
+					}
+				});
+			},
+			buttons   : {
+				Ok: function() {
+					$("#dialogSelectRecipientContent :checkbox").each(function(){
+						if($(this).is(":checked")){
+							var controlId = "recipient_" + $(this).attr("id").replace(/\s/g, '');
+							var text      = $(this).attr("id").substring(0,$(this).attr("id").indexOf("_"));
+							var id        = $(this).attr("id").substring(text.length + 1);
+							//ensure that we dont add the same contact
+							if($("#newConversationRecipients").find("#" + controlId).length == 0){
+								$("#newConversationRecipients").append('<label id="' + controlId + '" recipientId="' + id + '">&nbsp;<a href="javascript:void(0)">' + text + '</a><span class="close-icon" style="cursor:default;" onclick="$(this).parent().remove();$(\'#btnNewConversationAttachment\').fileuploader(\'resize\');">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></label>');
+								//we need to reposition the uploader
+								$("#btnNewConversationAttachment").fileuploader("resize");
+							}
+						}
+					});
+					$(this).dialog("close");
+				}
+			}
+		});
+		
+		if(open){
+			$("#dialogSelectRecipient").dialog("open");
+		}
+	}
+	
+	function addTag(){
+		$("#newConversationTagsTextbox").toggle();
+		$("#newConversationTagsSpan").toggle();
+		
+		
+		if(!$("#newConversationTagsTextbox").is(":visible")){
+			$("#newConversationTagsSpan").html("");
+			if($("#newConversationTagsTextbox").val().length != 0){
+				var tags = $("#newConversationTagsTextbox").val().split(",");
+				for(var index in $("#newConversationTagsTextbox").val().split(",")){
+					$("#newConversationTagsSpan").append("#" + tags[index] + " ");
+				}
+			}
+		}
+		else{
+			$("#newConversationTagsTextbox").focus();
+			$("#newConversationTagsTextbox").attr("onblur","addTag();");
+		}
+		
+	}
+
+	function createConversation(){
+		//get all the recipients
+		var recipientIds = new Array();
+		$("#newConversationRecipients label").each(function(){
+			var id = $(this).attr("recipientId");
+			recipientIds.push(id);
+		});
+		
+		//get all the tags
+		var tags = null;
+		if($("#newConversationTagsTextbox").val().length > 0){
+			tags = $("#newConversationTagsTextbox").val().split(",");
+		}
+		
+		var text = $("#txtNewConversation").val();
+		
+		//do all checking here
+		if(recipientIds.length == 0){
+			alert("<?=$trans["message_center_specify_recipient"]?>");
+			return;
+		}
+		
+		if(text.length == 0 || text == "<?=$trans["message_center_conversation_text"];?>"){
+			alert("<?=$trans["message_center_specify_message"]?>");
+			return;
+		}
+		
+		//get attachment
+		var object     = $("#newConversationAttachmentSpan a");
+		var attachment = null;
+		if($(object).length > 0){
+			attachment 			  = new Array();
+			var file   			  = new Object();
+			file.filenameInServer = $(object).attr("filenameInServer");
+			file.actualFilename   = $(object).text();
+			attachment.push(file);
+		}
+		
+		//create the conversation
+		priside.messageManager.sendMessage({
+			text           : text,
+			recipientIds   : recipientIds,
+			tags		   : tags,
+			files          : attachment,
+			userId         : userId,
+			checksum       : checksum,
+			success        : function(){
+				//reload the comments
+				$("#newConversationRecipients").html("");
+				$("#txtNewConversation").val("");
+				$("#newConversationAttachmentSpan").html("");
+				loadConversations(1,20,null,null,null);	
+			}
+		});
+	}
+	
+	//this function will redirect the user to the Project tab and load the project
+	function messageCenterGoToProject(projectIdCheckSum,projectName){
+		if($("#tab2header").length == 0){
+			//the mainTab does not exist
+			return;
+		}
+		//parse the onclick handler of the tab, since we cant attach a handler to the load method
+		var onclick    = $("#tab2header").find("a").attr("onclick").replace(/loadTabAjax/g, "").replace(/'/g, "").replace(/\(/g, "").replace(/\)/g, "").replace(/;/g, "");
+		var parameters = onclick.split(",");
+		var target     = parameters[0].replace(/\s/g, "");
+		var url        = parameters[1].replace(/\s/g, "");
+		//call back function when the page is successfully loaded, set a delay to make it look more presentable
+		var callback   = function(){
+			if($("#" + target).find("#subtab1MyProjectsheader").length == 0){
+				//the subTab does not exist
+				return;
+			}
+			
+			setTimeout(function(){
+				//unset the selected tab
+				$(".current").removeClass("current");
+				//set the selected tab
+				$("#tab2header").addClass("current");
+				//hide all the tabs
+				$(".tab_content").hide();
+				//show the "mainTab"
+				$("#" + target).show();
+				//load the subTab
+				var callback = function(){
+					displaySelectedItem('div_project_overview', 'spn_project_overview',projectName);
+					LoadProjectDetails(projectIdCheckSum);
+				}
+				$('#subtab1MyProjects').load('project_overview.php',{lang : $("#loaded_langugage").val()},callback);
+			},100);
+		};
+		var language   = $("#loaded_langugage").val();
+		$("#" + target).load(url,{lang:language},callback);
+	}
+
+	//converts the rgb to hex value
+	function hexc(colorval) {
+		var parts = colorval.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+		delete(parts[0]);
+		for (var i = 1; i <= 3; ++i) {
+			parts[i] = parseInt(parts[i]).toString(16);
+			if (parts[i].length == 1) parts[i] = '0' + parts[i];
+		}
+		color = '#' + parts.join('');
+		return color;
+	}
+</script>
+<div id="main-column-2">
+	<!--dialog for selecting contacts!-->
+	<div id="dialogSelectRecipient" title="Select Recipients" style="display:none">
+		<div id="dialogSelectRecipientContent" style="max-height:200px"></div>
+	</div>
+	<!--dialog for selecting contacts!-->
+	
+	<!--<notes dialog box>-->
+	<div id="messageCenter_noteDialogContainer" style="display: none;">
+		<input type="hidden" name="messageCenter_noteDialogUpdateIdCheckSum" id="messageCenter_noteDialogUpdateIdCheckSum">
+		<input type="hidden" name="messageCenter_noteDialogTargetIdCheckSum" id="messageCenter_noteDialogTargetIdCheckSum">
+		<input type="hidden" name="messageCenter_noteDialogCurrNoteType" id="messageCenter_noteDialogCurrNoteType">
+		<textarea name="messageCenter_noteDialogText" cols="75" rows="10" id="messageCenter_noteDialogText"></textarea>
+	</div>
+	<!--</notes dialog box>-->
+	
+	<h1 class="title"><?=$trans["message_center_title"];?></h1>	
+	<div class="clearfix container-small">
+		<div class="left">
+			<div class="textarea_top_left">
+			   <div class="textarea_bottom_right">
+				   <div class="textarea_top_right">
+					   <div class="textarea_bottom_left">
+							<input type="text" style="width: 540px; border:none; margin:8px 5px 8px 5px" value="<?=$trans["message_center_search_in_text"];?>" />
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="left" style="margin: .3em 1em .3em 1em">
+			<img src="img/question_mark.png" />
+		</div>
+	</div>	
+	<div class="clearfix container-small">
+		<div class="combobox-container left">
+			<input type="hidden" id="default_sel_contact" value="<?=$trans["message_center_select_contact"];?>" />
+			<span id="spn_sel_contact" class="cmb_sel_item_value italic" style="margin-left: 5px; width: 210px;"><?=$trans["message_center_select_contact"];?></span>
+			<span class="site-color arrow-down-button" style="width: 25px; height: 18px; border-left: 2px solid #412467;" onclick=""></span>
+			<span class="combobox-arrow" style="margin-left: 8px;" onclick="showHideComboboxItems('div_sel_contact');"></span>
+			<div id="div_sel_contact" class="combox-search-container comboBox combo-list-container">
+				<div id="divClose" align="right" onclick="closeListBox('div_sel_contact');"><img src="../img/closeImage.png" alt="Close" /></div>
+				<ul class="combobox-list">
+					<?=GetContacts()?>
+				</ul>
+			</div>
+		</div>
+		<div class="combobox-container right">
+			<input type="hidden" id="default_inquiry" value="<?=$trans["message_center_select_request"];?>" />
+			<span id="spn_inquiry" class="cmb_sel_item_value italic" style="margin-left: 5px; width: 210px;"><?=$trans["message_center_select_request"];?></span>
+			<span class="site-color arrow-down-button" style="width: 25px; height: 18px; border-left: 2px solid #412467;" onclick=""></span>
+			<span class="combobox-arrow" style="margin-left: 8px;" onclick="showHideComboboxItems('div_inquiry');"></span>
+			<div id="div_inquiry" class="combox-search-container comboBox combo-list-container">
+				<div id="divClose" align="right" onclick="closeListBox('div_inquiry');"><img src="../img/closeImage.png" alt="Close" /></div>
+				<ul class="combobox-list" style="overflow-x:hidden">
+					<?=GetInquiries()?>
+				</ul>
+			</div>
+		</div>
+		<div class="combobox-container right">
+			<input type="hidden" id="default_project" value="<?=$trans["message_center_select_project"];?>" />
+			<span id="spn_project" class="cmb_sel_item_value italic" style="margin-left: 5px; width: 210px;"><?=$trans["message_center_select_project"];?></span>
+			<span class="site-color arrow-down-button" style="width: 25px; height: 18px; border-left: 2px solid #412467;" onclick=""></span>
+			<span class="combobox-arrow" style="margin-left: 8px;" onclick="showHideComboboxItems('div_project');"></span>
+			<div id="div_project" class="combox-search-container comboBox combo-list-container">
+				<div id="divClose" align="right" onclick="closeListBox('div_project');"><img src="../img/closeImage.png" alt="Close" /></div>
+				<ul class="combobox-list">
+					<?=GetProjects()?>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<p><img src="img/cb_arrow_right.png" /> <?=$trans["message_center_save_desc"];?></p>
+	<div class="clearfix container-small" id="divProjectDetails" style="display:none;width:595px">
+		<div class="serviceRequest" style="margin:1em 0 1em 0;">
+			<div class="requestsHeader">
+				<div class="serviceheadercontainer_top_left">
+					<div class="serviceheadercontainer_top_right">
+						<table class="serviceRequestHeader" style="color:black; padding:.3em 1em .3em 1em;">
+							<thead>
+								<tr>
+									<td align="left" class="bold" style="text-transform:none;color:#fff;" id="ProjectName"></td>
+									<td align="right" class="bold" style="text-transform:none;color:#fff;" id="ProjectDuration"></td>
+								</tr>
+							</thead>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div class="servicecontainer-box-top">
+				<div class="servicecontainer-box-top-br">
+					<div class="servicecontainer-box-top-bl">
+						<table style="padding: 10px; background-color: #fff;" class="side-borders">
+							<tbody>
+								<tr>
+									<td>
+										<table style="padding:0; margin:0;">
+											<tr height="30px">
+												<td style="padding-left:8px;" id="ProjectDescription"></td>
+											</tr>
+											<tr height="30px">
+												<td style="padding-left:8px;" id="ProjectPurpose"></td>
+											</tr>
+										</table>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+						<table>
+							<tbody>
+								<tr>
+									<td class="txt12Purple pre-padding-10" style="background-color: #ebe9ef;" id="ProjectViewProject"></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="clearfix container-small" id="divInquiryDetails"  style="display:none;width:595px">
+		<div class="serviceRequest" style="margin:1em 0 1em 0;">
+			<div class="requestsHeader">
+				<div class="serviceheadercontainer_top_left">
+					<div class="serviceheadercontainer_top_right">
+						<table class="serviceRequestHeader" style="color:black; padding:.3em 1em .3em 1em;">
+							<thead>
+								<tr>
+									<td align="left" class="bold" style="text-transform:none;color:#fff;" id="InquiryCategoryLocation"></td>
+									<td align="right" class="bold" style="text-transform:none;color:#fff;" id="InquiryCreationDate"></td>
+								</tr>
+							</thead>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div class="servicecontainer-box-top">
+				<div class="servicecontainer-box-top-br">
+					<div class="servicecontainer-box-top-bl">
+						<table style="padding:0; margin:0;">
+							<tr height="30px">
+								<td style="padding-left:8px;" id="InquiryMissionStatement"></td>
+							</tr>
+							<tr height="30px">
+								<td style="padding-left:8px;" id="InquiryFiles"></td>
+							</tr>
+							<tr height="30px">
+								<td style="padding-left:8px;" id="InquiryPerformedAt"></td>
+							</tr>
+						</table>	
+						<table>
+							<tbody>
+								<tr>
+									<td colspan="2" class="bottom-left-rounded txt12White pre-padding-10" style="width:400px;background-color:#ebe9ef;" id="InquiryRelatedProject"></td>
+									<td class="txt12Purple pre-padding-10" style="background-color: #ebe9ef;" id="InquiryRelatedNote"</td>
+									<td class="bottom-right-rounded pre-padding-10" id="InquiryStatus"></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="container-small"><h3><?=$trans["message_center_new_conversation"];?></h3></div>
+	<div class="container-small"><h5 style="position:relative;float:left;">Recipients:</h5>&nbsp;<div id="newConversationRecipients" style="position:relative;float:left;max-width:532px;"></div></div>
+	<div class="textarea_top_left">
+	<div class="textarea_bottom_right">
+		   <div class="textarea_top_right">
+			   <div class="textarea_bottom_left">
+					<textarea id="txtNewConversation" style="resize: vertical; border: 0; margin: 5px;" rows="10" cols="71"><?=$trans["message_center_conversation_text"];?></textarea>
+				</div>
+			</div>
+		</div>
+	</div>	
+	<div style="height:42px;padding-top:8px;">
+		<h5><?=$trans["message_center_tags"];?>:</h5>
+		<span style="position:relative;float:left;left:35px;top:-35px;width:558px;" id="newConversationTagsSpan"></span>
+		<input type="text" id="newConversationTagsTextbox" style="position:relative;float:left;left:35px;top:-35px;display:none;width:558px;"/>
+	</div>	
+	<div style="height:42px;padding-top:8px;">
+		<h5><?=$trans["message_center_attachments"];?>:</h5>
+		<span style="position:relative;float:left;left:75px;top:-34px;width:558px;" id="newConversationAttachmentSpan"></span>
+	</div>
+	<div class="clearfix container-small">
+		<div class="left">
+			<a class="btn-violet" href="javascript:void(0);" onclick="loadRecipients(true);"><span><h5><?=$trans["message_center_select_recipient"];?></h5></span></a>
+		</div>
+		<div class="left" style="margin: .3em 1em .3em 1em">
+			<img src="img/question_mark.png" />
+		</div>
+		<div class="left">
+			<a id="btnNewConversationAttachment" class="btn-violet" href="javascript:void(0);"><span><h5><?=$trans["message_center_send_attach_file"];?></h5></span></a>
+		</div>
+		<div class="left" style="margin: .3em 1em .3em 1em">
+			<img src="img/question_mark.png" />
+		</div>
+		<div class="left">
+			<a class="btn-violet" href="javascript:void(0);" onclick="addTag();"><span><h5><?=$trans["message_center_select_tag_msg"];?></h5></span></a>
+		</div>
+		<div class="left" style="margin: .3em 1em .3em 1em">
+			<img src="img/question_mark.png" />
+		</div>
+		
+		<div class="left"  style="margin-bottom:1em;">
+			<a class="btn-orange" href="javascript:void(0);" onclick="createConversation();"><span><?=$trans["button_send"];?></span></a>
+		</div>
+	</div>
+	<div class="clearfix container-small">
+		<div class="pagging-links clearfix">
+			<div class="left">
+				<span id="pagingConversationsTextTop"></span>
+			</div>
+			<div class="right">
+				<span id="pagingConversationNavigationTop"></span>
+			</div>
+		</div>
+		<div class="coversation" id="conversationTemplate" style="display:none">
+			<div class="textarea_top_left">
+			   <div class="textarea_bottom_right">
+				   <div class="textarea_top_right">
+					   <div class="textarea_bottom_left">
+							<table class="coversationMain" style="margin:1em; width:572px;">
+								<tr>
+									<td style="width:20%"><span id="Business_Name"></span></td>
+									<td><?=$trans["message_center_today_at"];?>. <span id="StartDate"></span>  | <?=$trans["message_center_reciever"];?>: <span id="Recipients">this is a test</span> </td>
+								</tr>
+								<tr>
+									<td><img id="Sender_ProfileImage" src="img/person-pic.png" width="89" height="89"/></td>
+									<td style="text-align:top; vertical-align: top;"> 
+										<div class="mainConversation messageText" id="Text"></div>   
+										<div id="readMore" class="readMore"><?=$trans["message_center_read_more"];?></div>
+									</td>
+								</tr>
+								<tr>
+									<td></td>
+									<td style="text-align:right; vertical-align:middle;"> 
+										<span id="Tags" style="font-weight:bold"></span> 
+										<div class="commentCounter" id="MessageCount"></div>
+										<div class="commentToggle" id="commentToggle"><?=$trans["message_center_comment"];?></div>
+									</td>
+								</tr>
+								<tr>
+									<td></td>
+									<td style="text-align:right; vertical-align:middle;"> 
+										<span id="ConversationAttacment"></span>
+									</td>
+								</tr>
+							 </table>
+							<div id="subconversation" class="hide">
+								<div id="allMessages"></div>
+								<div class="comments" id="messageTemplate" style="display:none">	 
+									<div class="textarea_top_left">
+									   <div class="textarea_bottom_right">
+										   <div class="textarea_top_right">
+											   <div class="textarea_bottom_left">
+													 <table style="margin:1em; width:540px;">
+													<tr>
+														<td style="width:10%"></td>
+													<td><?=$trans["message_center_today_at"];?>. <span id="MessageSendDate"></span>  </td>
+													</tr>
+													<tr>
+														<td><img id="MessageSenderPhoto" src="img/request_replyicon_med.png" width="41" height="41"/></td>
+														<td style="text-align:top; vertical-align: top;"><div id="MessageText" class="messageText"></div></td>
+													</tr>
+													<tr>
+														<td></td>
+														<td style="text-align:right; vertical-align:middle;" id="MessageAttachment"></td>
+													</tr>
+												 </table>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>	 
+								<div class="comments" id="messageReplyTemplate">
+									<div class="left">
+										<div class="textarea_top_left">
+										   <div class="textarea_bottom_right">
+											   <div class="textarea_top_right">
+												   <div class="textarea_bottom_left">
+														<textarea id="txtReply" class="replyTextArea" wrap="hard" style="width: 450px; border:none; margin:8px 5px 8px 5px"></textarea>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="left"  style="margin-bottom:1em; margin-left:1em;">
+										<a id="btnSendReply" class="btn-orange" href="javascript:void(0);"><span><?=$trans["button_send"];?></span></a>
+									</div>
+									<div class="clearfix left" style="height:40px;width:100%;padding-top:10px;">
+										<div class="left">
+											<a id="btnAttachFile" class="btn-violet" href="#"><span><h5><?=$trans["message_center_attach_file"];?></h5></span></a>
+										</div>
+										<div class="left" style="position:absolute;left:130px;margin: .3em 1em .3em 1em">
+											<img src="img/question_mark.png" />
+											<div id="spnUploadContainer" style="position:absolute;top:-2px;left:26px;width:400px;"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="allConversations">
+		</div>
+		<div class="pagging-links clearfix">
+			<div class="left">
+				<span id="pagingConversationsTextBottom"></span>
+			</div>
+			<div class="right">
+				<span id="pagingConversationNavigationBottom"></span>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="sidebar-column">
+	<div class="info-pane">
+		<span class="help-user-tile" style="display:block;"><?=$trans["message_center_help"];?></span>
+		<div class="help-user-title"><?=$trans["message_center_title"];?></div>
+		<div class="info-pane-content clearfix" style="margin-top: 45px;">
+			<div class="txt12" style="margin-top: 5px; margin-left: 50px; width: 240px;"><?=$trans["message_center_desciption"];?></div>
+
+			<div style="margin-top: 5px; width: 260px;">
+				<div class="txt16Orange bold" style="margin-left: 50px; width: 100%;"><?=$trans["message_center_contact_info"];?></div>
+				<ul style="padding:0;display:none;" id="ulContactInfo">
+					<li style="list-style:none;font-weight:bold;"><span id="ConpanyName" style="margin-left: 5px;"></span></li>
+					<li class="list_request_replied"><span id="ContactName"></span></li>
+					<li class="list_mobile_phone"><span id="ContactMobile"></span></li>
+					<li class="list_envelope"><span id="ContactEmail"></span></li>
+					<li class="list_arrow_right"><?=$trans["message_center_view_company_prof"];?></li>
+					<li class="list_arrow_right"><?=$trans["message_center_contact_history"];?></li>
+				</ul>
+			</div>
+
+			<div style="margin-top: 5px; width: 260px;">
+				<div class="txt16Orange bold" style="margin-left: 50px; width: 100%;"><?=$trans["message_center_my_files"];?></div>
+				<div class="txt12" style="margin-top: 5px; margin-left: 50px; width: 240px;"><?=$trans["message_center_my_desc"];?></div>
+				<div style="width:250px; float:right;">
+					<table id="relatedFilesTable" style="border-top:1px solid #ccc; border-bottom:1px solid #ccc;width:95%"></table>
+					<div class="pagging-links" style="width:247px;margin-left:-10px" id="pagingFilesNavigationBottom"></div>
+				</div>
+			</div>
+
+		</div>
+		<? include( "inc_users_panel_client_banner.html" ); ?>
+	</div>
+</div>

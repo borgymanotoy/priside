@@ -1,0 +1,202 @@
+
+<style type="text/css"><!--
+
+.clickable:hover {
+   cursor: pointer;
+}
+
+.nonselectable {
+   -webkit-touch-callout: none;
+   -webkit-user-select: none;
+   -khtml-user-select: none;
+   -moz-user-select: none;
+   -ms-user-select: none;
+   user-select: none;
+}
+
+/* ====================================================== */
+/* = Service requests "table"                           = */
+/* ====================================================== */
+
+#requestsContainer {
+   width: 580px; /* Width of "table" */
+   margin-left: auto;  
+   margin-right: auto;
+}
+
+.requestsHeader {
+   display: inline-block;
+   margin: 0px;
+   margin-top: 20px;
+   padding: 0px;
+   line-height: 100%;
+   color: #ffffff;
+   background-color: #412567;
+}
+
+.tableColumn {
+   display: inline-block;
+   vertical-align: text-top;
+}
+
+/* Column widths. Should add up to width of requestsContainer. */
+.tableColumn.date {
+   margin-left: 5px;
+   width: 70px;
+}
+.tableColumn.category {
+   width: 305px; /* All left of max width. */ 
+}
+.tableColumn.area {
+   width: 75px;
+}
+.tableColumn.status {
+   width: 80px;
+}
+.tableColumn.delete {
+   width: 10px;
+}
+
+/* Wraps each service request. */
+.serviceRequest {
+   display: inline-block;
+   padding-right: 0px;
+   margin-top: 10px;
+   vertical-align: top;
+   color: #222222;
+   background-color: #f6f4f8 ;
+}
+
+.serviceRequest.even {}
+.serviceRequest.odd {}
+
+/* ====== START: Box wrapping service table header ====== */
+.serviceheadercontainer_top_left {
+   background: url("img/roundbox_border_lightblue.png") top left no-repeat;
+}
+
+.serviceheadercontainer_bottom_right {
+   background: url("img/roundbox_border_lightblue.png") bottom right no-repeat;
+}
+
+.serviceheadercontainer_top_right {
+   background: url("img/roundbox_border_lightblue_tr.png") top right no-repeat;
+}
+
+/* If paddings inside the box are desired they shall be set in this class. */
+.serviceheadercontainer_bottom_left {
+   padding: 1px;
+   padding-top: 5px;
+   padding-bottom: 5px;
+   background: url("img/roundbox_border_lightblue_bl.png") bottom left no-repeat;
+}
+/* ====== END:   Box wrapping service table header ====== */
+
+/* ====== START: Box wrapping each service row ====== */
+.servicecontainer_top_left {
+   background: url("img/roundbox_border_lightblue.png") top left no-repeat;
+}
+
+.servicecontainer_top_left:hover {
+   background: url("img/roundbox_border.png") top left no-repeat;
+}
+
+.servicecontainer_bottom_right {
+   background: url("img/roundbox_border_lightblue.png") bottom right no-repeat;
+}
+.servicecontainer_bottom_right:hover {
+   background: url("img/roundbox_border.png") bottom right no-repeat;
+}
+.servicecontainer_top_right {
+   background: url("img/roundbox_border_lightblue_tr.png") top right no-repeat;
+}
+.servicecontainer_top_right:hover {
+   background: url("img/roundbox_border_tr.png") top right no-repeat;
+}
+
+/* If paddings inside the box are desired they shall be set in this class. */
+.servicecontainer_bottom_left {
+   padding: 1px;
+   padding-top: 5px;
+   padding-bottom: 5px;
+   background: url("img/roundbox_border_lightblue_bl.png") bottom left no-repeat;
+}
+.servicecontainer_bottom_left:hover {
+   background: url("img/roundbox_border_bl.png") bottom left no-repeat;
+}
+
+/* ====== END:   Box wrapping each service row ====== */
+
+
+/* ====== START: Service Request details ====== */
+/* Contains both the request details and contact info. */
+.requestDetailsContainer {
+   padding-top: 10px;
+   background-color: #ffffff;
+}
+
+.requestDetails {
+   display: inline-block;
+   width: 65%;
+   margin-top: 0px;
+   margin-bottom: 5px;
+   padding-left: 10px;
+   vertical-align: text-top;
+}
+
+.requestTitle {
+   font-size: 1.1em;
+   font-weight: normal;
+   margin: 5px 0px 5px 0px;
+   color: #412567;
+}
+
+.requestDetailLabel {
+   font-size: 1em;
+   font-weight: bold;
+   margin: 0px;
+   color: #000000;
+   display: inline;
+}
+
+/* ===    START: Contact info box    === */
+.contactInfo {
+   display: inline-block;
+   width: 30%;
+   margin-top: 0px;
+   vertical-align: text-top;
+   line-height: 1.4em;
+   background-color: #f6f4f7;
+}
+
+.contactInfoHeader {
+   padding-bottom: 1em;
+   font-size: 1.0em;
+   font-weight: bold;
+   color: #ea905a;
+}
+
+.contactinfobox_top_left {
+   background: url("img/roundbox_border_lightblue.png") top left no-repeat;
+}
+
+.contactinfobox_bottom_right {
+   background: url("img/roundbox_border_lightblue.png") bottom right no-repeat;
+}
+
+.contactinfobox_top_right {
+   background: url("img/roundbox_border_lightblue_tr.png") top right no-repeat;
+}
+
+/* If paddings inside the box etc are desired they shall be set in this class. */
+.contactinfobox_bottom_left {
+   overflow: auto;
+   padding: 7px 5px 9px 7px;
+   background: url("img/roundbox_border_lightblue_bl.png") bottom left no-repeat;
+}
+
+/* ===    END:   Contact info box    === */
+/* ====== END:   Service Request details ====== */
+
+
+--></style>

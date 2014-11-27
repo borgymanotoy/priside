@@ -1,0 +1,56 @@
+<!--inc_my_account_main.html-->
+<script>
+ $("#myAccountSubTab li").click(function() {
+	var headerId = $(this).attr("id");
+	if (headerId) {
+		$("#myAccountSubTab li a").removeClass('myaccount_current');
+		$(this).children(":first").toggleClass("myaccount_current");
+		$(".my_acc_sub_tab_content").hide();
+		var selected_tab = headerId.substring(0,16) // means tab1header to tab1
+		$("#"+selected_tab).fadeIn();
+	}
+});
+
+
+
+$('document').ready( function() {
+	setTabHeader('myAccountSubTab', 'subtab1myaccountheader', 'myaccount_current');
+	showHideSubTabUserPanel('subtab1myaccount',true);
+	loadTabAjax('subtab1myaccount', 'my_account.php');} 
+);
+
+
+function loadTabAjax( target, page ){
+	$(".my_acc_sub_tab_content").html("");
+	var lang = $("#loaded_langugage").val();
+	$('#'+target).load( page, { lang:lang } );
+}
+
+function setTabHeader(target, selected, active_class){
+	$("#"+target+" li a").removeClass(active_class);
+	$("#"+selected).children(":first").toggleClass(active_class);
+}
+
+</script>
+
+
+<ul id="myAccountSubTab" class="submenu">
+	<li id="subtab1myaccountheader"><a onclick="loadTabAjax('subtab1myaccount', 'my_account.php');" class="myaccount_current" href="javascript: void(0);"><?=$trans["my_account_my_account_details"];?></a>
+	<? if ( IsAdmin() )  {?>
+	|
+	<? }?>
+	
+	</li>
+	<? if ( IsAdmin() )  {?>
+	<li id="subtab2myaccountheader"><a onclick="loadTabAjax('subtab2myaccount', 'cancel_account.php');" href="javascript: void(0);"><?=$trans["my_account_cancel_account"];?></a></li>
+	<? } ?>
+</ul>
+
+<div id="subtab1myaccount" class="my_acc_sub_tab_content">
+
+</div>
+<? if ( IsAdmin() )  {?>
+<div id="subtab2myaccount" class="my_acc_sub_tab_content">
+
+</div>
+<? } ?>

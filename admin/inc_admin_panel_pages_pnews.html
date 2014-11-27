@@ -1,0 +1,551 @@
+<!-- inc_admin_panel_pages_pnews.html -->
+
+<script type="text/javascript">
+	$(document).ready(function(){
+		$("#btnNewsUploadPicture1").css({"position" : "relative" ,"top" : "0px"}).fileuploader({
+				"onComplete" : function(filename){
+					var dt = new Date();
+					 $.ajax( {
+						type: 'POST',
+						url:  'admin_panel_pages_pnews.php',
+						data:
+						   {
+							  'ajaxRequest'   		: 'saveBannerImage',
+							  'BannerIdChecksum' 	: $("#NewsBannerFile_Id").val()+":"+$("#NewsBannerFile_Checksum").val(),
+							  'filename'      		: filename
+						   },
+						success: function(data){
+							var fileInfos = JSON.parse( data );
+							$("#imgPressNewsBanner").attr("src",fileInfos.FileUrl);
+							$("#NewsBannerFile_Id").val(fileInfos.FileId);
+							$("#NewsBannerFile_Checksum").val(fileInfos.FileChecksum);
+							$("#NewsBannerFile_Name").val(fileInfos.FileName);
+							modifiedPressNewsFields();
+						},
+						error: function(xhr){
+							showStatusMessageBox("div_news_status_msgs",xhr.statusText, true);
+						}
+					 });
+				},
+				"onError" : function(error){
+					showStatusMessageBox("div_news_status_msgs",error, true);
+				},
+				"useExternProgressHandler" : false,
+				"ButtonStateCancel" : '<?=$trans["button_state_cancel"];?>',
+				'FlashVars' 	: "SavePath=<?=base64_encode( $UploadPath );?>,CheckSum=<?=CheckSum( base64_encode( $UploadPath ) );?>,Session=<?=session_id();?>",
+				'filters'       : "(Images):*.bmp;*.png;*.jpg;*.gif;*.jpeg;"
+		});
+
+		$("#btnNewsUploadBrochure1").css({"position" : "relative" ,"top" : "0px"}).fileuploader({
+				"onComplete" : function(filename){
+					 $.ajax( {
+						type: 'POST',
+						url:  'admin_panel_pages_pnews.php',
+						data:
+							{
+								'ajaxRequest'   : 'setUploadedBrochure',
+								'BrochureIdChecksum' : $("#NewsBrochureFileId").val()+":"+$("#NewsBrochureFileChecksum").val(),
+								'filename' : filename
+							},
+						success: function(data){
+							var BrochureInfos = JSON.parse( data );
+							$("#NewsBrochureFileId").val(BrochureInfos.BrochureId);
+							$("#NewsBrochureFileChecksum").val(BrochureInfos.BrochureChecksum);
+							$("#spanPressNewsBrochureName").html(BrochureInfos.BrochureName);
+							$("#PressNewsBrochureLink").attr("href", BrochureInfos.BrochureUrl).addClass("arrow-link");
+							modifiedPressNewsFields();
+						},
+						error: function(xhr){
+							showStatusMessageBox("div_news_status_msgs",xhr.statusText, true);
+						}
+					 });
+				},
+				"onError" : function(error){
+					showStatusMessageBox("div_news_status_msgs",error, true);
+				},
+				"useExternProgressHandler" : true,
+				"ButtonStateCancel" : '<?=$trans["button_state_cancel"];?>',
+				'FlashVars' 	: "SavePath=<?=base64_encode( $UploadPath );?>,CheckSum=<?=CheckSum( base64_encode( $UploadPath ) );?>,Session=<?=session_id();?>",
+				'filters'       : "(Documents):*.doc;*.xls;*.odt;*.rtf;*.pdf;"
+		});
+
+		$("#btnNewsUploadPicture2").css({"position" : "relative" ,"top" : "0px"}).fileuploader({
+				"onComplete" : function(filename){
+					 $.ajax( {
+						type: 'POST',
+						url:  'admin_panel_pages_pnews.php',
+						data:
+							{
+								'ajaxRequest' 	: 'getPreview',
+								'filename' 		: filename
+							},
+						success: function(data){
+							var PressNewsItemImageInfos = JSON.parse( data );
+							$("#PressNewsBannerFile_Name").val(PressNewsItemImageInfos.PressNewsItemImageFileName);
+							$("#imgPressNewsItemBanner").attr("src", PressNewsItemImageInfos.PressNewsItemImageImageUrl);
+							relocateUploadFlashObject();
+							modifiedPressNewsItemFields();
+						},
+						error: function(xhr){
+							showStatusMessageBox("div_news_status_msgs",xhr.statusText, true);
+						}
+					 });
+				},
+				"onError" : function(error){
+					showStatusMessageBox("div_news_status_msgs",error, true);
+				},
+				"useExternProgressHandler" : true,
+				"ButtonStateCancel" : '<?=$trans["button_state_cancel"];?>',
+				'FlashVars' 	: "SavePath=<?=base64_encode( $UploadPath );?>,CheckSum=<?=CheckSum( base64_encode( $UploadPath ) );?>,Session=<?=session_id();?>",
+				'filters'       : "(Images):*.bmp;*.png;*.jpg;*.gif;*.jpeg;"
+		});
+
+
+		resetPressNewsModifiedFlag();
+		relocateUploadFlashObject();
+
+		//Confirmation dialog for Admin pages here
+		var dialogBoxInst = $('#confirmNewsDialog').dialog({
+			title: '', //prompt,
+			modal : true,
+			resizable : false,
+			autoOpen : false,
+			buttons: [
+						{
+							text: "Yes",
+							click: function(){
+								ajaxRemovePressNewsItem();
+								$(this).dialog( "close" );
+							}
+						},
+						{ text: "No", click: function(){ $(this).dialog("close"); } }
+					]
+		});
+		dialogBoxInst.parent('.ui-dialog').appendTo('#div_news_container');
+	});
+
+	/* START: Saving or Updating Press News Infos */
+	function validatePressNewsInfos(){
+		if($("#PressIntroduction").val().length == 0) return false;
+		else if($("#PressSubHeading").val().length == 0) return false;
+		else if($("#PressSubHeadingContent").val().length == 0) return false;
+		return true;
+	}
+	function savePressNewsInfos(){
+		if(!validatePressNewsInfos()){
+			var validation_msg = $("#pnews_error_entry_validation").val();
+			showStatusMessageBox("div_news_status_msgs", validation_msg, true);
+			return;
+		}else{
+			ajaxSavePressNewsInfos();
+		}
+	}
+	function ajaxSavePressNewsInfos(){
+		var url = "/admin/admin_panel_pages_pnews.php";
+		$.ajax({
+			type : "POST",
+			url : url,
+			data : {
+				"ajaxRequest" 				: "ajaxSavePressNewsInfos",
+				'PressNewsIdChecksum' 		: $("#NewsId").val()+":"+$("#NewsCheckSum").val(),
+				'BannerIdChecksum' 			: $("#NewsBannerFile_Id").val()+":"+$("#NewsBannerFile_Checksum").val(),
+				'BrochureIdChecksum' 		: $("#NewsBrochureFileId").val()+":"+$("#NewsBrochureFileChecksum").val(),
+				"PressIntroduction" 		: $("#PressIntroduction").val(),
+				"PressSubHeading" 			: $("#PressSubHeading").val(),
+				"PressSubHeadingContent" 	: $("#PressSubHeadingContent").val(),
+			},
+			success: function(data){
+				var PressNewsInfos = JSON.parse( data );
+				$("#NewsId").val(PressNewsInfos.PressNewsId);
+				$("#NewsCheckSum").val(PressNewsInfos.PressNewsChecksum);
+				$("#NewsBannerFile_Id").val(PressNewsInfos.PressNewsBannerId);
+				$("#NewsBannerFile_Checksum").val(PressNewsInfos.PressNewsBannerChecksum);
+				$("#NewsBrochureFileId").val(PressNewsInfos.PressNewsBrochureId);
+				$("#NewsBrochureFileChecksum").val(PressNewsInfos.PressNewsBrochureChecksum);
+				$("#imgPressNewsBanner").attr("src", PressNewsInfos.PressNewsImageImageUrl);
+				showStatusMessageBox("div_news_status_msgs", PressNewsInfos.PressNewsStatusMsg, false);
+				resetPressNewsModifiedFlag();
+			},
+			error: function(xhr){
+				showStatusMessageBox("div_news_status_msgs", xhr.statusText, true);
+			}
+		});
+	}
+	/* END Saving or Updating Press News Infos */
+
+	/* START: Saving or Updating Press News Items Infos */
+	function validateSavingUpdatePressNewsItemInfos(){
+		if($("#PressNewsItemTitle").val().length == 0) return false;
+		else if($("#PressNewsItemDescription").val().length == 0) return false;
+		return true;
+	}
+	function saveUpdatePressNewsItemInfos(){
+		if($("#PressNewsBannerFile_Name").val().length == 0){
+			showStatusMessageBox("div_news_status_msgs", "<?=$trans["p_news_ErrMsg_BannerImageNotSet"];?>", true);
+			return;
+		}
+		else if(!validateSavingUpdatePressNewsItemInfos()){
+			var validation_msg = $("#pnews_error_entry_validation").val();
+			showStatusMessageBox("div_news_status_msgs", validation_msg, true);
+			return;
+		}else{
+			ajaxSaveUpdatePressNewsItemInfos();
+		}
+	}
+	function ajaxSaveUpdatePressNewsItemInfos(){
+		var url = "/admin/admin_panel_pages_pnews.php";
+		$.ajax({
+			type : "POST",
+			url : url,
+			data : {
+				"ajaxRequest" 				: "ajaxSaveUpdatePressNewsItemInfos",
+				"PressNewsItemIdCheckSum" 	: $("#PressNewsItemId").val()+":"+$("#PressNewsCheckSum").val(),
+				"BannerIdChecksum" 			: $("#PressNewsBannerFile_Id").val()+":"+$("#PressNewsBannerFile_Checksum").val(),
+				"BannerFileName" 			: $("#PressNewsBannerFile_Name").val(),
+				"PressNewsItemTitle" 		: $("#PressNewsItemTitle").val(),
+				"PressNewsItemDescription" 	: $("#PressNewsItemDescription").val()
+			},
+			success: function(data){
+				showStatusMessageBox("div_news_status_msgs", data, false);
+				clearPressNewsItemInfos();
+				ajaxReloadPressNewsItemList();
+			},
+			error: function(xhr){
+				showStatusMessageBox("div_news_status_msgs", xhr.statusText, true);
+			}
+		});
+	}
+	/* END: Saving or Updating Press News Items Infos */
+
+	/* START: Reload Press News Items */
+	function ajaxReloadPressNewsItemList(){
+		var url = "/admin/admin_panel_pages_pnews.php";
+		$.ajax({
+			type : "POST",
+			url : url,
+			data : {
+				"ajaxRequest" : "ajaxReloadPressNewsItemList",
+			},
+			success: function(data){
+				$("#PressNewsListHtml").html(data);
+			}
+		});
+	}
+	/* END: Reload Press News Items */
+
+	/* START: Removing functions */
+	function validatePressNewsItemDeletion(){
+		if($("#PressNewsItemId").val().length == 0) return false;
+		return true;
+	}
+	function removePressNewsItem(){
+		if(!validatePressNewsItemDeletion()) return;
+		var msg = "<?=$trans["pnews_confirm_delete"];?>";
+		$('#confirmNewsDialog').dialog( "option", "title", "<?=$trans["pnews_confirm_delete_title"];?>" );
+		$('#confirmationNewsMessage').html(msg);
+		$('#confirmNewsDialog').dialog( "open" );
+	}
+	function ajaxRemovePressNewsItem(){
+		var url = "/admin/admin_panel_pages_pnews.php";
+		$.ajax({
+			type : "POST",
+			url : url,
+			data : {
+				"ajaxRequest" : "ajaxRemovePressNewsItem",
+				"PressNewsItemIdCheckSum" 	: $("#PressNewsItemId").val()+":"+$("#PressNewsCheckSum").val(),
+				'BannerIdChecksum' 			: $("#NewsBannerFile_Id").val()+":"+$("#NewsBannerFile_Checksum").val(),
+			},
+			success: function(data){
+				showStatusMessageBox("div_news_status_msgs", data, false);
+				clearPressNewsItemInfos();
+				ajaxReloadPressNewsItemList();
+			},
+			error: function(xhr){
+				showStatusMessageBox("div_news_status_msgs", xhr.statusText, true);
+			}
+		});
+	}
+	/* END: Removing functions */
+
+	function displayNewsItemInfos(newItemId, checksum){
+		if($("#pnews_modified").val() == "true"){
+			showStatusMessageBox("div_news_status_msgs", "<?=$trans["pnews_confirm_changes"];?>", true);
+		}else{
+			//Sent Ajax request to get news infos
+			$.ajax({
+				type : "POST",
+				url : "/admin/admin_panel_pages_pnews.php",
+				data : {
+					"ajaxRequest" 		: "displayNewsItemInfos",
+					"NewsItemIdChecksum" 	: newItemId+":"+checksum,
+				},
+				success: function(data){
+					//Return JSON Object that will be stored in the UI and then load the image url to image object
+					//(PressNewsItemId, PressNewsItemChecksum, PressNewsItemTitle, PressNewsItemDescription, PressNewsImageFile_Id, PressNewsItemImageChecksum, PressNewsItemImageFileName, PressNewsItemImageUrl)
+					var PressNewsItemInfos = JSON.parse( data );
+
+					$("#PressNewsItemId").val(PressNewsItemInfos.PressNewsItemId);
+					$("#PressNewsCheckSum").val(PressNewsItemInfos.PressNewsItemChecksum);
+					$("#PressNewsItemTitle").val(PressNewsItemInfos.PressNewsItemTitle);
+					$("#PressNewsItemDescription").val(PressNewsItemInfos.PressNewsItemDescription);
+
+					//Load News image infos here
+					$("#PressNewsBannerFile_Id").val(PressNewsItemInfos.PressNewsImageFile_Id);
+					$("#PressNewsBannerFile_Checksum").val(PressNewsItemInfos.PressNewsItemImageChecksum);
+					$("#PressNewsBannerFile_Name").val(PressNewsItemInfos.PressNewsItemImageFileName);
+					$("#imgPressNewsItemBanner").attr("src", PressNewsItemInfos.PressNewsItemImageUrl);
+
+					//Show Press Kit Page so that the user can Edit the press kit infos.
+					//Display news item page entry container.
+					enterPageMode('pnews', 'entry');
+
+					//Relocate the flash object to keep it functional.
+					relocateUploadFlashObject();
+				},
+				error: function(xhr){
+					//Display error if news is not found.
+					showStatusMessageBox("div_news_status_msgs", xhr.statusText, true);
+				}
+			});
+		}
+	}
+
+	function modifiedPressNewsFields(){
+		if($("#pnews_modified").val() == "false") $("#pnews_modified").val("true");
+	}
+	function modifiedPressNewsItemFields(){
+		if($("#pnews_items_modified").val() == "false") $("#pnews_items_modified").val("true");
+	}
+	function resetPressNewsModifiedFlag(){
+		$("#pnews_modified").val("false");
+	}
+	function resetPressNewsItemModifiedFlag(){
+		$("#pnews_items_modified").val("false");
+	}
+	function clearPressNewsInfos(){
+		$("#PressIntroduction").val("");
+		$("#PressSubHeading").val("");
+		$("#PressSubHeadingContent").val("");
+		$("#PressBrochureUrl").val("");
+		resetPressNewsModifiedFlag();
+	}
+	function clearPressNewsItemInfos(){
+		$("#PressNewsItemId").val("");
+		$("#PressNewsCheckSum").val("");
+		$("#PressNewsItemTitle").val("");
+		$("#PressNewsItemDescription").val("");
+		$("#PressNewsBannerFile_Id").val("");
+		$("#PressNewsBannerFile_Checksum").val("");
+		$("#PressNewsBannerFile_Name").val("");
+		$("#imgPressNewsItemBanner").attr("src",  "/img/transparent_logo.png");
+		enterPageMode('pnews', 'display');
+		resetPressNewsItemModifiedFlag();
+	}
+	function relocateUploadFlashObject(){
+		$("#btnNewsUploadPicture1").fileuploader("resize");
+		$("#btnNewsUploadBrochure1").fileuploader("resize");
+		$("#btnNewsUploadPicture2").fileuploader("resize");
+	}
+	function addUpdatePressNewsItems(){
+		if($("#pnews_modified").val() == "false"){
+			clearPressNewsItemInfos();
+			enterPageMode('pnews', 'entry');
+			relocateUploadFlashObject();
+		}
+		else{
+			showStatusMessageBox("div_news_status_msgs", "<?=$trans["pnews_confirm_changes"];?>", true);
+		}
+	}
+</script>
+
+<input type="hidden" id="pnews_error_entry_validation" value="<?=$trans["pnews_error_entry_validation"];?>"/>
+<input type="hidden" id="pnews_modified" value="false"/>
+<input type="hidden" id="pnews_items_modified" value="false"/>
+
+<div id="main-column">
+	<div id="div_news_container">
+
+		<!-- START: Create confirm dialog here -->
+		<div id="confirmNewsDialog" style="display: none; height: 200px; padding: 0px 10px;">
+			<span id="confirmationNewsMessage" class="txt12Purple bold"></span>
+		</div>
+		<!-- END -->
+
+		<div class="clearfix" style="padding: 10px; width: 650px;">
+			<h1 class="title"><?=$trans["pages_sub_media_news"];?></h1>
+
+			<!-- START: Status Message Box -->
+			<div id="div_news_status_msgs" class="status-msg-box" style="display: none;">
+				<?if(!empty($ErrMsg)){?>
+					<script type="text/javascript">
+						showStatusMessageBox("div_news_status_msgs","<?=$ErrMsg?>", true);
+					</script>
+				<?}?>
+				<?if(!empty($OkMsg)){?>
+					<script type="text/javascript">
+						showStatusMessageBox("div_news_status_msgs","<?=$OkMsg?>", false);
+					</script>
+				<?}?>
+			</div>
+			<!-- END -->
+
+			<!-- START: Customer Service infos -->
+			<input type="hidden" id="NewsId" value="<?=$PressNewsDefaults["PressId"];?>" />
+			<input type="hidden" id="NewsCheckSum" value="<?=CheckSum( $PressNewsDefaults["PressId"] );?>" />
+			<input type="hidden" id="NewsBannerFile_Id" value="<?=$PressNewsDefaults["PressImageFile_Id"];?>" />
+			<input type="hidden" id="NewsBannerFile_Checksum" value="<?=CheckSum( $PressNewsDefaults["PressImageFile_Id"] );?>" />
+			<input type="hidden" id="NewsBannerFile_Name" value="<?=$PressNewsDefaults["PressImageFileName"];?>" />
+			<!-- END -->
+
+			<div id="div_pnews_display" style="display: block; margin-top: 10px;">
+
+				<div class="clearfix container-small">
+					<div class="left">
+						<a id="btnNewsUploadPicture1" class="btn-violet txt12White" href="javascript:void(0);"><span><?=$trans["pages_button_choose_picture"];?></span></a>  
+					</div>
+				</div>
+				<div class="clearfix container-small">
+					<img id="imgPressNewsBanner" src="<?=$PressNewsImageUrl;?>" style="min-height: 110px; min-width: 100px; max-height: 500px; max-width: 500px; margin-bottom: 10px; border: 1px solid #eee;" alt="News"/>
+				</div>
+
+				<div class="clearfix container-small">
+					<label for="text-area" class="pre-margin-10 txt12Bold" style="display:block;"><?=$trans["text"];?></label>
+					<div class="textarea_top_left">
+					   <div class="textarea_bottom_right">
+						   <div class="textarea_top_right">
+							   <div class="textarea_bottom_left">
+									<textarea class="txt-area" id="PressIntroduction" rows="8" cols="71" onchange="modifiedPressNewsFields();"><?= $PressNewsDefaults["PressIntroduction"]; ?></textarea>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="clearfix container-small">
+					<div class="clearfix input-text">
+						<span><?=$trans["subheading"];?></span>
+						<div><input type="text" id="PressSubHeading" maxlength="30" value="<?= $PressNewsDefaults["PressSubHeading"]; ?>" onchange="modifiedPressNewsFields();" /></div>
+					</div>
+				</div>
+				<div class="clearfix container-small">
+					<label for="text-area" class="pre-margin-10 txt12Bold" style="display:block;"><?=$trans["text"];?></label>
+					<div class="textarea_top_left">
+					   <div class="textarea_bottom_right">
+						   <div class="textarea_top_right">
+							   <div class="textarea_bottom_left">
+									<textarea class="txt-area" id="PressSubHeadingContent" rows="8" cols="71" onchange="modifiedPressNewsFields();" ><?= $PressNewsDefaults["PressSubHeadingContent"]; ?></textarea>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="clearfix container-small">
+					<input type="hidden" id="PressBrochureUrl" value="<?= $PressNewsDefaults["PressBrochureUrl"]; ?>" />
+					<div class="left" style="padding: 5px 0px;">
+						<a id="btnNewsUploadBrochure1" class="btn-violet txt12White" href="javascript:void(0);"><span><?=$trans["pnews_btn_brochure"];?></span></a>
+						<a id="PressNewsBrochureLink" href="<?=$PressNewsBrochureUrl;?>" <?= !empty( $PressNewsBrochureUrl ) ? "class=\"arrow-link\"" : ""; ?>  style="margin-left: 15px;">&nbsp;<span id="spanPressNewsBrochureName"><?=$PressNewsDefaults['BrochureFileName'];?></span></a>
+						<input type="hidden" id="NewsBrochureFileId" value="<?= empty( $PressNewsDefaults["PressBrochureFile_Id"] ) ? 0 : $PressNewsDefaults["PressBrochureFile_Id"];?>" />
+						<input type="hidden" id="NewsBrochureFileChecksum" value="<?=empty( $PressNewsDefaults["PressBrochureFile_Id"]) ? CheckSum(0) : CheckSum( $PressNewsDefaults["PressBrochureFile_Id"] );?>" />
+					</div>
+				</div>
+				<div class="clearfix container-small">
+					<a class="btn-orange txt14White bold" href="javascript: void(0);" onclick="savePressNewsInfos();">
+						<span><?=$trans["pages_button_save"];?></span>
+					</a>
+				</div>
+				<div class="clearfix container-small" style="margin-top: 30px;">
+					<a class="btn-orange txt14White bold" href="javascript: void(0);" onclick="addUpdatePressNewsItems();">
+						<span><?=$trans["pnews_add"];?></span>
+					</a>
+				</div>
+				<div id="PressNewsListHtml" class="clearfix container-small">
+					<?= $PressNewsListHtml ?>
+				</div>
+			</div>
+
+			<!-- START: News Item Infos -->
+			<input type="hidden" id="PressNewsItemId" value="" />
+			<input type="hidden" id="PressNewsCheckSum" value="" />
+			<input type="hidden" id="PressNewsBannerFile_Id" value="" />
+			<input type="hidden" id="PressNewsBannerFile_Checksum" value="" />
+			<input type="hidden" id="PressNewsBannerFile_Name" value="" />
+			<!-- END -->
+
+			<div id="div_pnews_entry" style="display: none;">
+				<div class="clearfix container-small">
+					<div class="clearfix input-text">
+						<span><?=$trans["pages_title"];?></span>
+						<div><input type="text" id="PressNewsItemTitle" maxlength="250" value="" /></div>
+					</div>
+				</div>
+
+				<div class="clearfix container-small">
+					<img id="imgPressNewsItemBanner" src="<?=$NewsImageUrl;?>" style="min-height: 100px; min-width: 100px; max-height: 500px; max-width: 500px; margin-bottom: 10px; border: 1px solid #eee;" alt="News"/>
+				</div>
+
+				<div class="clearfix container-small">
+					<div class="left">
+						<a id="btnNewsUploadPicture2" class="btn-violet txt12White" href="javascript:void(0);"><span><?=$trans["pages_button_choose_picture"];?></span></a>  
+					</div>
+				</div>
+				<div class="clearfix container-small">
+					<label for="text-area" class="pre-margin-10 txt12Bold" style="display:block;"><?=$trans["text"];?></label>
+					<div class="textarea_top_left">
+					   <div class="textarea_bottom_right">
+						   <div class="textarea_top_right">
+							   <div class="textarea_bottom_left">
+									<textarea class="txt-area" id="PressNewsItemDescription" rows="10" cols="71"></textarea>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="clearfix container-small">
+					<div class="clearfix left">
+						<a class="btn-orange txt14White bold" href="javascript: void(0);" onclick="saveUpdatePressNewsItemInfos();">
+							<span><?=$trans["pages_button_save"];?></span>
+						</a>
+						<a class="btn-orange txt14White bold" href="javascript: void(0);" onclick="removePressNewsItem();">
+							<span><?=$trans["pages_button_remove"];?></span>
+						</a>
+					</div>
+					<div class="clearfix right">
+						<a class="btn-orange txt14White bold" href="javascript: void(0);" onclick="clearPressNewsItemInfos(); relocateUploadFlashObject();">
+							<span><?=$trans["pages_button_cancel"];?></span>
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="sub-sidebar-column">
+	<div class="help-sub-panel-location">
+		<div class="overview-info">
+			<div class="help-tile"><?=$trans["page_help"];?></div>
+			<div class="help-header">
+				<span id="span_help_id_cyb" class="txt16Orange bold"><?=$trans["pages_sub_media_news"];?></span>
+			</div>
+			<div class="help-content-panel corners-bottom">
+				<span class="txt14Bold"><?=$trans["pages_help_html_tags"];?></span><br/>
+				<span class="txt12"><?=$trans["pages_help_msg1"];?></span><br/>
+				<br/>
+				<span class="txt12"><?=$trans["pages_help_bold"];?>:</span><br/>
+				<span class="txt12">&lt;strong&gt;<?=$trans["pages_help_sample_bold"];?>&lt;/strong&gt;</span><br/>
+				<br/>
+				<span class="txt12"><?=$trans["pages_help_italic"];?>:</span><br/>	
+				<span class="txt12">&lt;em&gt;<?=$trans["pages_help_sample_italic"];?>&lt;/em&gt;</span><br/>
+				<br/>
+				<span class="txt12"><?=$trans["pages_help_bullets"];?>:</span><br/>
+				<span class="txt12">&lt;ul&gt;</span>&nbsp;<span class="arialGray"><?=$trans["pages_help_bullets_msg_start"];?></span><br/>
+				<span class="txt12">&lt;li&gt;<?=$trans["pages_help_bullets_item"];?>&nbsp;1&lt;/li&gt;</span><br/>
+				<span class="txt12">&lt;li&gt;<?=$trans["pages_help_bullets_item"];?>&nbsp;2&lt;/li&gt;</span><br/>
+				<span class="txt12">&lt;li&gt;<?=$trans["pages_help_bullets_item"];?>&nbsp;3&lt;/li&gt;</span><br/>
+				<span class="txt12">&lt;/ul&gt;</span>&nbsp;<span class="arialGray"><?=$trans["pages_help_bullets_msg_end"];?></span><br/>
+				<br/>
+				<span class="txt12"><?=$trans["pages_help_linking_a_text"];?>:</span><br/>
+				<span class="txt12">&lt;a href="http://www.lankadress.se"&gt;<u><?=$trans["pages_help_text_to_link"];?></u>&lt;/a&gt;</span><br/>
+			</div>
+		</div>
+	</div>
+</div>

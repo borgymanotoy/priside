@@ -1,0 +1,24 @@
+<script type="text/javascript">
+	$('document').ready( function() { loadTabAjax( 'ads_tab_ads', 'customer_info_ads_advertisement.php' ); showHideCustomersInfoAdsContent('ads', true); } );
+
+	function loadTabAjax( target, page ){
+		var lang = $("#loaded_langugage").val();
+		lang = (lang!=null && lang.length > 0) ? lang : "en";
+		$('#'+target).load( page, { lang:lang, ajaxRequest:'loadData',  accountId:'<?=$accountId?>', customerId:'<?=$customerId?>' , checksum:'<?=$checksum?>'});
+	}
+</script>
+<div class="clearfix" style="width:570px; padding: 5px;">
+	<input type="hidden" id="loaded_ads_tab" value="" />
+	<ul id="ads_sub_list" class="submenu">
+		<li id="cust_ads_subtab_ads" class="ads-current" ><a href="javascript:void(0);" onclick="loadTabAjax( 'ads_tab_ads', 'customer_info_ads_advertisement.php' ); showHideCustomersInfoAdsContent('ads', true);"><span><?=$trans["cust_nfo_ads_advertisement"];?></span></a>|</li>
+		<li id="cust_ads_subtab_book_ads"><a href="javascript:void(0);" onclick="loadTabAjax( 'ads_tab_book_ads', 'customer_info_ads_booking.php' ); showHideCustomersInfoAdsContent('book_ads', true);"><span><?=$trans["cust_nfo_ads_book_ad"];?></span></a></li>
+	</ul>
+	<div>
+		<div id="ads_tab_ads" class="ads_tab_content">
+			<!-- ? include( "customer_info_ads_advertisement.php" ); ? -->
+		</div>
+		<div id="ads_tab_book_ads" class="ads_tab_content">
+			<!-- ? include("customer_info_ads_booking.php"); ? -->
+		</div>
+	</div>
+</div>

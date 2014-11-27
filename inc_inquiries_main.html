@@ -1,0 +1,120 @@
+<script>
+
+/**
+* Returns the element id of the container for the currently shown tab.
+*
+* If no tab is shown, null is returned.
+*
+* @return A string or null.
+*/
+function getCurrentTabId() {
+	var tabId = null;
+	var liId = $('.inquiries_current').parent().attr("id");
+	if (undefined !== liId) {
+		// li id is the same as the tab div id but suffixed with "header".
+		var lenWithoutEnd = liId.length - 6; // 6 = length of "header".
+		var tabId = liId.substr(0, lenWithoutEnd);
+	}
+	return tabId;
+}
+
+/**
+* Loads an url into the currently displayed sub-tab.
+*/
+function loadInCurrentTabAjax(url) {
+	var tabId = getCurrentTabId();
+	if (null === tabId) {
+		return;
+	}
+
+	loadTabAjax(tabId, url);
+}
+
+function loadTabAjax( target, url) {
+	var $target = $('#' + target);
+	var $prevTarget;
+	var lang = $("#loaded_langugage").val();
+	var prevTabHeight = 10; // Height of tab that was activated before this.
+
+	// Get height of old tab and use that as forced temporary height.
+	// We do this do decrease visual glitches (as our old tab will become empty
+	// and have no height when we remove its data.
+	// The entire tab switching logic should preferably be rewritten
+	// to something better.
+	// Also note that the div elements need to have "overflow:hidden" otherwise
+	// we will always get 0 returned for height. Don't you just love HTML and
+	// CSS design ;)
+	// Figure out old tab (yes, due to "suboptimal" code we actually need to try
+	// and figure it out instead of just knowing it...).
+	var prevTargetId = getCurrentTabId();
+	if (null !== prevTargetId) {
+		$prevTarget = $('#' + prevTargetId);
+		prevTabHeight = $prevTarget.height();
+		$prevTarget.height(prevTabHeight); // To avoid flicker when we clear it.
+	}
+
+	$(".inq_sub_tab_content").html(""); // Clear content in all tabs.
+
+	// Remove old tab header highlight
+	$("#inquiriesSubtab li a").removeClass('inquiries_current');
+	// Highlight new tab header
+	$('#'+target+'header').children(":first").toggleClass("inquiries_current");
+
+	// Hide our new tab so we can fade it in later.
+	$target.hide();
+
+	// Load tab content
+	$target.load( url, { lang:lang } , function()
+	{
+		if (undefined !== $prevTarget) {
+			$prevTarget.height("100%"); // Reset height to fit content.
+		}
+		$target.fadeIn(); // Fade in tab content.
+	});
+}
+
+$('document').ready( function() { 
+	// Load default tab.
+	loadTabAjax('subtab2Inquiries','answered.php');
+});
+
+</script>
+
+<?php
+// Check if logged in user belongs to either a premium or Prisidé account.
+// We use this to know what tabs the user is allowed to see.
+$inq_IsPremiumOrPriside = false;
+if (0 == strcmp($_SESSION['User']['AccountType'], 'Premium') ||
+    0 == strcmp($_SESSION['User']['AccountType'], 'Priside')) {
+	$inq_IsPremiumOrPriside = true;
+}
+?>
+<ul id="inquiriesSubtab" class="submenu">
+	<?php if ($inq_IsPremiumOrPriside): ?> 
+	<li id="subtab1Inquiriesheader"><a onclick="loadTabAjax('subtab1Inquiries', 'inquiries.php');" href="javascript: void(0);"><?=$trans["inquires_main_inquries"];?></a>|</li>
+	<li id="subtab2Inquiriesheader"><a onclick="loadTabAjax('subtab2Inquiries', 'answered.php');" href="javascript: void(0);"><?=$trans["inquires_main_answered"];?></a>|</li>
+	<li id="subtab3Inquiriesheader"><a onclick="loadTabAjax('subtab3Inquiries', 'trash.php');" href="javascript: void(0);"><?=$trans["inquires_main_trash"];?></a>|</li>
+	<?php endif; ?>
+	<li id="subtab4Inquiriesheader"><a onclick="loadTabAjax('subtab4Inquiries', 'my_request.php');" href="javascript: void(0);"><?=$trans["inquires_main_mina"];?></a>|</li>
+	<li id="subtab5Inquiriesheader"><a onclick="loadTabAjax('subtab5Inquiries', 'new_request.php');" href="javascript: void(0);"><?=$trans["inquires_main_ny_fore"];?></a></li>
+</ul>
+
+<div id="subtab1Inquiries" class="inq_sub_tab_content" style="overflow:hidden">
+	
+</div>
+
+<div id="subtab2Inquiries" class="inq_sub_tab_content" style="overflow:hidden">
+
+</div>
+
+<div id="subtab3Inquiries" class="inq_sub_tab_content" style="overflow:hidden">
+
+</div>
+
+<div id="subtab4Inquiries" class="inq_sub_tab_content" style="overflow:hidden">
+
+</div>
+
+<div id="subtab5Inquiries" class="inq_sub_tab_content" style="overflow:hidden">
+
+</div>

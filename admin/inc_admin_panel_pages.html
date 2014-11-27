@@ -1,0 +1,93 @@
+<!--inc_admin_panel_pages.html-->
+
+<style type="text/css">
+	.left_pages_container {
+		float: left; 
+		width: 320px; 
+		height: 200px;
+	}
+	.right_pages_container {
+		margin-left: 320px;  
+		width: 300px; 
+		height: 200px; 
+		padding: 15px 0px 15px 20px;
+	}
+	.first-col { width: 100px; }
+	.second-col { width: 150px; }
+	.third-col { width: 250px; }
+	.first-data { height: 25px; width: 100px; }
+	.second-data { height: 25px; width: 150px; }
+	.third-data { height: 25px; width: 250px; }
+	.controls { background-color: #ebe9ef; }
+	.edit-button { 
+		background-color: #e66313;
+		padding-left: 10px;
+		color: #FFF; 
+		cursor: pointer;
+		/* This will not work with IE8 below (CSS3) */
+		border-bottom-left-radius: 10px 10px;
+	}
+	.corner-bottom-right-10 { border-bottom-right-radius: 10px 10px; }
+	.corners-left { border-top-left-radius: 7px 7px; border-bottom-left-radius: 7px 7px; }
+	.corners-bottom { border-bottom-left-radius: 7px 7px; border-bottom-right-radius: 7px 7px; }
+	.pointer { cursor: pointer; }
+</style>
+
+<script type="text/javascript">
+	$('document').ready( function() { 
+		loadTabAjax('pages_tab_home', 'admin_panel_pages_home.php');
+		showHideSubTab('home', true); 
+
+		var cur_tab = $("#loaded_page_tab").val();
+		cur_tab = (cur_tab != null && cur_tab.length > 0) ? cur_tab : "home";
+
+		if(cur_tab){
+			$("ul#pages_sub_list li a").removeClass('pages_current');
+			$("#"+cur_tab).children(":first").addClass("pages_current");
+		}
+
+	});
+
+	function loadTabAjax( target, page ){
+			var lang = $("#loaded_langugage").val();
+			$('#'+target).load( page, { lang:lang } );
+	}
+</script>
+
+<!-- START: Sidor sub-header -->
+<input type="hidden" id="loaded_page_tab" value="" />
+<ul id="pages_sub_list" class="submenu">
+	<li id="pages_sub_tab_home"><a href="javascript: void(0);" onclick="showHideSubTab('home', true); loadTabAjax('pages_tab_home', 'admin_panel_pages_home.php');"><?=$trans["pages_sub_home"];?></a>|</li>
+	<li id="pages_sub_tab_cyb"><a href="javascript: void(0);" onclick="showHideSubTab('cyb', true);loadTabAjax('pages_tab_cyb', 'admin_panel_pages_cyb.php');"><?=$trans["pages_sub_connect_your_business"];?></a>|</li>
+	<li id="pages_sub_tab_hit"><a href="javascript: void(0);" onclick="showHideSubTab('hit', true);loadTabAjax('pages_tab_hit', 'admin_panel_pages_hiw.php');"><?=$trans["pages_sub_how_it_works"];?></a>|</li>
+	<li id="pages_sub_tab_cs"><a href="javascript: void(0);" onclick="showHideSubTab('cs', true);loadTabAjax('pages_tab_cs', 'admin_panel_pages_cs.php');"><?=$trans["pages_sub_custservice"];?></a>|</li>
+	<li id="pages_sub_tab_faq"><a href="javascript: void(0);" onclick="showHideSubTab('faq', true);loadTabAjax('pages_tab_faq', 'admin_panel_pages_faq.php');"><?=$trans["pages_sub_FAQs"];?></a>|</li>
+	<li id="pages_sub_tab_careers"><a href="javascript: void(0);" onclick="showHideSubTab('careers', true);loadTabAjax('pages_tab_careers', 'admin_panel_pages_careers.php');"><?=$trans["pages_sub_careers"];?></a>|</li>
+	<li id="pages_sub_tab_news"><a href="javascript: void(0);" onclick="showHideSubTab('news', true);loadTabAjax('pages_tab_news', 'admin_panel_pages_pnews.php');"><?=$trans["pages_sub_media_news"];?></a></li>
+</ul>
+<!-- END: Sidor sub-header -->
+
+<div class="clearfix">
+	<div id="pages_tab_home" class="sub_tab_content">
+		<!-- content loaded by tab click call to loadTabAjax() -->
+	</div>
+	<div id="pages_tab_cyb" class="sub_tab_content">
+		<!-- content loaded by tab click call to loadTabAjax() -->
+	</div>
+	<div id="pages_tab_hit" class="sub_tab_content">
+		<!-- content loaded by tab click call to loadTabAjax() -->
+	</div>
+	<div id="pages_tab_cs" class="sub_tab_content">
+		<!-- content loaded by tab click call to loadTabAjax() -->
+	</div>
+	<div id="pages_tab_faq" class="sub_tab_content">
+		<!-- content loaded by tab click call to loadTabAjax() -->
+	</div>
+	<div id="pages_tab_careers" class="sub_tab_content">
+		<!-- content loaded by tab click call to loadTabAjax() -->
+	</div>
+	<div id="pages_tab_news" class="sub_tab_content">
+		<!-- content loaded by tab click call to loadTabAjax() -->
+	</div>
+
+</div>

@@ -1,0 +1,229 @@
+<!-- inc_admin_panel_pages_faq_consumer_consumer.html -->
+
+<script type="text/javascript">
+	$(document).ready(function(){
+		resetFaqConsumerModifiedFlag();
+
+		//Confirmation dialog for Admin pages here
+		var dialogBoxInst = $('#confirmFAQConsumerDialog').dialog({
+			title: '', //prompt,
+			modal : true,
+			resizable : false,
+			autoOpen : false,
+			buttons: [
+						{
+							text: "Yes",
+							click: function(){
+								ajaxRemoveFaqConsumer();
+								$(this).dialog( "close" );
+							}
+						},
+						{ text: "No", click: function(){ $(this).dialog("close"); } }
+					]
+		});
+		dialogBoxInst.parent('.ui-dialog').appendTo('#div_faq_consumer_container');
+	});
+	/* START: Saving or Updating functions */
+	function validateSavingUpdateFaqConsumer(){
+		if($("#ConsumerQuestion").val().length == 0) return false;
+		else if($("#ConsumerAnswer").val().length == 0) return false;
+		return true;
+	}
+	function saveUpdateFaqConsumer(){
+		if(!validateSavingUpdateFaqConsumer()){
+			var validation_msg = $("#faq_consumer_error_entry_validation").val();
+			showStatusMessageBox("div_faq_consumer_status_msgs", validation_msg, true);
+			return;
+		}else{
+			ajaxSaveUpdateFaqConsumer();
+		}
+	}
+	function ajaxSaveUpdateFaqConsumer(){
+		var url = "/admin/admin_panel_pages_faq_consumer.php";
+		$.ajax({
+			type : "POST",
+			url : url,
+			data : {
+				"ajaxRequest" : "ajaxSaveUpdateFaqConsumer",
+				"ConsumerId" : $("#ConsumerId").val(),
+				"ConsumerCheckSum" : $("#ConsumerCheckSum").val(),
+				"ConsumerQuestion" : $("#ConsumerQuestion").val(),
+				"ConsumerAnswer" : $("#ConsumerAnswer").val(),
+			},
+			success: function(data){
+				showStatusMessageBox("div_faq_consumer_status_msgs", data, false);
+				resetFaqConsumerModifiedFlag();
+				clearFaqConsumerInfos();
+				reloadConsumerFAQList();
+			},
+			error: function(xhr){
+				showStatusMessageBox("div_faq_consumer_status_msgs", xhr.statusText, true);
+			}
+		});
+	}
+	/* END: Saving or Updating functions */
+
+	/* START: Removing functions */
+	function validateFaqConsumerDeletion(){
+		if($("#ConsumerId").val().length == 0) return false;
+		return true;
+	}
+	function removeFaqConsumer(){
+		if(!validateFaqConsumerDeletion()) return;
+		var msg = "<?=$trans["faq_consumer_confirm_delete"];?>";
+		$('#confirmFAQConsumerDialog').dialog( "option", "title", "<?=$trans["faq_consumer_confirm_delete_title"];?>" );
+		$('#confirmationFAQConsumerMessage').html(msg);
+		$('#confirmFAQConsumerDialog').dialog( "open" );
+	}
+	function ajaxRemoveFaqConsumer(){
+		var url = "/admin/admin_panel_pages_faq_consumer.php";
+		var ConsumerId = $("#ConsumerId").val();
+		$.ajax({
+			type : "POST",
+			url : url,
+			data : {
+				"ajaxRequest" : "ajaxRemoveFaqConsumer",
+				"ConsumerId" : ConsumerId,
+			},
+			success: function(data){
+				showStatusMessageBox("div_faq_consumer_status_msgs", data, false);
+				resetFaqConsumerModifiedFlag();
+				clearFaqConsumerInfos();
+				reloadConsumerFAQList();
+			},
+			error: function(xhr){
+				showStatusMessageBox("div_faq_consumer_status_msgs", xhr.statusText, true);
+			}
+		});
+	}
+	/* END: Removing functions */
+
+	function modifiedFaqConsumerFields(){
+		if($("faq_consumer_modified").val() == "false") $("faq_consumer_modified").val("true");
+	}
+	function resetFaqConsumerModifiedFlag(){
+		$("faq_consumer_modified").val("false");
+	}
+	function clearFaqConsumerInfos(){
+		$("#ConsumerId").val("");
+		$("#ConsumerCheckSum").val("");
+		$("#ConsumerQuestion").val("");
+		$("#ConsumerAnswer").val("");
+		enterPageMode('faq_consumer', 'display');
+	}
+	function loadFaqConsumerInfo(info_id, checksum){
+		var question = $("#span_faq_consumer_question_" + info_id).html();
+		var answer = $("#span_faq_consumer_answer_" + info_id).html();
+
+		if(question == null || answer == null || question.length == 0 || answer.length == 0) return;
+
+		$("#ConsumerId").val(info_id);
+		$("#ConsumerCheckSum").val(checksum);
+		$("#ConsumerQuestion").val(question);
+		$("#ConsumerAnswer").val(answer);
+
+		enterPageMode('faq_consumer', 'entry');
+	}
+	function reloadConsumerFAQList(){
+		var url = "/admin/admin_panel_pages_faq_consumer.php";
+		$.ajax({
+			type : "POST",
+			url : url,
+			data : {
+				"ajaxRequest" : "reload_consumer_faqs",
+			},
+			success: function(data){
+				$("#ConsumerFAQsHtml").html(data);
+			}
+		});
+	}
+	function clearConsumerFAQsCheckSum(){
+		$("#ConsumerId").val("");
+		$("#ConsumerCheckSum").val("");
+	}
+</script>
+<div id="div_faq_consumer_container">
+
+	<!-- START: Create confirm dialog here -->
+	<div id="confirmFAQConsumerDialog" style="display: none; height: 200px; padding: 0px 10px;">
+		<span id="confirmationFAQConsumerMessage" class="txt12Purple bold"></span>
+	</div>
+	<!-- END -->
+
+	<input type="hidden" id="faq_consumer_error_entry_validation" value="<?=$trans["faq_consumer_error_entry_validation"];?>"/>
+	<input type="hidden" id="faq_consumer_modified" value="false"/>
+
+	<input type="hidden" id="pages_subpage_help_title" value="<?=$trans["pages_sub_FAQs"];?>"/>
+
+	<div style="padding: 0px; width: 650px;" class="clearfix">
+		<!-- START: Status Message Box -->
+		<div id="div_faq_consumer_status_msgs" class="status-msg-box" style="display: none;">
+			<?if(!empty($ErrMsg)){?>
+				<script type="text/javascript">
+					showStatusMessageBox("div_faq_consumer_status_msgs","<?=$ErrMsg?>", true);
+				</script>
+			<?}?>
+			<?if(!empty($OkMsg)){?>
+				<script type="text/javascript">
+					showStatusMessageBox("div_faq_consumer_status_msgs","<?=$OkMsg?>", false);
+				</script>
+			<?}?>
+		</div>
+		<!-- END -->
+	</div>
+
+	<div id="div_faq_consumer_display" style="display: block;">
+		<div class="clearfix container-small" style="padding: 0px;">
+			<a class="btn-orange txt14White bold" href="javascript: void(0);" onclick="clearConsumerFAQsCheckSum(); enterPageMode('faq_consumer', 'entry');">
+				<span><?=$trans["pages_button_add"];?></span>
+			</a>
+		</div>
+		<div id="ConsumerFAQsHtml">
+			<?= $ConsumerFAQsHtml ?>
+		</div>
+	</div>
+
+	<div id="div_faq_consumer_entry" style="display: none;">
+		<input type="hidden" id="ConsumerId" value="" />
+		<input type="hidden" id="ConsumerCheckSum" value="" />
+		<div class="clearfix container-small">
+			<label for="text-area" class="pre-margin-10 txt12Bold" style="display:block;"><?=$trans["faq_question"];?></label>
+			<div class="textarea_top_left">
+			   <div class="textarea_bottom_right">
+				   <div class="textarea_top_right">
+					   <div class="textarea_bottom_left">
+							<textarea class="txt-area" id="ConsumerQuestion" name="ConsumerQuestion" rows="10" cols="71"></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="clearfix container-small">
+			<label for="text-area" class="pre-margin-10 txt12Bold" style="display:block;"><?=$trans["faq_answer"];?></label>
+			<div class="textarea_top_left">
+			   <div class="textarea_bottom_right">
+				   <div class="textarea_top_right">
+					   <div class="textarea_bottom_left">
+							<textarea class="txt-area" id="ConsumerAnswer" name="ConsumerAnswer" rows="10" cols="71"></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="clearfix container-small">
+			<div class="clearfix left">
+				<a class="btn-orange txt14White bold" href="javascript: void(0);" onclick="saveUpdateFaqConsumer();">
+					<span><?=$trans["pages_button_save"];?></span>
+				</a>
+				<a class="btn-orange txt14White bold" href="javascript: void(0);" style="margin-left: 10px;" onclick="removeFaqConsumer();">
+					<span><?=$trans["pages_button_remove"];?></span>
+				</a>
+			</div>
+			<div class="clearfix right">
+				<a class="btn-orange txt14White bold" href="javascript: void(0);" onclick="clearFaqConsumerInfos();">
+					<span><?=$trans["pages_button_cancel"];?></span>
+				</a>
+			</div>
+		</div>
+	</div>
+</div>

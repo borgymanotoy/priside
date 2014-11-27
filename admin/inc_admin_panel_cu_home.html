@@ -1,0 +1,191 @@
+<!-- inc_admin_panel_cu_home.html -->
+<style>
+	.col1 { text-align:left; width: 70px; }
+	.col2 { text-align:left; width: 200px; }
+	.col3 { text-align:left; width: 120px; }
+	.col4 { text-align:left; width: 90px; }
+	.col5 { text-align:left; width: 70px; }
+	.col6 { text-align:left; width: 110px; }
+	.col7 { text-align:left; width: 100px; }
+	.col8 { text-align:left; width: 100px; }
+	.col9 { text-align:left; width: 50px; }
+</style>
+<script type="text/javascript">
+	<?
+		$records = 20;
+		$page    = 1;
+	?>
+	var recordsPerPage = '<?=$records?>';
+	var startPage      = '<?=$page?>';
+		
+	$(document).ready(function(){
+		loadCustomers(recordsPerPage,startPage,'<?=CheckSum($records.$page);?>');
+		
+		//add event listeners to textbox to trigger search
+		$("#keyword").blur(function(){
+			if($(this).val().length == 0){
+				$(this).val('<?=$trans["cu_home_search_text"];?>');
+				$(this).css("color","#949699").css("font-style","italic");
+			}
+		}).focus(function(){
+			if($(this).val() == '<?=$trans["cu_home_search_text"];?>'){
+				$(this).val("");
+				$(this).css("color","#000000").css("font-style","normal");
+			}
+		}).keypress(function(e){
+			var code = e.which;
+			if(code == 13 && $(this).val() != '<?=$trans["cu_home_search_text"];?>'){
+				loadCustomers(recordsPerPage,startPage,'<?=CheckSum($records.$page);?>');
+			}
+		});
+	});
+	
+	//ajax function to load data
+	function loadCustomers(records,page,checksum){
+		var keyword = $("#keyword").val() == '<?=$trans["cu_home_search_text"];?>' ? "" : $("#keyword").val();
+		$.ajax({
+			type : "POST",
+			url  : 'admin_panel_cu_home.php',
+			data : {
+				"ajaxRequest" : "loadCustomers",
+				"keyword"     : keyword,
+				"supplier"    : $("#cu_home_supplier").is(":checked"),
+				"consumer"    : $("#cu_home_consumer").is(":checked"),
+				"advertiser"  : $("#cu_home_advertiser").is(":checked"),
+				"priside"     : $("#cu_home_priside").is(":checked"),
+				"company"     : $("#cu_home_company").is(":checked"),
+				"builder"     : $("#cu_home_builder_contractor").is(":checked"),
+				"tenant"      : $("#cu_home_tenant").is(":checked"),
+				"ngo"         : $("#cu_home_non_profit").is(":checked"),
+				"authority"   :$ ("#cu_home_municipality_country_authority").is(":checked"),
+				"records"     : records,
+				"page"        : page,
+				"checksum"    : checksum
+			},
+			success: function(data) {
+				//display data
+				$("#tableDataAdminPanelCuHome").html(data);
+				//copy bottom navigation bar to top
+				$("#navBarTopAdminPanelCuHome").html($("#navBarBottomAdminPanelCuHome").html());
+			},
+			error: function(xhr){
+				showStatusMessageBox("cu_home_error_msg",xhr.statusText, true);
+			}
+		});
+	}
+</script>
+<div id="main">
+	<div id="content" class="wrapper">
+		<div id="main-column">
+			<div style="padding: 0px; width: 650px;" class="clearfix">
+			<!-- START: Status Message Box -->
+			<div id="cu_home_error_msg" class="status-msg-box" style="display:none">
+			<?if(!empty($ErrMsg)){?> 
+				<script type="text/javascript">
+					showStatusMessageBox("cu_home_error_msg","<?=$ErrMsg?>", true);
+				</script>
+			<?}?> 
+			<?if(!empty($OkMsg)){?>
+					<script type="text/javascript">
+						showStatusMessageBox("cu_home_error_msg","<?=$OkMsg?>", false);
+					</script>
+			<?}?>
+			</div>
+			<!-- END -->
+		</div>	
+			<div class="clearfix" style="padding: 10px;">
+				<h1 class="title"><?=$trans["cu_home_title"];?></h1>
+				<div class="clearfix container-small" style="width: 900px; min-height: 25px;">
+					<div class="clearfix left" style="padding-top: 5px;">
+						<div class="textarea_top_left">
+							<div class="textarea_bottom_right">
+								<div class="textarea_top_right">
+									<div class="textarea_bottom_left">
+										<div style="position: relative">
+											<input type="text" id="keyword" class="txt12Default" style="width: 600px; border:none; margin:5px 5px 5px 5px" value="<?=$trans["cu_home_search_text"];?>"/>
+											<div style="position: absolute; height: 20px; width: 30px; top: 5px; right: 7px; background: url(/img/search_button_help.png) no-repeat; cursor: pointer;" onclick="loadCustomers(recordsPerPage,startPage,'<?=CheckSum($records.$page);?>');"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="clearfix right">
+						<a class="btn-orange trebuchetWhite" href="javascript: void(0);" onclick="loadTabAjax( 'cu_tab_new_user', 'admin_panel_cu_new.php' );showHideCustomersUsersSubtabContent('new_user', true);">
+							<span><?=$trans["cu_button_new_customer"];?></span>
+						</a>
+					</div>
+				</div>
+
+				<div class="clearfix container-small">
+					<span class="filter-search" style="margin:0px;"><b><?=$trans["cu_home_account_type"]?></b></span>
+					<ol class="checklist-horizontal" style="list-style: none; padding-left: 0px;">
+						<li id="check_1" style="padding-right: 10px;"><input type="checkbox" id="cu_home_supplier" name="cu_home_supplier" onclick="loadCustomers(recordsPerPage,startPage,'<?=CheckSum($records.$page);?>');"/><label for="cu_home_supplier"><span><?=$trans["supplier"];?></span></label></li>
+						<li id="check_2" style="padding-right: 10px;"><input type="checkbox" id="cu_home_consumer" name="cu_home_consumer" onclick="loadCustomers(recordsPerPage,startPage,'<?=CheckSum($records.$page);?>');"/><label for="cu_home_consumer"><span><?=$trans["consumer"];?></span></label></li>
+						<li id="check_3" style="padding-right: 10px;"><input type="checkbox" id="cu_home_advertiser" name="cu_home_advertiser" onclick="loadCustomers(recordsPerPage,startPage,'<?=CheckSum($records.$page);?>');"/><label for="cu_home_advertiser"><span><?=$trans["advertiser"];?></span></label></li>
+						<li id="check_4" style="padding-right: 10px;"><input type="checkbox" id="cu_home_priside" name="cu_home_priside" onclick="loadCustomers(recordsPerPage,startPage,'<?=CheckSum($records.$page);?>');"/><label for="cu_home_priside"><span><?=$trans["priside"];?></span></label></li>
+					</ol>
+				</div>
+
+				<div class="clearfix container-small">
+					<span class="filter-search" style="margin:0px;"><b><?=$trans["cu_home_business_classification"]?></b></span>
+					<ol class="checklist-horizontal" style="list-style: none; padding-left: 0px;">
+						<li id="check_4" style="padding-right: 10px;"><input type="checkbox" id="cu_home_company" name="cu_home_company" onclick="loadCustomers(recordsPerPage,startPage,'<?=CheckSum($records.$page);?>');"/><label for="cu_home_company"><span><?=$trans["cu_home_company"];?></span></label></li>
+						<li id="check_5" style="padding-right: 10px;"><input type="checkbox" id="cu_home_builder_contractor" name="cu_home_builder_contractor" onclick="loadCustomers(recordsPerPage,startPage,'<?=CheckSum($records.$page);?>');"/><label for="cu_home_builder_contractor"><span><?=$trans["cu_home_builder_contractor"];?></span></label></li>
+						<li id="check_6" style="padding-right: 10px;"><input type="checkbox" id="cu_home_tenant" name="cu_home_tenant" onclick="loadCustomers(recordsPerPage,startPage,'<?=CheckSum($records.$page);?>');"/><label for="cu_home_tenant"><span><?=$trans["cu_home_tenant"];?></span></label></li>
+					</ol>
+				</div>
+				<div class="clearfix container-small">	
+					<ol class="checklist-horizontal" style="list-style: none; padding-left: 0px;">
+						<li id="check_7" style="padding-right: 10px;"><input type="checkbox" id="cu_home_non_profit" name="cu_home_non_profit" onclick="loadCustomers(recordsPerPage,startPage,'<?=CheckSum($records.$page);?>');"/><label for="cu_home_non_profit"><span><?=$trans["cu_home_non_profit"];?></span></label></li>
+						<li id="check_8" style="padding-right: 10px;"><input type="checkbox" id="cu_home_municipality_country_authority" name="cu_home_municipality_country_authority" onclick="loadCustomers(recordsPerPage,startPage,'<?=CheckSum($records.$page);?>');"/><label for="cu_home_municipality_country_authority"><span><?=$trans["cu_home_municipality_country_authority"];?></span></label></li>
+					</ol>
+				</div>
+
+				<br/>
+				<div class="clearfix" style="width: 900px;">
+					<div class="pagging-links clearfix" style="margin-left: 5px;">
+						<span id="navBarTopAdminPanelCuHome">
+							<!--copy from navBarBottom!-->
+							<!--inc_admin_panel_cu_home_rowSnippet.html!-->
+						</span>
+					</div>
+					<!-- START: Header -->
+					<div class="requestsHeader">
+						<div class="serviceheadercontainer_top_left">
+							<div class="serviceheadercontainer_bottom_right">
+								<div class="serviceheadercontainer_top_right">
+									<div class="serviceheadercontainer_bottom_left">
+										<table border="0">
+											<thead>
+												<tr>
+													<th class="col1 pre-padding-5 txt10ArialWhiteBold"><?=$trans["cu_header_custno"];?></th>
+													<th class="col2 pre-padding-5 txt10ArialWhiteBold"><?=$trans["cu_header_customer"];?></th>
+													<th class="col3 pre-padding-5 txt10ArialWhiteBold"><?=$trans["cu_header_regno"];?></th>
+													<th class="col4 pre-padding-5 txt10ArialWhiteBold"><?=$trans["cu_header_place"];?></th>
+													<th class="col5 pre-padding-5 txt10ArialWhiteBold"><?=$trans["cu_header_trade"];?></th>
+													<th class="col6 pre-padding-5 txt10ArialWhiteBold"><?=$trans["cu_header_type"];?></th>
+													<th class="col7 pre-padding-5 txt10ArialWhiteBold"><?=$trans["cu_header_login"];?></th>
+													<th class="col8 pre-padding-5 txt10ArialWhiteBold"><?=$trans["cu_header_status"];?></th>
+													<!--
+													<th class="col9 pre-padding-5 txt10ArialWhiteBold"><?=$trans["cu_header_priside_admin"];?></th>
+													!-->
+												</tr>
+											</thead>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!-- END: Header -->
+					<!-- START: Rows -->
+						<div id="tableDataAdminPanelCuHome">
+							<!--inc_admin_panel_cu_home_rowSnippet.html!-->
+						</div>
+					<!-- END: Rows -->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

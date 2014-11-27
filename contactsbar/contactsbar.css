@@ -1,0 +1,352 @@
+<style type="text/css">
+
+/* Used by template elements */
+.template {
+   display: none;
+   visibility: hidden;
+}
+
+#cb_contactsbar {
+   position: relative; /* For positioning chat windows. */
+   margin-left: 40px;
+   margin-right: 40px;
+   color: #ffffff;
+   background-color: transparent;
+   font-family: Tahoma, Verdana, Arial, Sans-serif;
+   font-size: 11px;
+}
+
+/* ====== START: Box wrapping bar header ====== */
+.cb_header_tl {
+   background: url("/img/roundbox_border.png") top left no-repeat;
+}
+
+
+/* If paddings inside the box are desired they shall be set in this class. */
+.cb_header_tr {
+   padding: 1px;
+   padding-top: 5px;
+   padding-bottom: 5px;
+   background: url("/img/roundbox_border_tr.png") top right no-repeat;
+}
+/* ====== END:   Box wrapping bar header ====== */
+
+#cb_header {
+   position: relative;
+   clear: both;
+   font-weight: bold;
+   background-color: #412567;
+}
+
+#cb_msgcount {
+   margin-left: 10px;
+   margin-right: 5px;
+}
+
+#cb_contactsonlinecount {
+   margin-left: 2em;
+}
+
+#cb_startchat {
+   display: inline-block;
+   position: absolute;
+   right: 10px;
+   left: auto;
+   width: auto;
+   margin-left: auto;
+   margin-right: 0px;
+}
+
+/* === Content === */
+
+#cb_content {
+   position: relative;
+   background-color: #F7F4F8;
+   height: 15%; /* To get the child floats to expand this container. */
+   overflow: hidden; /* To get the child floats to expand this container. */
+}
+
+#cb_messages {
+   width: 350px; /* To get proper float in IE7 */
+   float: left;
+   background-color: #efe8f1;
+   vertical-align: top;
+}
+
+.cb_message_row {
+   float: left;
+}
+
+.cb_message {
+   float: left;
+   display: inline-block;
+   width: 315px;
+   margin-left: 5px;
+   margin-right: 5px;
+}
+
+.cb_messages_prev {
+   width: 10px;
+   display: inline-block;
+   float: left;
+}
+
+.cb_messages_next {
+   display: inline-block;
+   margin-left: auto;
+   margin-right: 0px;
+   width: 10px;
+   right: 0px;
+}
+
+.cb_message_brief {
+   max-width: 350px;
+   max-height: 1.5em;
+   overflow: hidden;
+   font-size: 0.8em;
+   line-height: 1.2em;
+   color: black;
+}
+
+.cb_message_hour {
+   color: #aaaaaa;
+}
+
+
+/* Encompasses all contact entries and contact navigation
+ * aids. */
+#cb_contacts {
+   float: right;
+   right: 0px;
+   width: 550px;
+   margin-left: auto;
+   margin-right: 0px;
+   background-color: #F7F4F8;
+}
+
+/* Encompasses all contact entries. */
+#cb_contacts_list {
+   display: inline-block;
+   color: #000000;
+   background-color: #F7F4F8;
+}
+
+.cb_contacts_nav {
+   display: inline-block;
+   vertical-align: top;
+}
+
+.cb_contacts_column {
+   display: inline-block;
+}
+
+.cb_contact {
+   width: 250px;
+   overflow: hidden;
+   white-space: nowrap;
+   text-overflow: ellipsis;
+}
+
+.cb_contact:hover {
+   cursor: pointer;
+}
+
+.cb_unread_message {
+   background-color: #e67013;
+}
+
+.cb_contactphoto {
+   display: inline-block;
+   vertical-align: middle;
+   width: 21px;
+   height: 25px;
+   margin: 0px;
+   padding: 0px;
+   border: 0px;
+}
+
+.cb_contactphoto_header {
+   display: inline-block;
+   vertical-align: middle;
+   width: 21px;
+   height: 25px;
+   margin: 0px;
+   padding: 0px;
+   border: 0px;
+   border-radius: 5px 0px 0px 0px;
+}
+
+.cb_contact_name {
+   color: #412567;
+}
+
+.cb_unread_message > .cb_contact_name {
+   color: #ffffff;
+}
+
+.cb_contact_company {
+   color: #000000;
+}
+
+.cb_unread_message > .cb_contact_company {
+   color: #ffffff;
+}
+
+/* ======= Chat window ====== */
+/* Creates room on the page for minimized window headers.
+ * We don't want minimized window headers to cover any content. */
+#cb_chatwindows_spacer {
+   height: 27px; /* Same height as cb_chat_window_header with border. */
+   background-color: transparent;
+}
+
+/* #cb_chatwindows_container exists so that the chat_windows can lie on top of other
+ * content while still having flow right and thus end up next to each other
+ * automatically. */
+#cb_chatwindows_container {
+   position: absolute;
+   right: 0px;
+   top: 0px;
+   height: 0px;
+   background-color: #888800; 
+}
+
+/* Container for an individual chat window. */
+/* This style allows chat windows to position themselves next to each other
+ * automatically, but it also causes them to push other content above and
+ * below them, ie they're not floating on top of the page.
+ * To have them on top of other content, they need to be in a container
+ * that is on top of other content. However, if they are in such a container
+ * they will also cover content as the windows are so many that they
+ * take up several rows.*/
+.cb_chat_window {
+   position: relative;
+   float: right;
+   top: auto;
+   bottom: 175px; /* height + border - height of cb_chatwindows_spacer */
+   width: 240px;
+   height: 200px;
+   margin-left: 5px;
+   z-index: 1;
+   border: 1px solid #dedbdf;
+   color: #000000;
+   background-color: #f7f4f8;
+   border-radius: 5px 5px 0px 0px;
+}
+
+
+.cb_chat_window_header {
+   position: relative;
+   clear: both;
+   border-width: 0px 0px 0px 0px;
+   min-height: 15px;
+   height: 25px; /* Same height as cb_chat_window_spacer. */
+   color: #412567;
+   background-color: #dfd1e2;
+   border-radius: 5px 5px 0px 0px;
+}
+
+.cb_chat_window_header.cb_unread_message {
+   color: #ffffff;
+   background-color: #e67013;
+}
+
+.cb_chat_window_title {
+   margin-left: 5px;
+}
+
+.cb_chat_window_buttons {
+   display: inline-block;
+   position: absolute;
+   right: 0px;
+   left: auto;
+   width: auto;
+   margin-left: auto;
+   margin-right: 0px;
+}
+
+.cb_chatwin_content {
+}
+
+.cb_chatwin_invite_container {
+   margin-left: 10px;
+   color: #412567;
+}
+
+.cb_chatwin_invite_toggle:hover {
+   cursor: pointer;
+}
+
+.cb_chatwin_messages {
+   height: 110px;
+   overflow: auto;
+   margin-top: 8px;
+}
+
+.cb_chatwin_messages > ul {
+   list-style-type: none;
+   margin-left: 10px;
+   padding-left: 0px;
+}
+
+.cb_chatwin_messages > ul > li {
+   margin-bottom: 5px;
+   line-height: 1em;
+}
+
+.cb_chatwin_sender {
+   color :#979496;
+}
+
+.cb_chatwin_message {
+   color: #000000;
+}
+
+.cb_chatwin_message_sendfail {
+   color: #330000;
+   font-weight: bold;
+}
+
+.cb_chatwin_invited {
+   color: #000000;
+   font-weight: bold;
+}
+
+.cb_chatwin_newmsg_input {
+   position: relative;
+   bottom: 0px;
+   right: 0px;
+   margin-top: 8px;
+   margin-left: 10px;
+   margin-right: 10px;
+   padding: 0px;
+   border: 0px;
+   background-color: #ffffff;
+}
+
+
+/* ====== START: Round border box ====== */
+.cb_roundborder_tl {
+   background: url("../img/roundbox_border_lightblue.png") top left no-repeat;
+}
+
+.cb_roundborder_br{
+   background: url("/img/roundbox_border_lightblue.png") bottom right no-repeat;
+}
+
+.cb_roundborder_tr{
+   background: url("../img/roundbox_border_lightblue_tr.png") top right no-repeat;
+}
+
+/* If paddings inside the box are desired they shall be set in this class. */
+.cb_roundborder_bl {
+   padding: 1px;
+   padding-top: 5px;
+   padding-bottom: 5px;
+   background: url("../img/roundbox_border_lightblue_bl.png") bottom left no-repeat;
+}
+/* ====== END:   Round border box ====== */
+
+
+/* ========================================================= */
+</style>

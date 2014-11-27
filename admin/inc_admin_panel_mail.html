@@ -1,0 +1,73 @@
+<!-- inc_admin_panel_mail.html -->
+
+<script type="text/javascript">
+	$(document).ready(function(){
+		$("#txt_mail_services").autocomplete_dropdown({
+			"type" : "collapsable",
+			"table" : "BusinessServiceCategory",
+			"paging" : true
+		});
+
+		$("#txt_mail_locations").autocomplete_dropdown({
+			"table" : "Sweden_LanKommuner",
+			"type" : "collapsable"
+		});
+
+		$("#txt_mail_services").hide();
+		$("#txt_mail_services_dropDown").hide();
+		$("#txt_mail_services_divTarget").show();
+
+		$("#txt_mail_locations").hide();
+		$("#txt_mail_locations_dropDown").hide();
+		$("#txt_mail_locations_divTarget").show();
+	});
+
+</script>
+
+<div id="main-column">
+	<div class="clearfix" style="padding: 10px; width: 650px;">
+		<h1 class="title"><?=$trans["mail_title"];?></h1>
+		<div class="clearfix container-small" style="margin-top: 30px;">
+			<ol id="target_list" style="list-style: none; padding-left: 0px;">
+				<li id="target_1" style="padding-right: 10px;"><input type="checkbox" id="mail_suppliers" name="mail_suppliers" value="Bike" /><label for="mail_suppliers"><span><?=$trans["mail_suppliers"];?></span></label></li>
+				<li id="target_2" style="padding-right: 10px;"><input type="checkbox" id="mail_consumers" name="mail_consumers" value="Bike" /><label for="mail_consumers"><span><?=$trans["mail_consumers"];?></span></label></li>
+				<li id="target_3" style="padding-right: 10px;"><input type="checkbox" id="mail_advertisers" name="mail_advertisers" value="Bike" /><label for="mail_advertisers"><span><?=$trans["mail_advertisers"];?></span></label></li>
+			</ol>
+		</div>
+		<div style="width: 100%;">
+			<div class="clearfix" style="width: 680px;">
+				<div class="clearfix left" style="padding-top: 0px; width: 400px;">
+					<div class="txt14Bold" style="width: 390px; position: relative; top: 10px; left: 5px;"><?=$trans["mail_fltr_services"];?></div>
+					<input type="text" id="txt_mail_services" />
+				</div>
+				<div class="clearfix left" style="width: 280px;">
+					<div class="txt14Bold" style="width: 280px; position: relative; top: 10px; left: 5px;"><?=$trans["mail_fltr_countries_municipalities"];?></div>
+					<input type="text" id="txt_mail_locations" />
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="clearfix" style="width:650px; height: 75px; margin-top: 25px;">
+		<div class="clearfix">
+				<a class="btn-orange txt14White bold" href="#">
+					<span><?=$trans["mail_create_list"];?></span>
+				</a>
+		</div>
+		<div class="clearfix">
+			<a href="#" class="arrow-link">&nbsp;&nbsp;<?=$trans["mail_link_to_mailchimp"];?></a><br/>
+		</div>
+	</div>
+</div>
+<div id="sidebar-column">
+	<div class="help-panel-location">
+		<div class="overview-info">
+			<div class="help-tile"><?=$trans["help"];?></div>
+			<div class="help-header">
+				<span id="span_help_id_ov" class="txt20Bold"><?=$trans["mail_title"];?></span>
+			</div>
+			<div class="help-content-panel corners-bottom">
+				<?=$trans["mail_help_info"];?>
+			</div>
+		</div>
+	</div>
+</div>

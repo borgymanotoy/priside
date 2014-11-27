@@ -1,0 +1,252 @@
+<?php
+	$INQUIRES_PER_PAGE = 5;
+?>
+
+<script type="text/javascript">
+	<?=include( $_SERVER['DOCUMENT_ROOT']."/jscommon/common_js.php" );?>
+
+	$(document).ready(function(){
+		$("#txt_industry").autocomplete_dropdown({"table" : "BusinessServiceCategory", "onChange" : function(CategoryId){getAnsweredAdByCategory(CategoryId);}}).css({"width":"180px"});
+		$("#txt_location").autocomplete_dropdown({"table" : "Sweden_LanKommuner", "onChange" : function(LocationId){getAnsweredAdByLocation(LocationId);}}).css({"width":"180px"});
+
+
+		// Disable click toggling setup by priside-common-script.js
+		// TODO: This shouldn't be neccessary! Remove that handler from priside-common-script.js!
+		$(document).off('click', '.serviceRequest');
+	});
+
+
+	/**
+	 * Loads and displays list of service inquiries current user has replied to.
+	 *
+	 * The load is made as an Ajax call so when this function returns the service
+	 * requests are likely not yet loaded.
+	 *
+	 * The list is split into several pages and the number of inquiries per page
+	 * is decided by the records parameter.
+	 *
+	 * The retrieved service inquiries will be filtered based on the contents of
+	 * the html elements txt_industry_selectedValue, txt_inq_services_divTarget,
+	 * txt_location_selectedValue and txt_inq_locations_divTarget. See the
+	 * function getCheckedAndSelected for more information on how this filter works.
+	 *
+	 * If the request fails an error message will be displayed in the
+	 * inquires_services_error_msg element.
+	 *
+	 * @param records  Number of service inquiries to display per page (integer).
+	 * @param page     Page number to display (integer).
+	 *                 First service inquiry displayed will be records*page.
+	 * @return         false
+	*/
+	function loadInquiries(records,page,checksum) {
+		var businessServiceCategoryIds = getCheckedAndSelected("txt_industry_selectedValue", null);
+		var sweden_LanKommunerIds      = getCheckedAndSelected("txt_location_selectedValue", null);
+
+
+		$.ajax({
+			type : "POST",
+			url  : 'answered.php',
+			data : {
+				"ajaxRequest"                : "loadAnsweredInquiries",
+				"businessServiceCategoryIds" : businessServiceCategoryIds,
+				"sweden_LanKommunerIds"      : sweden_LanKommunerIds,
+				"records"                    : records,
+				"page"                       : page,
+				"checksum"                   : checksum
+			},
+			success: function(data) {
+				//display data
+				$("#tableDataInquiriesServices").html(data);
+				//copy bottom navigation bar to top
+				$("#navBarTop").html($("#navBarBottom").html());
+			},
+			error: function(xhr){
+				// TODO: Showing error messages isn't working yet!
+				showStatusMessageBox("inquiries_services_error_msg",xhr.statusText, true);
+			}
+		});
+
+		return false;
+	}
+
+
+	/*
+	* getCheckedAndSelected :
+	* Returns the ids of the selected items in the autocomplete component or filter checkboxes
+	*
+	* If any of the checkboxes is checked, the contents of the autocomplete component will be ignoredi
+	* and only those of the checked checkboxes returned.
+	*
+	* Params :
+	*  autocomplete : id of the hidden text of the autocomplete component
+	*  collapsable  : id of the div containing the checkboxes.
+	*                 Not used in this implementation since this page doesn't have
+	*                 that filter. Parameter kept to have same function signature
+ 	*                as pages that do so that it's easier to move this function
+	*                to a common utility lib.
+	* Returns :
+	*  selected ids as comma separated values
+	* Usage :
+	*  getCheckedAndSelected("txt_search_vad_selectedValue","txt_hierarchy_services_divTarget")
+	*  getCheckedAndSelected("txt_search_var_selectedValue","txt_hierarchy_locations_divTarget")
+	*/
+	function getCheckedAndSelected(autocomplete,collapsable) {
+		var ids = new Array();
+		var id;
+
+		if (ids.length == 0) {
+			id = $("#" + autocomplete).val();
+			//get the value of the autocomplete
+			if(id.length != 0){
+				//make sure it's not in the array.
+				if($.inArray(id,ids) < 0){
+					ids.push(id);
+				}
+			}
+		}
+		return ids.join(",");
+	}
+
+	/**
+	* Function for getting specific advertisement depending on the selected category and location.
+	 */
+	function GetAnsweredAd(){
+		$.ajax({
+			type : "GET",
+			url : "/libs/lib_ads.php",
+			data : {
+				"ajaxRequest" : "GetAd",
+				"CategoryId" : $("#hAnsweredSelCategory").val(),
+				"LocationId" : $("#hAnsweredSelLocation").val()
+			},
+			success: function(data){
+				var Ad = JSON.parse( data );
+				if(Ad.adImageSrc){
+					$("#gallery_image").attr( "src", Ad.adImageSrc);
+					$("#ImageLink").attr( "href", Ad.adUrl);
+				}
+			},
+			error: function(xhr){
+				showStatusMessageBox("search_affiliates_error_msg", xhr.statusText, true);
+			}
+		});
+	}
+	/**
+	* Function for getting specific advertisement depending on the selected category.
+	 */
+	function getAnsweredAdByCategory(categoryId){
+		$("#hAnsweredSelCategory").val(categoryId);
+		GetAnsweredAd();
+	}
+	/**
+	* Function for getting specific advertisement depending on the selected location.
+	 */
+	function getAnsweredAdByLocation(locationId){
+		$("#hAnsweredSelLocation").val(locationId);
+		GetAnsweredAd();
+	}
+</script>
+
+
+<style>
+.date { width:100px; }
+.inquiry { width:280px; }
+.municipality { width:100px;}
+
+.requestTableRowExpand {
+	line-height: 1.2em;
+	padding-left: 15px;
+	padding-right: 20px;
+	padding-bottom: 10px;
+}
+
+.info_note {
+	color: #444444;
+	font-style: italic;
+}
+</style>
+
+<input type="hidden" id="hAnsweredSelCategory" value="" />
+<input type="hidden" id="hAnsweredSelLocation" value="" />
+
+<div id="main-column-2">
+	<h1 class="title"><?=$trans["answered_answered"];?></h1>
+		
+	<!-- Status Message Box -->
+	<div id="inquiries_services_error_msg" class="status-msg-box" style="display:none"></div>
+
+
+	<!-- START: Search boxes -->
+	<div class="clearfix container-small">
+		<div class="left">
+			<span class="txt12Bold"><?=$trans["answered_what_industry"];?></span>&nbsp;
+			<div class="combox">
+				<input type="text" id="txt_industry" />
+			</div>
+		</div>
+		<div class="left" style="margin-left:3em;">
+			<strong><?=$trans["answered_search_country"];?></strong>
+			<div class="combox">
+				<input type="text" id="txt_location" />
+			</div>
+		</div>
+		<div>
+			<a class="btn-orange" style="margin-top: 5px;" href="javascript:void(0)" onclick="loadInquiries(<?=$INQUIRES_PER_PAGE ?>, 1,'<?=CheckSum(array($INQUIRES_PER_PAGE, 1))?>');">
+				<span><h5><?=$trans["answered_search"];?></h5></span>
+			</a>
+		</div>
+	</div>
+	<!-- END: Search boxes -->
+
+	<div class="container-small">
+		<div class="pagging-links">
+			<div id="navBarTop"></div>
+		</div>
+
+		<div class="requestsHeader">
+			<div class="serviceheadercontainer_top_left">
+				<div class="serviceheadercontainer_bottom_right">
+					<div class="serviceheadercontainer_top_right">
+						<div class="serviceheadercontainer_bottom_left">
+							<table>
+								<thead>
+									<th>
+										<td class="date"><?=$trans["answered_date"];?></td>
+										<td class="inquiry"><?=$trans["answered_inquiry"];?></td>
+										<td class="municipality"><?=$trans["answered_municipality"];?></td>
+										<td><?=$trans["answered_status"];?></td>
+										<td>&nbsp;</td>
+									</th>
+								</thead>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Rows -->
+		<div id="tableDataInquiriesServices">
+		</div>
+	</div>
+</div> <!-- END: main-column -->
+
+<div id="sidebar-column">
+	<div class="info-pane">
+		<span class="help-user-tile" style="display:block;"><?=$trans["answered_help"];?></span>
+		<div class="help-user-title"><?=$trans["answered_answered"];?></div>
+		<div class="info-pane-content clearfix" style="margin-top: 45px;">
+			<div class="txt12" style="margin-top: 5px; margin-left: 50px; width: 240px;"><?=$trans["answered_answered_text"];?></div>
+			<div style="margin-top: 5px; width: 260px;">
+				<ul class="txt12">
+					<li class="list_request_replied"><?=$trans["answered_answered_req"];?></li>
+					<li class="list_request_not_replied"><?=$trans["answered_not_answered_ques"];?></li>
+					<li class="list_request_reply_icon"><?=$trans["answered_company_res"];?></li>
+				</ul>
+			</div>
+		</div>
+		<? include( "inc_users_panel_client_banner.html" ); ?>
+	</div>
+
+</div>
+

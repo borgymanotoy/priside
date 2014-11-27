@@ -1,0 +1,71 @@
+<!-- inc_admin_panel_pages_faq_main.html -->
+
+<script type="text/javascript">
+	$('document').ready( function() { 
+		loadTabAjax( 'pages_faq_consumer', 'admin_panel_pages_faq_consumer.php' ); 
+		showHideFaqSubtabContent('consumer', true); 
+	});
+
+	function loadTabAjax( target, page ){
+		var lang = $("#loaded_langugage").val();
+		$('#'+target).load( page, { lang:lang } );
+	}
+</script>
+
+<div id="main-column">
+	<div style="padding: 10px; width: 650px;" class="clearfix">
+
+		<input type="hidden" id="loaded_faq_page_tab" value="" />
+		<input type="hidden" id="faq_subtab_consumer" value="<?=$trans["consumer_small"];?>"/>
+		<input type="hidden" id="faq_subtab_supplier" value="<?=$trans["supplier_small"];?>"/>
+		<h1 class="title"><?=$trans["pages_sub_FAQs"];?><span id="main_sub_connector">&nbsp;-&nbsp;</span><span id="span_faq_page_subtitle"><?=$trans["consumer_small"];?></span></h1>
+
+		<!-- START: HIW sub tabs here -->
+		<div class="clearfix" style="margin-bottom: 15px;">
+			<ul id="faq_tab_list" class="submenu">
+				<li id="faq_sub_tab_consumer"><a class="faq_current" href="javascript: void(0);" onclick="loadTabAjax( 'pages_faq_consumer', 'admin_panel_pages_faq_consumer.php' );  showHideFaqSubtabContent('consumer', true);"><?=$trans["consumer"];?></a>|</li>
+				<li id="faq_sub_tab_supplier"><a href="javascript: void(0);" onclick="loadTabAjax( 'pages_faq_supplier', 'admin_panel_pages_faq_supplier.php' );  showHideFaqSubtabContent('supplier', true);"><?=$trans["supplier"];?></a></li>
+			</ul>
+		</div>
+		<!-- END: HIW sub tabs here -->
+		
+		<div class="clearfix">
+			<div id="pages_faq_consumer" class="faq_sub_tab_content">
+			</div>
+			<div id="pages_faq_supplier" class="faq_sub_tab_content">
+			</div>
+		</div>
+
+	</div>
+</div>
+
+<div id="sub-sidebar-column">
+	<div class="help-sub-panel-location">
+		<div class="overview-info">
+			<div class="help-tile"><?=$trans["page_help"];?></div>
+			<div class="help-header">
+				<span id="span_help_id_hiw_main" class="txt16Orange bold"><?=$trans["pages_sub_FAQs"];?></span>
+			</div>
+			<div class="help-content-panel corners-bottom">
+				<span class="txt14Bold"><?=$trans["pages_help_html_tags"];?></span><br/>
+				<span class="txt12"><?=$trans["pages_help_msg1"];?></span><br/>
+				<br/>
+				<span class="txt12"><?=$trans["pages_help_bold"];?>:</span><br/>
+				<span class="txt12">&lt;strong&gt;<?=$trans["pages_help_sample_bold"];?>&lt;/strong&gt;</span><br/>
+				<br/>
+				<span class="txt12"><?=$trans["pages_help_italic"];?>:</span><br/>	
+				<span class="txt12">&lt;em&gt;<?=$trans["pages_help_sample_italic"];?>&lt;/em&gt;</span><br/>
+				<br/>
+				<span class="txt12"><?=$trans["pages_help_bullets"];?>:</span><br/>
+				<span class="txt12">&lt;ul&gt;</span>&nbsp;<span class="arialGray"><?=$trans["pages_help_bullets_msg_start"];?></span><br/>
+				<span class="txt12">&lt;li&gt;<?=$trans["pages_help_bullets_item"];?>&nbsp;1&lt;/li&gt;</span><br/>
+				<span class="txt12">&lt;li&gt;<?=$trans["pages_help_bullets_item"];?>&nbsp;2&lt;/li&gt;</span><br/>
+				<span class="txt12">&lt;li&gt;<?=$trans["pages_help_bullets_item"];?>&nbsp;3&lt;/li&gt;</span><br/>
+				<span class="txt12">&lt;/ul&gt;</span>&nbsp;<span class="arialGray"><?=$trans["pages_help_bullets_msg_end"];?></span><br/>
+				<br/>
+				<span class="txt12"><?=$trans["pages_help_linking_a_text"];?>:</span><br/>
+				<span class="txt12">&lt;a href="http://www.lankadress.se"&gt;<u><?=$trans["pages_help_text_to_link"];?></u>&lt;/a&gt;</span><br/>
+			</div>
+		</div>
+	</div>
+</div>

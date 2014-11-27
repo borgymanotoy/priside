@@ -1,0 +1,246 @@
+<!-- inc_admin_panel_pages_home.html -->
+
+<script type="text/javascript">
+	$('.serviceRequest').click(function() {
+		var id = $(this).attr('id');
+		if (id && id.split('-').length > 1) {
+			var attr_id = id.split('-')[1]; 
+			$('#requestTableRowExpand-'+attr_id).toggle();
+		}
+	});
+	var closeListBox = function(parentBoxId){
+		jQuery('#'+parentBoxId).hide();
+	};
+</script>
+
+<div id="main-column">
+
+	<div style="padding: 10px; width: 650px;" class="clearfix">
+		<h1 class="title"><?=$trans["pages_home"];?></h1>
+		
+		<!-- START: Divider -->
+		<div>
+			<!-- START: Left container -->
+			<div class="clearfix left_pages_container">
+				<div class="clearfix container-small">
+					<div class="input-text left">
+						<span><?=$trans["pages_title"];?></span>
+						<div><input type="text" name="tb5" maxlength="300" onkeydown="if(event.keyCode == 13){ alert('Search for: ' + this.value); }" /></div>
+					</div>
+				</div>
+				<div class="clearfix container-small">
+
+					<span class="dropboxLabel" valign="middle">
+						<span class="txt12Bold"><?=$trans["pages_industry_service"];?></span>
+					</span>
+					<div class="dropbox" style="z-index: 4;">
+						<!--
+							INPUT FIELD:
+								onkeyup="showSearchResultList(this.id, 'Ex. Flyttstädning', 'lst_search_vad', 'selected_item_value', event);"
+								onclick="highlightSearchboxContent(this.id);"
+							ARROW-DOWN-BUTTON:
+								onclick="showSubgroup('lst_cat_search_vad', 'list_categories_search_vad');
+						-->
+						<input type="text" id="txt_search_vad" class="search-input-box txt12Default" maxlength="30" value="Ex. Flyttstädning" onkeyup="" onclick="" />
+						<span class="site-color arrow-down-button" onclick="">
+							<span class="txt14Bold">|</span>
+							<span class="txt11"><?=$trans["search_select"];?></span>
+							<span style="position: relative; top: -2px; left: 0; padding-left: 12px; padding-top: 5px; background: url(../img/arrow-down-temp.png) no-repeat 0 12px;">&nbsp;</span>
+						</span>
+						<div id="lst_search_vad" class="listBox" style="display: none;">
+							<div id="divClose" align="right" onclick="closeListBox('lst_search_vad');">
+								<img src="img/closeImage.png" alt="Close" />
+							</div>
+							<div class="bottom-spacer">
+								<ul class="listItems" type="none"></ul>
+							</div>
+						</div>
+						<div id="lst_cat_search_vad" class="listBox" style="display: none;">
+							<div id="divClose" align="right" onclick="closeListBox('lst_cat_search_vad');">
+								<img src="img/closeImage.png" alt="Close" />
+							</div>
+							<div class="bottom-spacer">
+								<ul id="list_categories_search_vad" class="listItems" type="none"></ul>
+							</div>
+						</div>
+					</div>
+
+				</div>
+				<p style="margin-bottom: 1em;">
+					<div class="clearfix left">
+						<a class="btn-orange txt14White bold" href="javascript: void(0);" onclick="testing();">
+							<span><?=$trans["pages_button_add"];?></span>
+						</a>
+					</div>
+				</p>
+			</div>
+			<!-- END: Left container -->
+
+			<!-- START: Right container -->
+			<div class="right" style="padding-top: 10px; padding-right: 10px;">
+				<img src="img/sample_image_catering.png" alt="sample catering image" />
+				<p>
+					<div class="right">
+						<a class="btn-violet txt12White" href="#"><span><?=$trans["pages_button_choose_picture"];?></span></a>  
+					</div>
+				</p>
+			</div>
+			<!-- END: Right container -->
+		</div>
+		<!-- END: Divider -->
+	</div>
+
+	<div>
+		
+		<div class="pagging-links clearfix">
+			<div class="left">
+			<span class="pre-padding-10 bold"><?=$trans["pages_sample_categories"];?></span><br/>
+			</div>
+			<div class="right">
+				<a href="#"><?=$trans["lang_previous"];?></a> 
+				<a href="#">1</a>
+				<a href="#">2</a>
+				<a href="#">3</a>
+				<a href="#">4</a>
+				<a href="#">5</a>
+				<a href="#">6</a>
+				<a href="#">7</a>
+				<a href="#">8</a>
+				<a href="#">9</a>
+				<a href="#"><?=$trans["lang_next"];?></a>
+			</div>
+		</div>
+		<!-- START: Header -->
+		<div class="requestsHeader">
+		   <div class="serviceheadercontainer_top_left">
+			   <div class="serviceheadercontainer_bottom_right">
+				   <div class="serviceheadercontainer_top_right">
+					  <div class="serviceheadercontainer_bottom_left">
+						  <table border="0">
+							  <thead>
+								<tr>
+									<th class="first-col pre-padding-5 arialWhite" align="left"><?=$trans["pages_table_header_picture"];?></th>
+									<th class="second-col pre-padding-10 arialWhite" align="left"><?=$trans["pages_table_header_title"];?></th>
+									<th class="third-col pre-padding-10 arialWhite" align="left"><?=$trans["pages_table_header_industry_service"];?></th>
+								</tr>
+							  </thead>
+						  </table>
+					  </div>
+				   </div>
+			   </div>
+		   </div>
+		</div>
+		<!-- END: Header -->
+		<!-- START: Rows -->
+			<div class="serviceRequest odd">
+				<div class="servicecontainer_top_left">
+					<div class="servicecontainer_bottom_right">
+						<div class="servicecontainer_top_right">
+							<div class="servicecontainer_bottom_left">
+								<table id="serviceRequestRow-1" class="serviceRequestHeader">
+									<tr>
+										<td class="first-data date" valign="middle"><img src="img/sample_image_catering.png" class="corners-left" height="25px" width="45px" alt="sample catering image" /></td>
+										<td class="second-data pre-padding-15 arialPurple"><?=$trans["categories_wedding_party"];?></td>
+										<td class="third-data pre-padding-15 arialColorBlack">Catering</td>
+									</tr>
+								</table>
+								<table id="requestTableRowExpand-1" class="hide" cellpadding="0" cellspacing="0">
+									<tr>
+										<td class="first-col edit-button controls" onclick="alert('Edit');"><?=$trans["pages_item_edit"];?></td>
+										<td class="second-col pre-padding-15 arialPurple controls pointer" onclick="alert('Delete');"><?=$trans["pages_item_delete"];?></td>
+										<td class="third-col pre-padding-15 arialColorBlack controls corner-bottom-right-10">&nbsp;</td>
+									</tr>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="serviceRequestRow-2" class="serviceRequest even">
+				<div class="servicecontainer_top_left">
+					<div class="servicecontainer_bottom_right">
+						<div class="servicecontainer_top_right">
+							<div class="servicecontainer_bottom_left">
+								<table>
+									<tr>
+										<td class="first-data date" valign="middle"><img src="img/sample_image_catering.png" class="corners-left" height="25px" width="45px" alt="sample catering image" /></td>
+										<td class="second-data pre-padding-15 arialPurple"><?=$trans["categories_wedding_party"];?></td>
+										<td class="third-data pre-padding-15 arialColorBlack">Catering</td>
+									</tr>
+								</table>
+								<table id="requestTableRowExpand-2" class="hide" cellpadding="0" cellspacing="0">
+									<tr>
+										<td class="first-col edit-button controls" onclick="alert('Edit');"><?=$trans["pages_item_edit"];?></td>
+										<td class="second-col pre-padding-10 arialPurple controls pointer" onclick="alert('Delete');"><?=$trans["pages_item_delete"];?></td>
+										<td class="third-col pre-padding-10 arialColorBlack controls corner-bottom-right-10">&nbsp;</td>
+									</tr>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="serviceRequestRow-3" class="serviceRequest odd">
+				<div class="servicecontainer_top_left">
+					<div class="servicecontainer_bottom_right">
+						<div class="servicecontainer_top_right">
+							<div class="servicecontainer_bottom_left">
+								<table>
+									<tr>
+										<td class="first-data date" valign="middle"><img src="img/sample_image_catering.png" class="corners-left" height="25px" width="45px" alt="sample catering image" /></td>
+										<td class="second-data pre-padding-15 arialPurple"><?=$trans["categories_wedding_party"];?></td>
+										<td class="third-data pre-padding-15 arialColorBlack">Catering</td>
+									</tr>
+								</table>
+								<table id="requestTableRowExpand-3" class="hide" cellpadding="0" cellspacing="0">
+									<tr>
+										<td class="first-col edit-button controls" onclick="alert('Edit');"><?=$trans["pages_item_edit"];?></td>
+										<td class="second-col pre-padding-15 arialPurple controls pointer" onclick="alert('Delete');"><?=$trans["pages_item_delete"];?></td>
+										<td class="third-col pre-padding-15 arialColorBlack controls corner-bottom-right-10">&nbsp;</td>
+									</tr>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="serviceRequestRow-4" class="serviceRequest even">
+				<div class="servicecontainer_top_left">
+					<div class="servicecontainer_bottom_right">
+						<div class="servicecontainer_top_right">
+							<div class="servicecontainer_bottom_left">
+								<table>
+									<tr>
+										<td class="first-data date" valign="middle"><img src="img/sample_image_catering.png" class="corners-left" height="25px" width="45px" alt="sample catering image" /></td>
+										<td class="second-data pre-padding-15 arialPurple"><?=$trans["categories_wedding_party"];?></td>
+										<td class="third-data pre-padding-15 arialColorBlack">Catering</td>
+									</tr>
+								</table>
+								<table id="requestTableRowExpand-4" class="hide" cellpadding="0" cellspacing="0">
+									<tr>
+										<td class="first-col edit-button controls" onclick="alert('Edit');"><?=$trans["pages_item_edit"];?></td>
+										<td class="second-col pre-padding-10 arialPurple controls pointer" onclick="alert('Delete');"><?=$trans["pages_item_delete"];?></td>
+										<td class="third-col pre-padding-10 arialColorBlack controls corner-bottom-right-10">&nbsp;</td>
+									</tr>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		<!-- END: Rows -->
+	</div>
+</div>
+
+<div id="sub-sidebar-column">
+	<div class="help-sub-panel-location">
+		<div class="overview-info">
+			<div class="help-header">
+				<span id="span_help_pages_main" class="txt20Bold"><?=$trans["pages_home"];?></span>
+			</div>
+			<div class="help-content-panel corners-bottom">
+				<?=$trans["pages_help"];?>
+			</div>	
+		</div>
+	</div>
+</div>

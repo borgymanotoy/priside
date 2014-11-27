@@ -1,0 +1,119 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"/>
+	<title>priside</title>
+
+	<link type="text/css" href="/css/screen.css" rel="stylesheet" media="screen,projection" />
+	<link type="text/css" href="/css/jquery.ui.all.css" rel="stylesheet" />
+	<link type="text/css" href="/css/formvalidation.css" rel="stylesheet" />
+	<link type="text/css" href="/css/jqueryfiletree.css" rel="stylesheet" />
+	<link type="text/css" href="/css/jquery-ui-timepicker-addon.css" rel="stylesheet" />
+
+	<?php
+		if (!CONTACTSBAR_DISABLED) {
+			include($_SERVER['DOCUMENT_ROOT'].'/contactsbar/contactsbar.css');
+			// For IE7 support include this. It does contain invalid css so it shouldn't
+			// be included for other browsers.
+			// include($_SERVER['DOCUMENT_ROOT'].'/contactsbar/contactsbar_ie7.css');
+		}
+	?>
+	<script type="text/javascript" src="/js/jquery-latest.js"></script>
+	<script type="text/javascript" src="/js/priside-common-script.js"></script>
+	<script type="text/javascript" src="/js/jquery-ui-core.min.js"></script>
+	<script type="text/javascript" src="/js/jquery-ui-slider.js"></script>
+	<script type="text/javascript" src="/js/jquery.ui.datepicker.js"></script>
+	<script type="text/javascript" src="/js/jquery-ui-timepicker-addon.js"></script>
+	<script type="text/javascript" src="/js/jquery-ui-dialog.min.js"></script>
+	<script type="text/javascript" src="/js/jquery.validate.min.js"></script>
+	<script type="text/javascript" src="/js/formvalidation.js"></script>
+	<script type="text/javascript" src="/js/autocomplete_dropdown.js"></script>
+	<script type="text/javascript" src="/js/fileuploader.js"></script>
+
+
+	<script type="text/javascript">
+	$(document).ready(function() {
+		initComponents();
+		showHideSubTabUserPanel('tab1',true);
+		loadTabAjax('tab1', 'inquiries_main.php');
+	}); // end document ready
+
+	function loadTabAjax( target, page ){
+		var lang = $("#loaded_langugage").val();
+		$('#'+target).load( page, { lang:lang } );
+	}
+	</script>
+
+</head>
+<body>
+
+		<input type="hidden" id="select_translation" value="<?=$trans["dropdown_select"];?>"/>
+
+		<input type="hidden" id="loaded_langugage" value="<? echo $lang; ?>" />
+		<!-- header section -->
+		<? include( "header.php" ); ?>
+		<!-- header section -->
+
+		<!-- body section -->
+		<div id="main">
+			<div id="content" class="wrapper">
+
+				<!-- outer tab section -->
+
+				<ol id="outer-tabs">
+					<li id="tab1header" class="current"><a href="javascript:void(0);" onclick="loadTabAjax('tab1', 'inquiries_main.php');" ><span><?=$trans["usr_panel_inquries"];?></span></a></li>
+					<li id="tab2header"><a href="javascript:void(0);" onclick="loadTabAjax('tab2', 'my_projects_main.php');"><span><?=$trans["usr_panel_my_proc"];?></span></a></li>
+					<li id="tab3header"><a href="javascript:void(0);" onclick="loadTabAjax('tab3', 'message_center_main.php');"><span><?=$trans["usr_panel_msg_center"];?></span></a></li>
+					<li id="tab4header"><a href="javascript:void(0);" onclick="loadTabAjax('tab4', 'my_account_main.php');"><span><?=$trans["usr_panel_my_account"];?></span></a></li>
+					<li id="tab5header"><a onclick="loadTabAjax('tab5', 'my_company_profile_main.php');" href="javascript:void(0);"><span><?=$trans["common_usr_pnel_my_company_profile"];?></span></a></li>
+
+				</ol>
+
+				<div id="main-content" class="clearfix">
+					<div id="tab1" class="tab_content">
+						<!-- inquiries_main.php -->
+					</div>
+					<div id="tab2" class="tab_content">
+
+					</div>
+					<div id="tab3" class="tab_content">
+						<!-- "message_center.php -->
+
+					</div>
+					<div id="tab4" class="tab_content">
+						<!-- my_account_main.php -->
+
+					</div>
+					<div id="tab5" class="tab_content">
+						<!-- my_company_profile_main.php -->
+					</div>
+				</div>
+
+				<div id="main-bottom-curve">&nbsp;
+					<?php
+						if (!CONTACTSBAR_DISABLED) {
+							include($_SERVER['DOCUMENT_ROOT'].'/contactsbar/contactsbar.php');
+						}
+					?>
+				</div>
+
+			</div>
+		</div>
+
+
+
+
+		<!-- footer section -->
+		<? include( "footer.php" ); ?>
+
+			<div id="div_modal_popup">
+				<div class="modal-lightsout"></div>
+				<div class="modal-profile">
+					<a href="#" title="Close profile window" class="modal-close-profile"><img src="/img/closeImage.png" border="0" alt="Close window" /></a>
+					<div id="div_popup_contents">
+						<!--? include( "certification_pop_up.php" ); ?-->
+					</div>
+				</div>
+			</div>
+</body>
+</html>

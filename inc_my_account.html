@@ -1,0 +1,1012 @@
+<!--inc_my_account.html-->
+<script>
+	
+	function GetNotificationIds(){
+		var numPrefs = 28; //28;
+		var prefix = 'notification_';
+		var prefixEmail = 'notificationEM_';
+		var prefixMessageCenter = 'notificationMC_';
+		var NotificationPreferences = [];
+		var notification,deliveryMethod;
+
+		for( var c = 1; c < numPrefs + 1; c ++ ){
+			notification = 0;
+			deliveryMethod = 0; // both - (email == 1, messagecenter == 2)
+
+			if( $('#' + prefix + c).attr('checked') ){
+				notification = 1;
+				
+				if( $('#' + prefixEmail + c).attr('checked') ) //email is checked only
+					deliveryMethod = 1;
+				if( $('#' + prefixMessageCenter + c).attr('checked') ) //MessageCenter is checked only
+					deliveryMethod = 2;
+				if( $('#' + prefixEmail + c).attr('checked') &&  $('#' + prefixMessageCenter + c).attr('checked')) //Both email and MessageCenter is Checked
+					deliveryMethod = 3;
+					
+				if( 0 == deliveryMethod ) // no point in notifiying without a method.
+					notification = 0;
+			}
+			NotificationPreferences[c-1] = { 'I' : c, 'N' : notification, 'D' : deliveryMethod };
+		}
+		return( NotificationPreferences );
+	}
+	
+	function SetNotificationIds(notificationArray){
+		var i;
+		var prefix = 'notification_';
+		var prefixEmail = 'notificationEM_';
+		var prefixMessageCenter = 'notificationMC_';		
+
+		// default all previous selections
+		for ( i = 1; i < 29; i++) {
+			$('#' + prefix + i).attr('checked', false);
+			$('#' + prefixEmail + i).attr('checked', false);
+			$('#' + prefixMessageCenter + i).attr('checked', false);
+		}
+
+		for ( i = 0; i < notificationArray.length; i++) {
+			
+			if (1 == notificationArray[i].N) {
+
+				$('#' + prefix + notificationArray[i].I).attr('checked', true); //check notification
+		
+			
+				if (1 == notificationArray[i].D) // check email
+					$('#' + prefixEmail + notificationArray[i].I ).attr('checked', true);
+
+				else if (2 == notificationArray[i].D) // check message center
+					$('#' + prefixMessageCenter + notificationArray[i].I).attr('checked', true);
+
+				else if (3 == notificationArray[i].D) { // check both email and message center
+					$('#' + prefixEmail + notificationArray[i].I).attr('checked', true);
+					$('#' + prefixMessageCenter + notificationArray[i].I).attr('checked', true);
+				}
+			}
+		}
+	}
+	
+	$(document).ready(function(){
+		//$("#btnMyAccountUploadProfilePic").css({"position" : "relative" ,"top" : "0px"}).fileuploader({"FlashVars" : "fname=1,mname=2,lname=3"});
+		
+			
+		$("#btnMyAccountUploadProfilePic").css({"position" : "relative" ,"top" : "0px"}).fileuploader({
+				"onComplete" : function(filename){
+					 $.ajax( {
+						type: 'POST',
+						url:  '/my_account.php',
+						data: { 'ajaxRequest'   : 'getPreview', 'filename' : filename },
+						success: function(data){
+							
+							$("#profilePic").attr("src",data.fileUrl);
+							$("#ProfilePicUploaded").val( true );
+							
+
+						},
+						error: function(xhr){
+							//showStatusMessageBox("div_modify_my_company_profile_status_msgs",xhr.statusText, true);
+						}
+					 });
+				},
+				"onError" : function(error){
+					showStatusMessageBox("div_modify_my_company_profile_status_msgs",error, true);
+				},
+				"useExternProgressHandler" : true, 
+				"ButtonStateCancel" : '<?=$trans["certs_ButtonStateCancel"];?>',
+				'FlashVars' 	: "SavePath=<?=$SavePath;?>",
+				'filters'       : "(Images):*.bmp;*.png;*.jpg;*.gif;*.jpeg;"
+		});
+		
+		
+	});
+
+	var myValidator = new FormAutoValidator();
+	myValidator.setupValidator('theForm');
+	
+	
+	function ajaxReloadUserList(){
+		$.ajax({
+			type : "POST",
+			url : "/my_account.php",
+			data : {
+				"ajaxRequest" : "ajaxReloadUserList",
+			},
+			success: function(data){ 
+				$('#contactsListHTML').html( data );
+			},
+			error: function(xhr){  
+				showStatusMessageBox("div_my_account_status_msgs", xhr.statusText, true);
+			}
+		});
+	}
+	
+	function ajaxLoadSelectedUser( UserId, CheckSum ){
+		$.ajax({
+			type : "POST",
+			url : "/my_account.php",
+			data : {
+				"ajaxRequest"	: "ajaxLoadSelectedUser",
+				"UserId" 	: UserId,
+				"CheckSum"		: CheckSum
+			},
+			success: function(data){
+				
+				$("#user_firstname").val( data.FirstName );
+				$("#user_lastname").val( data.LastName );
+				$("#user_title").val( data.Title );
+				$("#user_telephone").val( data.Phone );
+				$("#user_mail").val( data.Email );
+				$("#user_alt_phone").val( data.AltPhone );
+				$("#user_password").val( "" );
+				$("#user_comfirm_pass").val( "" );
+				
+				$("#user_type").val(data.Type);
+				$("#profilePic").attr("src",data.PhotoUrl);
+
+				// update hidden fields
+				$("#UserId").val( data.UserId );
+				$("#UserIdCheckSum").val( data.CheckSum );
+				$("#contactButton").text( "Save User" );
+				$("#createNewUser").show();
+				
+				//console.log(">> "+data.Notification);
+				$("[name=notification]").filter("[value="+data.Notification+"]").prop("checked",true);
+
+				SetNotificationIds( data.NotificationPreferences );
+				
+				if ("Admin" == data.Type) {
+					$("#user_regular").removeClass("btn-violet").attr("class","btn-white");
+					$("#user_admin").removeClass("btn-white").attr("class","btn-violet");
+					return;
+				}
+				
+				$("#user_regular").removeClass("btn-violet").attr("class","btn-violet");
+				$("#user_admin").removeClass("btn-white").attr("class","btn-white");
+				
+			},
+			error: function(xhr){  
+				showStatusMessageBox("div_my_account_status_msgs", xhr.statusText, true);
+			}
+		});
+	}
+	
+	
+	function validateUserEntries(){
+		if($("#user_firstname").val().length == 0) return false;
+		else if($("#user_lastname").val().length == 0) return false;
+		else if($("#user_telephone").val().length == 0) return false;
+		else if($("#user_mail").val().length == 0) return false;		
+
+		return true;
+	}
+
+	function saveUpdateUserEntries() {
+		if(!validateUserEntries()){
+			var validation_msg = $("#hiw_my_account_error_entry_validation").val();
+			showStatusMessageBox("div_my_account_status_msgs", validation_msg, true);
+		}
+		
+		ajaxSaveUpdateUser();
+	}
+	
+	function ajaxSaveUpdateUser() {
+				
+				
+		//GetNotificationIds();				
+		//return;
+		//confirmemail
+		//confirmemailEmail
+		//confirmemailMsgCenter
+				
+		$.ajax({
+			type : "POST",
+			url : "/my_account.php",
+			data : {
+				"ajaxRequest" : ("" == $("#UserId").val()) ? "ajaxCreateUser" : "ajaxUpdateUser",
+				"FirstName" : $("#user_firstname").val(),
+				"LastName" : $("#user_lastname").val(),
+				"Title" : $("#user_title").val(),
+				"Email" : $("#user_mail").val(),
+				"Phone" : $("#user_telephone").val(),
+				"AltPhone" : $("#user_alt_phone").val(),
+				"Password" : $("#user_password").val(),
+				"ConfirmPassword" : $("#user_comfirm_pass").val(),
+				"LoadedUserId" : $("#UserId").val(),
+				"LoadedUserIdCheckSum" : $("#UserIdCheckSum").val(),
+				"Type" : $("#user_type").val(),
+				"ProfilePicUploaded" : $("#ProfilePicUploaded").val(),
+				"NotificationPreferences" : GetNotificationIds()
+			},
+			success: function(data){ 
+				
+				
+				if ("<?=$_SESSION['User']['Type'];?>" == $("#user_type").val() ) { 
+					showStatusMessageBox("div_my_account_status_msgs", data.OkMsg, false);
+					return;
+				}
+				$("[name=notification]").filter("[value=\"weekly\"]").prop("checked",true);
+				$("#createNewUser").hide();
+				$("#user_firstname").val( "" );
+				$("#user_lastname").val( "" );
+				$("#user_title").val( "" );
+				$("#user_telephone").val( "" );
+				$("#user_mail").val( "" );
+				$("#user_alt_phone").val( "" );
+				$("#user_password").val( "" );
+				$("#user_comfirm_pass").val( "" );
+				
+				// set to regular
+				$("#user_regular").removeClass("btn-violet").attr("class","btn-violet");
+				$("#user_admin").removeClass("btn-white").attr("class","btn-white");
+				$("#user_type").val("Regular");
+				
+				$("#UserId").val( "");
+				$("#UserIdCheckSum").val( "" );
+				$("#spn_contact").text("<?=$trans['my_account_select_user'];?>");
+				$("#contactButton").text( "Add User" );
+				
+				clearNotifications();
+				
+				showStatusMessageBox("div_my_account_status_msgs", data.OkMsg, false);
+			},
+			error: function(xhr){  
+				showStatusMessageBox("div_my_account_status_msgs", xhr.statusText, true);
+			}
+		});
+		
+		
+	}
+	
+	function showBillingInfo() {
+		$("#my_account_billingInfo").toggle();
+	}
+	
+	function validateBusinessEntries(){
+		if($("#my_account_business_name").val().length == 0) return false;
+		else if($("#my_account_phone").val().length == 0) return false;
+		else if($("#my_account_address").val().length == 0) return false;
+		else if($("#my_account_zipcode").val().length == 0) return false;
+		else if($("#my_account_location").val().length == 0) return false;
+		else if($("#my_account_email").val().length == 0) return false;
+		else if($("#my_account_home_page").val().length == 0) return false;
+		return true;
+	}
+	
+	
+	function saveBusinessEntries() {
+		if(!validateBusinessEntries()) {
+			var validation_msg = $("#hiw_my_account_error_entry_validation").val();
+			showStatusMessageBox("div_my_account_status_msgs", validation_msg, true);
+			return;
+		}
+		ajaxSaveBusinessEntries();
+	}
+
+	function ajaxSaveBusinessEntries(){
+		$.ajax({
+			type : "POST",
+			url : "/my_account.php",
+			data : {
+				"ajaxRequest" : "ajaxSaveBusinessEntries",
+				"Name" : $("#my_account_business_name").val(),
+				"Phone" : $("#my_account_phone").val(),
+				"Address" : $("#my_account_address").val(),
+				"Postal" : $("#my_account_zipcode").val(),
+				"City" : $("#my_account_location").val(),
+				"BillingAddress" : $("#my_account_billing_address").val(),
+				"BillingPostal" : $("#my_account_billing_zipcode").val(),
+				"BillingCity" : $("#my_account_billing_city").val(),
+				"Email" : $("#my_account_email").val(),
+				"HomePage" : $("#my_account_home_page").val()
+			},
+			
+			success: function(data){ 
+				$("#contactButton").text( "Add User" );
+				showStatusMessageBox("div_my_account_status_msgs", data, false);
+			},
+			error: function(xhr){  
+				showStatusMessageBox("div_my_account_status_msgs", xhr.statusText, true);
+			}
+		});
+		
+	}
+	
+	// clear notifications
+	function clearNotifications() {
+		var i;
+		var prefix = 'notification_';
+		var prefixEmail = 'notificationEM_';
+		var prefixMessageCenter = 'notificationMC_';		
+
+		// default all previous selections
+		for ( i = 1; i < 29; i++) {
+			$('#' + prefix + i).attr('checked', false);
+			$('#' + prefixEmail + i).attr('checked', false);
+			$('#' + prefixMessageCenter + i).attr('checked', false);
+		}
+	}
+	
+	function clearUserForm() {
+			$("[name=notification]").filter("[value=\"weekly\"]").prop("checked",true);				
+			$("#user_firstname").val( "" );
+			$("#user_lastname").val( "" );
+			$("#user_title").val( "" );
+			$("#user_telephone").val( "" );
+			$("#user_mail").val( "" );
+			$("#user_alt_phone").val( "" );
+			$("#user_password").val( "" );
+			$("#user_comfirm_pass").val( "" );
+			
+			// set to regular
+			$("#user_regular").removeClass("btn-violet").attr("class","btn-violet");
+			$("#user_admin").removeClass("btn-white").attr("class","btn-white");
+			$("#user_type").val("Regular");
+			$("#createNewUser").hide();
+			$("#UserId").val( "");
+			$("#UserIdCheckSum").val( "" );
+			$("#spn_contact").text("<?=$trans['my_account_select_user'];?>");
+			$("#contactButton").text( "Add User" );
+		clearNotifications();
+	}
+	
+	$(document).ready(function(){
+		$("#user_regular, #user_admin").click(function() {
+			
+			if("user_regular" == $(this).attr("id")) {
+				$("#user_regular").removeClass("btn-violet").attr("class","btn-violet");
+				$("#user_admin").removeClass("btn-white").attr("class","btn-white");
+				$("#user_type").val("Regular");
+				return;
+			}
+			
+			$("#user_regular").removeClass("btn-violet").attr("class","btn-white");
+			$("#user_admin").removeClass("btn-white").attr("class","btn-violet");
+			$("#user_type").val("Admin");
+		});
+	});
+</script>
+<div id="main-column-2">
+<!--
+<pre>
+	<?var_dump($_SESSION)?>
+</pre>
+-->
+<input type="hidden" id="hiw_my_account_error_entry_validation" value="<?=$trans["hiw_my_account_error_entry_validation"];?>"/>
+<!-- START: Status Message Box -->
+<div id="div_my_account_status_msgs" class="status-msg-box" style="display: none;">
+	<?if(!empty($ErrMsg)){?> 
+		<script type="text/javascript">
+			showStatusMessageBox("div_my_account_status_msgs","<?=$ErrMsg?>", true);
+		</script>
+	<?}?> 
+	<?if(!empty($OkMsg)){?>
+		<script type="text/javascript">
+			showStatusMessageBox("div_my_account_status_msgs","<?=$OkMsg?>", false);
+		</script>
+	<?}?>
+</div>
+<!-- END -->
+
+<form id="theForm">
+		<h1 class="title"><?=$trans["my_account_my_acount"];?></h1>
+		<strong><?=$trans["my_account_welcome_header"];?></strong>
+		<p><?=$trans["my_account_welcome_desc"];?></p>
+		<div class="clearfix container-small">
+		
+			<div class="left">
+					<? if (IsAdmin()) { ?>
+					<div class="combobox-container left">
+						
+							<input type="hidden" id="default_contact" value="<?=$trans['my_account_select_user'];?>" />
+							<span id="spn_contact" class="cmb_sel_item_value italic" style="margin-left: 5px; width: 210px;"><?=$trans['my_account_select_user'];?></span>
+							<span class="site-color arrow-down-button" style="width: 25px; height: 18px; border-left: 2px solid #412467;" onclick=""></span>
+							<span class="combobox-arrow" style="margin-left: 8px;" onclick="ajaxReloadUserList();showHideComboboxItems('div_contact');"></span>
+							<div id="div_contact" class="combox-search-container comboBox combo-list-container">
+								<div id="divClose" align="right" onclick="closeListBox('div_contact');"><img src="../img/closeImage.png" alt="Close" /></div>
+								<ul class="combobox-list" id="contactsListHTML">
+									
+								</ul>
+							</div>
+
+						
+					</div>
+					<? } ?>
+					<input type="hidden" id="UserId" value="<? if (!IsAdmin()) {?><?=$_SESSION['User']['Id']?><?}?>"/>
+					<input type="hidden" id="UserIdCheckSum" value="<? if (!IsAdmin()) {?><?=CheckSum($_SESSION['User']['Id'])?><?}?>"/>
+					<input type="hidden" id="ProfilePicUploaded" value="false"/>
+					
+				<!--
+				<p><input type="checkbox" id="my_account_set_primary_contact" name="my_account_set_primary_contact" /><label for="my_account_set_primary_contact"></label><?=$trans["my_account_set_primary_contact"];?> ?&nbsp;<img src="img/question_mark.png" /></p>	
+				-->
+			</div>
+		
+
+			
+		
+			<div class="clearfix left">
+							
+				<img id="profilePic" height="89" width="89" style="margin-right:1em; margin-left:3em;" class="left" src="img/person-pic.png" />
+				
+				<div class="left" style="width:200px; margin-top:5em;"><a id="btnMyAccountUploadProfilePic" class="btn-violet" href="#"><span><h5><?=$trans["my_account_upload"];?></h5></span></a>&nbsp;<img src="img/question_mark.png" /></div>
+			</div>
+			
+		</div>
+		<div class="clearfix container-small">
+				<div class="input-text left">
+					<span><?=$trans["my_account_first_name"];?> *</span>
+					<div><input name="charles" type="text" id="user_firstname" value="<? if (!IsAdmin()) {?><?=$_SESSION['User']['FirstName']?><?}?>"/></div>
+				</div>
+
+				<div class="input-text left" style="margin-left:3em;">
+					<span><?=$trans["my_account_last_name"];?> *</span>
+					<div><input type="text" id="user_lastname" value="<? if (!IsAdmin()) {?><?=$_SESSION['User']['LastName']?><?}?>"/></div>
+				</div>
+		</div>
+		
+		<div class="clearfix container-small">
+				<div class="input-text left">
+					<span><?=$trans["my_account_title"];?></span>
+					<div><input type="text" id="user_title" value="<? if (!IsAdmin()) {?><?=$_SESSION['User']['Position']?><?}?>" /></div>
+				</div>
+
+				<div class="input-text left" style="margin-left:3em;">
+					<span><?=$trans["my_account_telephone"];?> *</span>
+					<div><input type="text" id="user_telephone" value="<? if (!IsAdmin()) {?><?=$_SESSION['User']['Phone']?><?}?>" /></div>
+				</div>
+		</div>
+
+		
+		<div class="clearfix container-small">
+				<div class="input-text left">
+					<span><?=$trans["my_account_mail"];?> *</span>
+					<div><input type="text" id="user_mail" value="<? if (!IsAdmin()) {?><?=$_SESSION['User']['Email']?><?}?>" /></div>
+				</div>
+
+				<div class="input-text left" style="margin-left:3em;">
+					<span><?=$trans["my_account_alternative_phone"];?> *</span>
+					<div><input type="text" id="user_alt_phone" value="<? if (!IsAdmin()) {?><?=$_SESSION['User']['AltPhone']?><?}?>" /></div>
+				</div>
+		</div>
+
+		
+					
+		<div class="clearfix container-small">
+				<div class="input-text left">
+					<span><?=$trans["my_account_new_pass"];?> *</span>
+					<div><input type="password" id="user_password" /></div>
+				</div>
+
+				<div class="input-text left" style="margin-left:3em;">
+					<span><?=$trans["my_account_confirm_pass"];?> *</span>
+					<div><input type="password" id="user_comfirm_pass" /></div>
+				</div>
+		</div>
+
+		<div class="container-small">* <?=$trans["my_account_required_field"];?></div>
+		
+		<div class="container-small">
+			<h3><?=$trans["my_account_notification"];?></h3>
+			<table>
+				<tr style="text-align:left; vertical-align:center;">
+					<th width="300px"><?=$trans["my_account_email"];?></th>
+					<th><?=$trans["my_account_notification"];?></th>
+					<th><?=$trans["my_account_method"];?></th>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail1"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input class="notification" type="checkbox" id="notification_1" name="notification_1"/>
+						<label for="notification_1"></label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_1" name="notificationEM_1" />
+						<label for="notificationEM_1"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_1" name="notificationMC_1" />
+						<label for="notificationMC_1"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail2"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_2" name="notification_2" />
+						<label for="notification_2">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_2" name="notificationEM_2" />
+						<label for="notificationEM_2"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_2" name="notificationMC_2" />
+						<label for="notificationMC_2"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail3"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_3" name="notification_3" />
+						<label for="notification_3">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_3" name="notificationEM_3" />
+						<label for="notificationEM_3"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_3" name="notificationMC_3" />
+						<label for="notificationMC_3"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail4"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_4" name="notification_4" />
+						<label for="notification_4">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_4" name="notificationEM_4" />
+						<label for="notificationEM_4"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_4" name="notificationMC_4" />
+						<label for="notificationMC_4"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail5"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_5" name="notification_5" />
+						<label for="notification_5">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_5" name="notificationEM_5" />
+						<label for="notificationEM_5"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_5" name="notificationMC_5" />
+						<label for="notificationMC_5"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail6"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_6" name="notification_6" />
+						<label for="notification_6">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_6" name="notificationEM_6" />
+						<label for="notificationEM_6"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_6" name="notificationMC_6" />
+						<label for="notificationMC_6"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail7"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_7" name="notification_7" />
+						<label for="notification_7">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_7" name="notificationEM_7" />
+						<label for="notificationEM_7"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_7" name="notificationMC_7" />
+						<label for="notificationMC_7"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail8"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_8" name="notification_8" />
+						<label for="notification_8">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_8" name="notificationEM_8" />
+						<label for="notificationEM_8"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_8" name="notificationMC_8" />
+						<label for="notificationMC_8"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail9"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_9" name="notification_9" />
+						<label for="notification_9">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_9" name="notificationEM_9" />
+						<label for="notificationEM_9"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_9" name="notificationMC_9" />
+						<label for="notificationMC_9"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail10"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_10" name="notification_10" />
+						<label for="notification_10">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_10" name="notificationEM_10" />
+						<label for="notificationEM_10"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_10" name="notificationMC_10" />
+						<label for="notificationMC_10"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail11"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_11" name="notification_11" />
+						<label for="notification_11">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_11" name="notificationEM_11" />
+						<label for="notificationEM_11"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_11" name="notificationMC_11" />
+						<label for="notificationMC_11"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail12"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_12" name="notification_12" />
+						<label for="notification_12">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_12" name="notificationEM_12" />
+						<label for="notificationEM_12"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_12" name="notificationMC_12" />
+						<label for="notificationMC_12"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail13"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_13" name="notification_13" />
+						<label for="notification_13">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_13" name="notificationEM_13" />
+						<label for="notificationEM_13"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_13" name="notificationMC_13" />
+						<label for="notificationMC_13"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail14"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_14" name="notification_14" />
+						<label for="notification_14">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_14" name="notificationEM_14" />
+						<label for="notificationEM_14"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_14" name="notificationMC_14" />
+						<label for="notificationMC_14"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail15"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_15" name="notification_15" />
+						<label for="notification_15">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_15" name="notificationEM_15" />
+						<label for="notificationEM_15"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_15" name="notificationMC_15" />
+						<label for="notificationMC_15"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail16"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_16" name="notification_16" />
+						<label for="notification_16">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_16" name="notificationEM_16" />
+						<label for="notificationEM_16"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_16" name="notificationMC_16" />
+						<label for="notificationMC_16"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail17"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_17" name="notification_17" />
+						<label for="notification_17">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_17" name="notificationEM_17" />
+						<label for="notificationEM_17"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_17" name="notificationMC_17" />
+						<label for="notificationMC_17"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail18"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_18" name="notification_18" />
+						<label for="notification_18">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_18" name="notificationEM_18" />
+						<label for="notificationEM_18"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_18" name="notificationMC_18" />
+						<label for="notificationMC_18"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail19"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_19" name="notification_19" />
+						<label for="notification_19">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_19" name="notificationEM_19" />
+						<label for="notificationEM_19"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_19" name="notificationMC_19" />
+						<label for="notificationMC_19"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail20"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_20" name="notification_20" />
+						<label for="notification_20">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_20" name="notificationEM_20" />
+						<label for="notificationEM_20"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_20" name="notificationMC_20" />
+						<label for="notificationMC_20"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail21"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_21" name="notification_21" />
+						<label for="notification_21">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_21" name="notificationEM_21" />
+						<label for="notificationEM_21"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_21" name="notificationMC_21" />
+						<label for="notificationMC_21"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail22"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_22" name="notification_22" />
+						<label for="notification_22">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_22" name="notificationEM_22" />
+						<label for="notificationEM_22"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_22" name="notificationMC_22" />
+						<label for="notificationMC_22"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail23"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_23" name="notification_23" />
+						<label for="notification_23">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_23" name="notificationEM_23" />
+						<label for="notificationEM_23"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_23" name="notificationMC_23" />
+						<label for="notificationMC_23"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail24"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_24" name="notification_24" />
+						<label for="notification_24">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_24" name="notificationEM_24" />
+						<label for="notificationEM_24"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_24" name="notificationMC_24" />
+						<label for="notificationMC_24"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail25"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_25" name="notification_25" />
+						<label for="notification_25">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_25" name="notificationEM_25" />
+						<label for="notificationEM_25"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_25" name="notificationMC_25" />
+						<label for="notificationMC_25"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail26"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_26" name="notification_26" />
+						<label for="notification_26">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_26" name="notificationEM_26" />
+						<label for="notificationEM_26"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_26" name="notificationMC_26" />
+						<label for="notificationMC_26"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail27"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_27" name="notification_27" />
+						<label for="notification_27">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_27" name="notificationEM_27" />
+						<label for="notificationEM_27"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_27" name="notificationMC_27" />
+						<label for="notificationMC_27"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+				<tr>
+					<td><?=$trans["my_account_notification_mail28"];?></td>
+					<td style="padding-bottom:.3em;">
+						<input type="checkbox" id="notification_28" name="notification_28" />
+						<label for="notification_28">&nbsp;</label>
+					</td>
+					<td>
+						<input type="checkbox" id="notificationEM_28" name="notificationEM_28" />
+						<label for="notificationEM_28"><?=$trans["my_account_email"];?></label>
+						
+						<input type="checkbox" id="notificationMC_28" name="notificationMC_28" />
+						<label for="notificationMC_28"><?=$trans["my_account_msg_center"];?></label>						
+					</td>
+				</tr>
+			</table>
+		</div>
+		
+		<div class="clearfix container-small">
+			
+				<div class="left"> 
+					<? if (IsAdmin()) { ?>
+					<a id="user_regular" class="btn-violet" href="javascript:void(0);"><span><?=$trans["my_account_normal_user"];?></span></a>&nbsp;<img style="margin-top:.3em;" src="img/question_mark.png" />
+					<? } ?>
+					<div style="margin-top:1em;">
+					<a onclick="saveUpdateUserEntries();" class="btn-violet" href="javascript:void(0);"><span id="contactButton"><?if (!IsAdmin) {?><?=$trans["my_account_add_user"];?><?}?><?if(IsAdmin){?><?=$trans["my_account_save_user"];?><?}?></span></a>
+					</div>
+				</div>
+			
+			<? if (IsAdmin()) { ?>
+				<div class="left"> 
+					<div style="margin-left:2em;"><a id="user_admin" class="btn-white" href="javascript:void(0);"><span><h5><?=$trans["my_account_admin"];?></h5></span></a>&nbsp;<img style="margin-top:.3em;" src="img/question_mark.png" /></div>
+					<div style="margin-top:1em;" class="hide" id="createNewUser">
+						<a class="btn-violet" href="javascript:void(0);" onclick="javascript:clearUserForm();"><span>create new user</span></a>
+					</div>
+				</div>
+			<? } ?>
+			
+			
+			<?
+				// Hidden field for Type of user
+			?>
+			<input type="hidden" id="user_type" value="Regular"/>
+		</div>
+		<? if (IsAdmin()) { ?>
+		
+		<h3><?=$trans["my_account_company_info"];?></h3>
+		<div class="clearfix container-small">
+				<div class="input-text left">
+					<span><?=$trans["my_account_company_org"];?> *</span>
+					<div><input id="my_account_business_name" type="text" value="<?=$Business['Name']?>"/></div>
+				</div>
+
+				<div class="input-text left" style="margin-left:3em;">
+					<span><?=$trans["my_account_telephone"];?> *</span>
+					<div><input id="my_account_phone" type="text" value="<?=$Business['Phone']?>"/></div>
+				</div>
+		</div>
+		<div class="clearfix container-small">
+				<div class="input-text left">
+					<span><?=$trans["my_account_address"];?> *</span>
+					<div><input id="my_account_address" type="text" value="<?=$Business['Address']?>" /></div>
+				</div>
+
+				<div class="input-text left" style="margin-left:3em;">
+					<span><?=$trans["my_account_zip_code"];?>. *</span>
+					<div><input id="my_account_zipcode" type="text" value="<?=$Business['Postal']?>" /></div>
+				</div>
+		</div>
+		<div class="clearfix container-small">
+				<div class="input-text left">
+					<span><?=$trans["my_account_location"];?> *</span>
+					<div><input id="my_account_location" type="text" value="<?=$Business['City']?>" /></div>
+				</div>
+
+		</div>
+			
+		<div class="container-small"><input onclick="showBillingInfo()" type="checkbox" id="my_account_other_billing" name="my_account_other_billing" /><label for="my_account_other_billing"></label><?=$trans["my_account_other_billing"];?></div>
+		
+		<div id="my_account_billingInfo" class="clearfix container-small hide">
+				<div class="input-text left">
+					<span><?=$trans["my_account_address"];?> *</span>
+					<div><input id="my_account_billing_address" type="text" value="<?=$Business['BillingAddress']?>" /></div>
+				</div>
+				<div class="input-text left" style="margin-left:3em;">
+					<span><?=$trans["my_account_zip_code"];?>. *</span>
+					<div><input id="my_account_billing_zipcode" type="text" value="<?=$Business['BillingPostal']?>" /></div>
+				</div>
+				<div class="input-text left">
+					<span><?=$trans["my_account_location"];?></span>
+					<div><input type="text" name="City" id="my_account_billing_city" value="<?=$Business["BillingCity"];?>"></div>
+				</div>
+		</div>
+		
+		<div class="clearfix container-small">
+				<div class="input-text left">
+					<span><?=$trans["my_account_mail"];?> *</span>
+					<div><input id="my_account_email" type="text" value="<?=$Business['Email']?>" /></div>
+				</div>
+
+				<div class="input-text left" style="margin-left:3em;">
+					<span><?=$trans["my_account_home_page"];?>. *</span>
+					<div><input id="my_account_home_page" type="text" value="<?=$Business['HomePage']?>" /></div>
+				</div>
+		</div>
+		
+		<div class="clearfix container-small">
+			<a class="btn-orange" href="javascript:void(0);" onclick="saveBusinessEntries();"><span><h5><?=$trans["my_account_save"];?></h5></span></a>
+		</div>
+		
+		<div class="clearfix container-small">
+			<h3><?=$trans["my_account_contract"];?></h3>
+		<?	
+			foreach( $contracts as $contract ){
+				if (strrpos($contract['Type'], "pdf"))
+					$img_src = "img/clip.png";
+				else 
+					$img_src = "img/play.png";
+		?>
+				<a href="<?=$contract['fileUrl']?>"><img src="<?=$img_src?>" /> <?=$contract['Name']?> (<?=$contract['CreationDate']?>)</a><br />	
+		<?}?>
+			
+		<!--<span><?=$trans["my_account_address"];?> *</span>-->
+		
+		<? } ?>
+		
+
+		</div>	
+</form>
+</div>
+
+<div id="sidebar-column">
+	<div class="info-pane">
+		<span class="help-user-tile" style="display:block;"><?=$trans["my_account_account_help"];?></span>
+		<div class="help-user-title"><?=$trans["my_account_account_details"];?></div>
+		<div class="info-pane-content clearfix" style="margin-top: 45px;">
+			<div class="txt12" style="margin-top: 5px; margin-left: 50px; width: 240px;"><?=$trans["my_account_update_user"];?></div>
+		</div>
+		<? include( "inc_users_panel_client_banner.html" ); ?>
+	</div>
+</div>
+

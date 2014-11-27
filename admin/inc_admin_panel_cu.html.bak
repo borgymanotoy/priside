@@ -1,0 +1,16 @@
+<!-- inc_admin_panel_cu_main.html -->
+
+<ul id="cu_sub_list" class="submenu">
+	<li id="cu_sub_tab_home"><a class="cu_current" href="javascript: void(0);" onclick="showHideCustomersUsersSubtabContent('cu', true);"><?=$trans["cu_customers_users"];?></a>|</li>
+	<li id="cu_sub_tab_new_user"><a href="javascript: void(0);" onclick="showHideCustomersUsersSubtabContent('new_user', true);"><?=$trans["cu_new_customer"];?></a></li>
+</ul>
+
+<div class="clearfix">
+	<input id="main_sub_tab" type="hidden" value="home" />
+	<div id="cu_tab_home" class="cu_sub_tab_content">
+		<? include( "admin_panel_cu_home.php" ); ?>
+	</div>
+	<div id="cu_tab_new_user" class="cu_sub_tab_content">
+		<? include( "admin_panel_cu_new.php" ); ?>
+	</div>
+</div>

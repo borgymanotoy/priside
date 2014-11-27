@@ -1,0 +1,358 @@
+<style>
+	.left {
+		float: left;
+	}
+
+	.right {
+		float: right;
+	}
+	
+	ul {
+		list-style : none;
+	}
+	
+	/*override screen.css*/
+	.collapsableListCustomerInfoCinfo input[type=checkbox] {
+		display:none;
+	}
+	.collapsableListCustomerInfoCinfo input[type=checkbox] + label{
+		background: transparent url(/img/checkboxes.png) no-repeat 0 -35px;
+		height: 16px;
+		/* width: 150px; */
+		padding-left: 0px;
+		padding-right: 0px;
+		min-width: 16px;
+		display:inline-block;
+		margin-top: 2px 2px;
+	}
+
+	.collapsableListCustomerInfoCinfo input[type=checkbox]:checked + label
+	{
+		background: transparent url(/img/checkboxes.png) no-repeat 0 0px;
+		height: 16px;
+		/* width: 150px; */
+		padding-left: 0px;
+		padding-right: 0px;
+		min-width: 16px;
+		display:inline-block;
+		margin-top: 2px 2px;
+	}
+</style>
+
+<script type="text/javascript">
+	var requiredFieldsRegular    = ["firstNameCustomerInfoCinfo","lastNameCustomerInfoCinfo","emailCustomerInfoCinfo","phoneCustomerInfoCinfo"];
+	var requiredFieldsAdvertiser = ["spn_organizationCustomerInfoCinfo","servicesCustomerInfoCinfo","municipalitiesCustomerInfoCinfo","nameCustomerInfoCinfo","orgNumberCustomerInfoCinfo","firstNameCustomerInfoCinfo","lastNameCustomerInfoCinfo","personNumberCustomerInfoCinfo","emailCustomerInfoCinfo","phoneCustomerInfoCinfo","altPhoneCustomerInfoCinfo","addressCustomerInfoCinfo","postalCustomerInfoCinfo","cityCustomerInfoCinfo","accountManagerNameCustomerInfoCinfo","noteCustomerInfoCinfo"];
+	var requiredFieldsPremium    = ["spn_organizationCustomerInfoCinfo","servicesCustomerInfoCinfo","municipalitiesCustomerInfoCinfo","nameCustomerInfoCinfo","orgNumberCustomerInfoCinfo","firstNameCustomerInfoCinfo","lastNameCustomerInfoCinfo","personNumberCustomerInfoCinfo","emailCustomerInfoCinfo","phoneCustomerInfoCinfo","altPhoneCustomerInfoCinfo","addressCustomerInfoCinfo","postalCustomerInfoCinfo","cityCustomerInfoCinfo","accountManagerNameCustomerInfoCinfo","noteCustomerInfoCinfo"];
+
+	$(document).ready(function(){
+		//set the values from db
+		//business name
+		$("#div_popup_contents").find("#inc_customer_info_page_company_name_header").text("<?=$row["Company"]?>");
+		
+		//classification
+		$("#spn_organizationCustomerInfoCinfo").text("<?=ucwords($row["Classification_Name"])?>");
+		$("#classificationCustomerInfoCinfo").val("<?=$row["Classification_Value"]?>");
+		
+		//services
+		var services = String("<?=$row["Service"]?>").split(",");
+	    for(var i = 0; i < services.length; i++){
+			$("#divServicesCustomerInfoCinfo").find("#servicesCustomerInfoCinfo_" + services[i]).attr("checked",true);
+		}
+		
+		//municipality
+		var municipality = String("<?=$row["Municipality"]?>").split(",");
+	    for(var i = 0; i < municipality.length; i++){
+			$("#divMunicipalitiesCustomerInfoCinfo").find("#municipalityCustomerInfoCinfo_" + municipality[i]).attr("checked",true);
+		}
+
+		//required fields
+		addRequiredFieldsMarker(<?=$row["Type"]?>);
+	});
+	
+	//this function will append asterisks to the label
+	function addRequiredFieldsMarker(accountType){
+		var arrToCheck;
+		$("#customer_info_cinfo_content").find("label[for*='CustomerInfoCinfo']").each(function(){
+			$(this).text($(this).text().replace(/\*/g, ""));
+			if(accountType == 3){
+				arrToCheck = requiredFieldsPremium
+			}
+			else if(accountType == 2){
+				arrToCheck = requiredFieldsAdvertiser
+			}
+			else if(accountType == 1){
+				arrToCheck = requiredFieldsRegular
+			}
+			if($.inArray($(this).attr("for"),arrToCheck) != -1){
+				if($(this).attr("for") == "spn_organizationCustomerInfoCinfo" && $(this).text() != "<?=$trans["cust_nfo_organization"];?>"){
+					//do nothing
+				}				
+				else{
+					$(this).text($(this).text() + " *");
+				}
+			}
+		});
+	}
+	
+	function getSelectedClassification(){
+		return $("#classificationCustomerInfoCinfo").val();
+	}
+	
+	function setSelectedClassification(value){
+		$("#classificationCustomerInfoCinfo").val(value);
+	}
+	
+	function getSelectedServices(){
+		var services = new Array(); 
+		$("#divServicesCustomerInfoCinfo :checkbox").each(function(){
+			if($(this).is(":checked")){
+				services.push($(this).val())
+			}
+		});
+		return services.join(",");
+	}
+	
+	function getSelectedMunicipalities(){
+		var municipality = new Array(); 
+		$("#divMunicipalitiesCustomerInfoCinfo :checkbox").each(function(){
+			if($(this).is(":checked")){
+				municipality.push($(this).val())
+			}
+		});
+		return municipality.join(",");
+	}
+	
+	
+	function validate(){
+		var errors = "";
+		
+		//required check if account type is PREMIUM
+		if(parseInt("<?=$row["Type"]?>") == 3){
+			//check if business classification was selected
+			if(getSelectedClassification().length == 0){
+				errors  += "<?=$trans["cust_nfo_organization_selected"]?><br/>";
+			}
+			
+			//check if at least 1 industry was selected
+			if(getSelectedServices().length == 0){
+				errors  += "<?=$trans["cust_nfo_no_service_selected"]?><br/>";
+			}
+			
+			//check if at least 1 municipality was selected
+			if(getSelectedMunicipalities().length == 0){
+				errors  += "<?=$trans["cust_nfo_no_municipality_selected"]?><br/>";
+			}	
+		}
+		
+		//traverse all the input elements in the div
+		//check if it has a value
+		$("#customer_info_cinfo_content :input").each(function(){
+			if($(this).val().length == 0 && $("label[for='" + $(this).attr("id") + "']").text().indexOf("*") > -1){
+				var label = $(this).parent().find("label").text();
+				errors   += "<span style='color:#000000;font-weight:bold'>" + label + "</span> <?=$trans["cust_nfo_cinfo_required_field"]?><br/>";
+			}
+			else{
+				if($(this).attr("id") == "emailCustomerInfoCinfo"){
+					var reg = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
+					if(reg.test($(this).val()) == false) {
+					  errors += "<span style='color:#000000;font-weight:bold'>" + $(this).val() + "</span> <?=$trans["cust_nfo_cinfo_invalid_email"]?>";
+					}
+				}
+			}
+		});
+		if(errors != ""){
+			showStatusMessageBox("customer_info_cinfo_error_msg",errors, true);
+			return false;
+		}
+		return true;
+	}
+	
+	function updateBusiness(){
+		if(!validate()){
+			return;
+		}
+		$.ajax({
+			type : "POST",
+			url  : 'customer_info_cinfo.php',
+			data : {
+				"ajaxRequest"        : "updateBusiness",
+				"accountId"          : "<?=$row["AccountId"]?>",
+				"customerId"         : "<?=$customerId?>",
+				"businessId"         : "<?=$row["Id"]?>",
+				"classification"     : $("#classificationCustomerInfoCinfo").val(),
+				"name"               : $("#nameCustomerInfoCinfo").val(),
+				"firstName"          : $("#firstNameCustomerInfoCinfo").val(),
+				"lastName"           : $("#lastNameCustomerInfoCinfo").val(),
+				"orgNumber"          : $("#orgNumberCustomerInfoCinfo").val(),
+				"personNumber"       : $("#personNumberCustomerInfoCinfo").val(),
+				"phone"              : $("#phoneCustomerInfoCinfo").val(),
+				"address"            : $("#addressCustomerInfoCinfo").val(),
+				"email"              : $("#emailCustomerInfoCinfo").val(),
+				"altPhone"           : $("#altPhoneCustomerInfoCinfo").val(),
+				"postal"             : $("#postalCustomerInfoCinfo").val(),
+				"city"               : $("#cityCustomerInfoCinfo").val(),
+				"serviceId"          : getSelectedServices(),
+			    "municipalityId"     : getSelectedMunicipalities(),
+				"checksum"           : '<?=$checksum?>'
+			},
+			success: function(data) {
+				$("#div_popup_contents").find("#inc_customer_info_page_company_name_header").text($("#companyCustomerInfoCinfo").val());
+				showStatusMessageBox("customer_info_cinfo_error_msg",data, false);
+				loadCustomers(20,1,'<?=CheckSum("201")?>');
+			},
+			error: function(xhr){
+				showStatusMessageBox("customer_info_cinfo_error_msg",xhr.statusText, true);
+			}
+		});
+	}
+</script>
+
+<br/>
+<div style="padding: 0px; width: 100%;" class="clearfix">
+	<!-- START: Status Message Box -->
+	<div id="customer_info_cinfo_error_msg" class="status-msg-box" style="width:86%;display:none">
+	<?if(!empty($ErrMsg)){?> 
+		<script type="text/javascript">
+			showStatusMessageBox("customer_info_cinfo_error_msg","<?=$ErrMsg?>", true);
+		</script>
+	<?}?> 
+	<?if(!empty($OkMsg)){?>
+			<script type="text/javascript">
+				showStatusMessageBox("customer_info_cinfo_error_msg","<?=$OkMsg?>", false);
+			</script>
+	<?}?>
+	</div>
+	<!-- END -->
+</div>
+
+<div id="customer_info_cinfo_content" class="clearfix" style="width:570px; padding: 15px 0px;">
+	<div style="width: 270px; min-height: 100px; float: left; padding: 5px;">
+			<div>
+				<div class="clearfix combobox-container right" style="margin-right:5px;">
+					<input type="hidden" id="default_organizationCustomerInfoCinfo"  value="<?=$trans["cust_nfo_organization"];?>" />
+					<input type="hidden" id="classificationCustomerInfoCinfo" value="" />
+					<label id="spn_organizationCustomerInfoCinfo" for="spn_organizationCustomerInfoCinfo" class="cmb_sel_item_value italic" style="margin-left: 5px; width: 210px;"><?=$trans["cust_nfo_organization"];?></label>
+					<span class="site-color arrow-down-button" style="width: 25px; height: 18px; border-left: 2px solid #412467;" onclick=""></span>
+					<span class="combobox-arrow" style="margin-left: 8px;" onclick="showHideComboboxItems('div_org_itemsCustomerInfoCinfo');"></span>
+					<div id="div_org_itemsCustomerInfoCinfo" class="combox-search-container comboBox combo-list-container" style="height:0px auto">
+						<div id="divClose" align="right" onclick="closeListBox('div_org_itemsCustomerInfoCinfo');"><img src="../img/closeImage.png" alt="Close"/></div>
+						<ul class="combobox-list"style="height:0px auto">
+							<?=GetClassication()?>
+						</ul>
+					</div>
+				</div>
+			</div>
+			
+			<div class="clearfix left" style="padding-bottom:10px">
+				<div class="clearfix input-text" style="display:block;">
+					<label for="servicesCustomerInfoCinfo"><?=$trans["cust_nfo_industry_caption"];?></label>
+				</div>
+				<div class="textarea_top_left collapsableListCustomerInfoCinfo">
+				   <div class="textarea_bottom_right">
+					   <div class="textarea_top_right">
+						   <div class="textarea_bottom_left">
+								<div style="width:240px;height:170px;overflow-y:auto;resize:none" class="txt-area" id="divServicesCustomerInfoCinfo">
+									<?=GetServices()?>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		
+			<div class="inputBoxContainer">
+				<label for="nameCustomerInfoCinfo" class="pre-padding-10 inputLabel" style="display: inline-block; width: 200px;"><?=$trans["cust_nfo_cinfo_co"];?></label>
+				<input type="text" id="nameCustomerInfoCinfo" name="nameCustomerInfoCinfo" maxlength="30" value="<?=$row["Company"]?>" class="inputBox required" />
+				<img class="formErrorIcon" alt="Error" src="/img/form_error_icon.png">
+				<div class="errorListContainer"><ul class="errorList"></ul></div>
+			</div>
+			<div class="inputBoxContainer">
+				<label for="firstNameCustomerInfoCinfo" class="pre-padding-10 inputLabel" style="display: inline-block; width: 200px;"><?=$trans["cust_nfo_cinfo_fname"];?></label>
+				<input type="text" id="firstNameCustomerInfoCinfo" name="firstNameCustomerInfoCinfo" maxlength="30" value="<?=$row["FirstName"]?>" class="inputBox required" />
+				<img class="formErrorIcon" alt="Error" src="/img/form_error_icon.png">
+				<div class="errorListContainer"><ul class="errorList"></ul></div>
+			</div>
+			<div class="inputBoxContainer">
+				<label for="personNumberCustomerInfoCinfo" class="pre-padding-10 inputLabel" style="display: inline-block; width: 200px;"><?=$trans["cust_nfo_cinfo_civic"];?></label>
+				<input type="text" id="personNumberCustomerInfoCinfo" name="personNumberCustomerInfoCinfo" maxlength="30" value="<?=$row["PersonNumber"]?>" class="inputBox required" />
+				<img class="formErrorIcon" alt="Error" src="/img/form_error_icon.png">
+				<div class="errorListContainer"><ul class="errorList"></ul></div>
+			</div>
+			<div class="inputBoxContainer">
+				<label for="phoneCustomerInfoCinfo" class="pre-padding-10 inputLabel" style="display: inline-block; width: 200px;"><?=$trans["cust_nfo_cinfo_tel"];?></label>
+				<input type="text" id="phoneCustomerInfoCinfo" name="phoneCustomerInfoCinfo" maxlength="30" value="<?=$row["Phone"]?>" class="inputBox required" />
+				<img class="formErrorIcon" alt="Error" src="/img/form_error_icon.png">
+				<div class="errorListContainer"><ul class="errorList"></ul></div>
+			</div>
+			<div class="inputBoxContainer">
+				<label for="addressCustomerInfoCinfo" class="pre-padding-10 inputLabel" style="display: inline-block; width: 200px;"><?=$trans["cust_nfo_cinfo_addr"];?></label>
+				<input type="text" id="addressCustomerInfoCinfo" name="addressCustomerInfoCinfo" value="<?=$row["Address"]?>" class="inputBox required" />
+				<img class="formErrorIcon" alt="Error" src="/img/form_error_icon.png">
+				<div class="errorListContainer"><ul class="errorList"></ul></div>
+			</div>
+	</div>
+	<div style="width: 270px; min-height: 100px; margin-left: 290px; padding: 5px;">
+			<div style="height:35px">
+				
+			</div>
+			
+			<div class="clearfix  right" style="margin-right:20px;padding-bottom:10px;">
+				<div class="clearfix input-text" style="display:block;">
+					<label for="municipalitiesCustomerInfoCinfo"><?=$trans["cust_nfo_municipality_caption"];?></label>
+				</div>
+				<div class="textarea_top_left collapsableListCustomerInfoCinfo">
+				   <div class="textarea_bottom_right">
+					   <div class="textarea_top_right">
+						   <div class="textarea_bottom_left">
+								<div style="width:240px;height:170px;overflow-y:auto;resize:none" class="txt-area"id="divMunicipalitiesCustomerInfoCinfo">
+									<?=GetMunicipality()?>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="inputBoxContainer">
+				<label for="orgNumberCustomerInfoCinfo" class="pre-padding-10 inputLabel" style="display: inline-block; width: 200px;"><?=$trans["cust_nfo_cinfo_corp"];?></label>
+				<input type="text" id="orgNumberCustomerInfoCinfo" name="orgNumberCustomerInfoCinfo" maxlength="30" value="<?=$row["OrgNumber"]?>" class="inputBox required"/>
+				<img class="formErrorIcon" alt="Error" src="/img/form_error_icon.png">
+				<div class="errorListContainer"><ul class="errorList"></ul></div>
+			</div>
+			<div class="inputBoxContainer">
+				<label for="lastNameCustomerInfoCinfo" class="pre-padding-10 inputLabel" style="display: inline-block; width: 200px;"><?=$trans["cust_nfo_cinfo_lname"];?></label>
+				<input type="text" id="lastNameCustomerInfoCinfo" name="lastNameCustomerInfoCinfo" maxlength="30" value="<?=$row["LastName"]?>" class="inputBox required" />
+				<img class="formErrorIcon" alt="Error" src="/img/form_error_icon.png">
+				<div class="errorListContainer"><ul class="errorList"></ul></div>
+			</div>
+			<div class="inputBoxContainer">
+				<label for="emailCustomerInfoCinfo" class="pre-padding-10 inputLabel" style="display: inline-block; width: 200px;"><?=$trans["cust_nfo_cinfo_mail"];?></label>
+				<input type="text" id="emailCustomerInfoCinfo" name="emailCustomerInfoCinfo" maxlength="30" value="<?=$row["Email"]?>" class="inputBox required" />
+				<img class="formErrorIcon" alt="Error" src="/img/form_error_icon.png">
+				<div class="errorListContainer"><ul class="errorList"></ul></div>
+			</div>
+			<div class="inputBoxContainer">
+				<label for="altPhoneCustomerInfoCinfo" class="pre-padding-10 inputLabel" style="display: inline-block; width: 200px;"><?=$trans["cust_nfo_cinfo_alt_tel"];?></label>
+				<input type="text" id="altPhoneCustomerInfoCinfo" name="altPhoneCustomerInfoCinfo" maxlength="30" value="<?=$row["AltPhone"]?>" class="inputBox required" />
+				<img class="formErrorIcon" alt="Error" src="/img/form_error_icon.png">
+				<div class="errorListContainer"><ul class="errorList"></ul></div>
+			</div>
+			<div class="inputBoxContainer">
+				<div class="left" style="width: 150px;">
+					<label for="postalCustomerInfoCinfo" class="pre-padding-10 inputLabel" style="display: inline-block; width: 200px;"><?=$trans["cust_nfo_cinfo_zip"];?></label>
+					<input type="text" id="postalCustomerInfoCinfo" name="postalCustomerInfoCinfo" maxlength="30" value="<?=$row["Postal"]?>" class="inputBoxSmall required" />
+					<img class="formErrorIcon" alt="Error" src="/img/form_error_icon.png">
+					<div class="errorListContainer"><ul class="errorList"></ul></div>
+				</div>
+				<div class="right" style="width: 150px;">
+					<label for="cityCustomerInfoCinfo" class="pre-padding-10 inputLabel" style="display: inline-block; width: 200px;"><?=$trans["cust_nfo_cinfo_location"];?></label>
+					<input type="text" id="cityCustomerInfoCinfo" name="cityCustomerInfoCinfo" maxlength="30" value="<?=$row["City"]?>" class="inputBoxSmall required" />
+					<img class="formErrorIcon" alt="Error" src="/img/form_error_icon.png">
+					<div class="errorListContainer"><ul class="errorList"></ul></div>
+				</div>
+			</div>
+	</div>
+</div>
+<div class="clearfix" style="width:570px; height: 40px; margin-top: 10px;">
+	<a class="btn-orange txt12White bold" style="margin-left: 0px;" href="javascript: void(0);" onclick="updateBusiness()"><span><?=$trans["button_save"];?></span></a>
+</div>

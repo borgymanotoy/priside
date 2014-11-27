@@ -1,0 +1,394 @@
+<script type="text/javascript">
+	<?
+		$records = 5;
+		$page    = 1;
+	?>
+	var recordsPerPage = '<?=$records?>';
+	var startPage      = '<?=$page?>';
+
+	$(document).ready(function(){
+		$("#txt_industry_services").autocomplete_dropdown({"table" : "BusinessServiceCategory"}).css({"width":"180px"});
+		$("#btnHomeUploadPicture").css({"position" : "relative" ,"top" : "0px"}).fileuploader({
+				"onComplete" : function(filename){
+					 $.ajax( {
+						type: 'POST',
+						url:  'admin_panel_pages_home.php',
+						data: { 'ajaxRequest'   : 'getPreview', 'filename' : filename },
+						success: function(data){
+							var homeImageInfos = JSON.parse( data );
+							$("#GalleryItemBannerFile_Name").val(homeImageInfos.Name);
+							$("#imgPagesHome").attr("src", homeImageInfos.fileUrl);
+						},
+						error: function(xhr){
+							showStatusMessageBox("div_pages_home_status_msgs",xhr.statusText, true);
+						}
+					 });
+				},
+				"onError" : function(error){
+					showStatusMessageBox("div_pages_home_status_msgs",error, true);
+				},
+				"useExternProgressHandler" : true,
+				"ButtonStateCancel" : '<?=$trans["button_state_cancel"];?>',
+				'FlashVars' 	: "SavePath=<?=base64_encode( $UploadPath );?>,CheckSum=<?=CheckSum( base64_encode( $UploadPath ) );?>,Session=<?=session_id();?>",
+				'filters'       : "(Images):*.bmp;*.png;*.jpg;*.gif;*.jpeg;"
+		});
+		$("#navBarTopAdminPagesHome").html($("#navBarBottomAdminPagesHome").html());
+
+		//Confirmation dialog for Admin pages here
+		var dialogBoxInst = $('#confirmDialogContainer').dialog({
+			title: '', //prompt,
+			modal : true,
+			resizable : false,
+			autoOpen : false,
+			buttons: [
+						{
+							text: "Yes",
+							click: function(){
+								var idx = $(this).data("idx");
+								var checksum = $(this).data("checksum");
+								var bannerId = $(this).data("bannerId");
+								var bannerChecksum = $(this).data("bannerChecksum");
+
+								ajaxRemoveGalleryItems( idx, checksum, bannerId, bannerChecksum );
+								$(this).dialog( "close" );
+							}
+						},
+						{ text: "No", click: function(){ $(this).dialog("close"); } }
+					]
+		});
+		dialogBoxInst.parent('.ui-dialog').appendTo('#div_container');
+	});
+
+	/* START: Saving or Updating functions */
+	function validateGalleryItemImage(){
+		if( 0 == $("#GalleryItemBannerFile_Name").val().length ) return false;
+		return true;
+	}
+
+	function validateImageCategory(){
+		if( $("#txt_industry_services_selectedValue").val() == null || $("#txt_industry_services_selectedValue").val().length == 0 ) return false;
+		return true;
+	}
+
+	function validateSavingUpdateGalleryItem(){
+		if($("#GalleryItemTitle").val().length == 0) return false;
+
+		//Enable this if description is already needed.
+		//else if($("#GalleryItemDescription").val().length == 0) return false;
+		return true;
+	}
+
+	function saveUpdateGalleryItem(){
+		if( !validateGalleryItemImage() ){
+			showStatusMessageBox("div_pages_home_status_msgs", "<?=$trans["ppages_ErrMsg_filename"];?>", true);
+		}
+		else if( !validateImageCategory() ){
+			showStatusMessageBox("div_pages_home_status_msgs", "<?=$trans["ppages_ErrMsg_category"];?>", true);
+		}
+		else if(!validateSavingUpdateGalleryItem()){
+			showStatusMessageBox("div_pages_home_status_msgs", $("#pages_home_error_entry_validation").val(), true);
+		}else{
+			ajaxAddGalleryItem();
+		}
+	}
+
+	function ajaxAddGalleryItem(){
+		$.ajax({
+			type : "POST",
+			url : "/admin/admin_panel_pages_home.php",
+			data : {
+				"ajaxRequest" 			: "ajaxAddGalleryItem",
+				"BannerFileName" 		: $("#GalleryItemBannerFile_Name").val(),
+				"DisplayTitle" 			: $("#GalleryItemTitle").val(),
+
+				//Enable this if description is already used by the page
+				//"DisplayDescription"	: $("#GalleryItemDescription").val(),
+
+				"CategoryId" 			: $("#txt_industry_services_selectedValue").val()
+			},
+			success: function(data){
+				showStatusMessageBox("div_pages_home_status_msgs", data, false);
+				clearGalleryItemInfos();
+				ajaxReloadGalleryItems();
+			},
+			error: function(xhr){
+				showStatusMessageBox("div_pages_home_status_msgs", xhr.statusText, true);
+			}
+		});
+	}
+	/* END: Saving or Updating functions */
+
+	//Note: ajaxReloadGalleryItems is loaded when there are changes in the gallery items such as adding new or removing existing gallery item
+	function ajaxReloadGalleryItems(){
+		$.ajax({
+			type : "POST",
+			url : "/admin/admin_panel_pages_home.php",
+			data : {
+				"ajaxRequest" : "ajaxReloadGalleryItems",
+				"records"			: recordsPerPage,
+				"page"				: startPage,
+				"checksum"			: '<?=CheckSum($records.$page);?>'
+			},
+			success: function(data){
+				$("#HomeGallerTableHTML").html(data);
+				$("#navBarTopAdminPagesHome").html($("#navBarBottomAdminPagesHome").html());
+			},
+			error: function(xhr){
+				showStatusMessageBox("div_pages_home_status_msgs", xhr.statusText, true);
+			}
+		});
+	}
+
+	//Note: loadServiceRequestsAvailable is loaded via paging navigation (e.g. previous, next, first, last, etc)
+	function loadServiceRequestsAvailable(records_per_page, current_page, page_checksum){
+		$.ajax({
+			type : "POST",
+			url : "/admin/admin_panel_pages_home.php",
+			data : {
+				"ajaxRequest" : "loadServiceRequestsAvailable",
+				"records"			: records_per_page,
+				"page"				: current_page,
+				"checksum"			: page_checksum
+			},
+			success: function(data){
+				$("#HomeGallerTableHTML").html(data);
+				$("#navBarTopAdminPagesHome").html($("#navBarBottomAdminPagesHome").html());
+			},
+			error: function(xhr){
+				showStatusMessageBox("div_pages_home_status_msgs", xhr.statusText, true);
+			}
+		});
+	}
+
+	function displaySelectedGalleryItem( idx, checksum){
+		$.ajax({
+			type : "POST",
+			url : "/admin/admin_panel_pages_home.php",
+			data : {
+				"ajaxRequest" : "displaySelectedGalleryItem",
+				"DisplayIdChecksum"	  :  idx + ":" + checksum
+			},
+			success: function(data){
+				var GalleryItemInfos = JSON.parse( data );
+				$("#GalleryItemTitle").val(GalleryItemInfos.DisplayTitle);
+
+				//Set image description here from JSON (If Description is already used)
+				//$("#GalleryItemDescription").val("N/A");
+
+				$("#txt_industry_services").val(GalleryItemInfos.CategoryName);
+				$("#txt_industry_services_selectedValue").val(GalleryItemInfos.ServiceCategoryId);
+				$("#imgPagesHome").attr("src", GalleryItemInfos.GalleryImageUrl);
+				toggleGalleryItemControl( idx );
+			},
+			error: function(xhr){
+				showStatusMessageBox("div_pages_home_status_msgs", xhr.statusText, true);
+			}
+		});
+	}
+
+	function removeGalleryItem( idx, checksum, bannerId, bannerChecksum ){
+		if( bannerId == null || bannerId <= 0 || bannerChecksum == null ){
+			showStatusMessageBox("div_pages_home_status_msgs","There is no selected gallery item", true);
+			return false;
+		}
+		else {
+			var msg = "<?=$trans["pages_confirm_delete"];?>";
+			$('#confirmDialogContainer').dialog( "option", "title", "<?=$trans["pages_confirm_delete_title"];?>" );
+			$('#confirmationMessage').html(msg);
+			$('#confirmDialogContainer').data({"idx": idx, "checksum" : checksum, "bannerId" : bannerId, "bannerChecksum" : bannerChecksum}).dialog( "open" );
+		}
+	}
+
+	function ajaxRemoveGalleryItems( idx, checksum, bannerId, bannerChecksum ){
+		$.ajax({
+			type : "POST",
+			url : "/admin/admin_panel_pages_home.php",
+			data : {
+				"ajaxRequest" : "ajaxRemoveGalleryItems",
+				"DisplayIdChecksum"	  :  idx + ":" + checksum,
+				"BannerIdChecksum"	  :  bannerId + ":" + bannerChecksum
+			},
+			success: function(data){
+				showStatusMessageBox("div_pages_home_status_msgs", data, false);
+				ajaxReloadGalleryItems();
+				clearGalleryItemInfos();
+			},
+			error: function(xhr){
+				showStatusMessageBox("div_pages_home_status_msgs", xhr.statusText, true);
+			}
+		});
+	}
+
+	function clearGalleryItemInfos(){
+		$("#GalleryItemBannerFile_Name").val("");
+		$("#GalleryItemTitle").val("");
+
+		//Enable this if description is needed
+		//$("#GalleryItemDescription").val("");
+
+		$("#txt_industry_services").val("");
+		$("#txt_industry_services_selectedValue").val("");
+		$("#imgPagesHome").attr("src", "/img/transparent_logo.png");
+	}
+	function toggleGalleryItemControl( idx ){
+		$('#requestTableRowExpand-'+idx).toggle();
+	}
+</script>
+
+<style type="text/css">
+	ul{ list-style-type: none; }
+	a { text-decoration:none; outline:none; }
+</style>
+
+<!-- inc_admin_panel_pages_home.html -->
+
+<script type="text/javascript">
+	var closeListBox = function(parentBoxId){
+		jQuery('#'+parentBoxId).hide();
+	};
+</script>
+
+<input type="hidden" id="pages_home_error_entry_validation" value="<?=$trans["pages_error_entry_validation"];?>"/>
+
+<div id="main-column">
+
+	<div id="div_container">
+
+		<!-- START: Create confirm dialog here -->
+		<div id="confirmDialogContainer" style="display: none; height: 200px; padding: 0px 10px;">
+			<span id="confirmationMessage" class="txt12Purple bold"></span>
+		</div>
+		<!-- END -->
+
+		<div style="padding: 10px; width: 650px;" class="clearfix">
+			<h1 class="title"><?=$trans["pages_home"];?></h1>
+			<!-- START: Status Message Box -->
+			<div id="div_pages_home_status_msgs" class="status-msg-box" style="display: none;">
+				<?if(!empty($ErrMsg)){?>
+					<script type="text/javascript">
+						showStatusMessageBox("div_pages_home_status_msgs","<?=$ErrMsg?>", true);
+					</script>
+				<?}?>
+				<?if(!empty($OkMsg)){?>
+					<script type="text/javascript">
+						showStatusMessageBox("div_pages_home_status_msgs","<?=$OkMsg?>", false);
+					</script>
+				<?}?>
+			</div>
+			<!-- END -->
+
+			<!-- START: Gallery Item infos -->
+			<input type="hidden" id="GalleryItemBannerFile_Name" value="" />
+			<!-- END -->
+
+			<!-- START: Divider -->
+			<div>
+				<!-- START: Left container -->
+				<div class="clearfix left_pages_container">
+					<div class="clearfix container-small">
+						<div class="input-text left">
+							<span><?=$trans["pages_title"];?></span>
+							<div><input type="text" id="GalleryItemTitle" maxlength="300" /></div>
+						</div>
+					</div>
+
+					<div class="clearfix container-small">
+						<span class="dropboxLabel" valign="middle">
+							<span class="txt12Bold"><?=$trans["pages_industry_service"];?></span>
+						</span>
+						<div class="combox">
+							<input type="text" id="txt_industry_services" />
+						</div>
+					</div>
+
+					<!-- -- >
+					<div class="clearfix container-small">
+						<div class="left">
+							<span class="txt12Bold" style="display:block; margin-left: 10px;"><?=$trans["pages_description"];?></span>
+							<div class="textarea_top_left">
+							   <div class="textarea_bottom_right">
+								   <div class="textarea_top_right">
+									   <div class="textarea_bottom_left">
+											<textarea class="txt-area" id="GalleryItemDescription" rows="3" cols="35"></textarea>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					< !-- -->
+
+					<p style="margin-bottom: 1em;">
+						<div class="clearfix left">
+							<a class="btn-orange txt14White bold" href="javascript: void(0);" onclick="saveUpdateGalleryItem();">
+								<span><?=$trans["pages_button_add"];?></span>
+							</a>
+						</div>
+					</p>
+				</div>
+				<!-- END: Left container -->
+
+				<!-- START: Right container -->
+				<div class="right" style="padding-top: 10px; padding-right: 10px;">
+					<img id="imgPagesHome" src="/img/transparent_logo.png" style="height: 155px; width: 300px; border: 1px solid #eee;" alt="sample catering image" />
+					<p>
+						<div class="right">
+							<a id="btnHomeUploadPicture" class="btn-violet txt12White" href="#"><span><?=$trans["pages_button_choose_picture"];?></span></a>
+						</div>
+					</p>
+				</div>
+				<!-- END: Right container -->
+			</div>
+			<!-- END: Divider -->
+		</div>
+
+		<div>
+			<div class="pagging-links clearfix" style="margin-left: 5px;">
+				<span id="navBarTopAdminPagesHome">
+					<!--copy from navBarBottom!-->
+					<!--inc_project_service_request_rowSnippet.html!-->
+				</span>
+			</div>
+			<!-- START: Header -->
+			<div class="requestsHeader">
+			   <div class="serviceheadercontainer_top_left">
+				   <div class="serviceheadercontainer_bottom_right">
+					   <div class="serviceheadercontainer_top_right">
+						  <div class="serviceheadercontainer_bottom_left">
+							  <table>
+								  <thead>
+									<tr>
+										<th class="first-col pre-padding-5 arialWhite" align="left"><?=$trans["pages_table_header_picture"];?></th>
+										<th class="second-col pre-padding-10 arialWhite" align="left"><?=$trans["pages_table_header_title"];?></th>
+										<th class="third-col pre-padding-10 arialWhite" align="left"><?=$trans["pages_table_header_industry_service"];?></th>
+									</tr>
+								  </thead>
+							  </table>
+						  </div>
+					   </div>
+				   </div>
+			   </div>
+			</div>
+			<!-- END: Header -->
+
+			<div id="HomeGallerTableHTML">
+				<?=$HomeGallerTableHTML;?>
+			</div>
+
+		</div>
+	</div>
+</div>
+
+<div id="sub-sidebar-column">
+	<div class="help-sub-panel-location">
+		<div class="overview-info">
+			<div class="help-tile"><?=$trans["page_help"];?></div>
+			<div class="help-header">
+				<span id="span_help_pages_main" class="txt16Orange bold"><?=$trans["pages_home"];?></span>
+			</div>
+			<div class="help-content-panel corners-bottom">
+				<?=$trans["pages_help"];?>
+			</div>	
+		</div>
+	</div>
+</div>

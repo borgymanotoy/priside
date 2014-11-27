@@ -1,0 +1,47 @@
+<style>
+	.inputBoxContainer {
+		width: 300px;
+	}
+
+	.inputBox {
+		display: inline-block;
+		width: 236px; /* Excluding padding. */
+		height: 28px;
+		padding-left: 8px;
+		padding-right: 8px;
+		border-style: none;
+
+		background: url("../img/input_box.png") no-repeat scroll 0 -60px transparent;
+	}
+
+	.inputLabel {
+		font-weight: bold;
+	}   
+
+	.left {
+		float: left;
+	}
+
+	.right {
+		float: right;
+	}
+</style>
+
+<div style="width:100%; padding: 10px;">
+	<div class="clearfix" style="width: 370px; min-height: 100px; float: left; padding: 0px 5px 0px 0px; background-color: #e6e6e6;">
+			<div class="inputBoxContainer">
+				<label for="Name" class="inputLabel"><?=$trans["cust_nfo_accnt_co"];?>&nbsp;*</label>
+				<input type="text" name="Name" maxlength="30" value="<?=$Name;?>" class="inputBox required" />
+				<img class="formErrorIcon" alt="Error" src="/img/form_error_icon.png">
+				<div class="errorListContainer"><ul class="errorList"></ul></div>
+			</div>
+	</div>
+	<div class="clearfix" style="width: 370px; min-height: 100px; margin-left: 375px; padding: 0px 0px 0px 5px; background-color: green;">
+			<div class="inputBoxContainer">
+				<label for="Name" class="inputLabel"><?=$trans["cust_nfo_accnt_corp"];?>&nbsp;*</label>
+				<input type="text" name="Name" maxlength="30" value="<?=$Name;?>" class="inputBox required" />
+				<img class="formErrorIcon" alt="Error" src="/img/form_error_icon.png">
+				<div class="errorListContainer"><ul class="errorList"></ul></div>
+			</div>
+	</div>
+</div>

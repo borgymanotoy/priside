@@ -1,0 +1,932 @@
+<script type="text/javascript">
+<?=include( $_SERVER['DOCUMENT_ROOT']."/jscommon/common_js.php" );?>
+</script>
+
+<?php
+	$INQUIRES_PER_PAGE = 5;
+?>
+<script type="text/javascript">
+
+	var $replyDialog;
+//==============================================================================
+//=                                                                            = 
+//= DOCUMENT READY                                                             =
+//=                                                                            = 
+//==============================================================================
+	$(document).ready(function(){
+		$("#txt_industry").autocomplete_dropdown({"table" : "BusinessServiceCategory", "onChange" : function(CategoryId){getInquiriesAdByCategory(CategoryId);}}).css({"width":"180px"});
+		$("#txt_location").autocomplete_dropdown({"table" : "Sweden_LanKommuner", "onChange" : function(LocationId){getInquiriesAdByLocation(LocationId);}}).css({"width":"180px"});
+
+		$("#txt_inq_services").autocomplete_dropdown({
+			"type" : "collapsable",
+			"table" : "BusinessServiceCategory",
+			"paging" : true,
+			"pagingContainerId" : "txt_inq_services_paging_container"
+		}).css({"width":"300px"});
+
+		$("#txt_inq_locations").autocomplete_dropdown({
+			"table" : "Sweden_LanKommuner",
+			"type" : "collapsable"
+		}).css({"width":"300px"});
+
+		$("#txt_inq_services").hide();
+		$("#txt_inq_services_dropDown").hide();
+		$("#txt_inq_services_divTarget").show();
+
+		$("#txt_inq_locations").hide();
+		$("#txt_inq_locations_dropDown").hide();
+		$("#txt_inq_locations_divTarget").show();
+
+
+		// Event handlers
+		$('#filter_search_toggle').toggle(
+				function() {
+					$('#filter_search_toggle').children('img').attr('src', '/img/arrow_down_small.png');
+					$('#filter_search_container').show();
+				},
+				function() {
+					$('#filter_search_toggle').children('img').attr('src', '/img/arrow_right_small.png');
+					$('#filter_search_container').hide();
+				});
+
+		// Enter key will trigger immediate search
+		$('#txt_industry').keypress(function(ev) {
+			if (ev.which == 13) { // Enter key
+				loadInquiries(<?=$INQUIRES_PER_PAGE ?>, 1, '<?=CheckSum(array($INQUIRES_PER_PAGE, 1))?>');
+			}
+		});
+		$('#txt_location').keypress(function(ev) {
+			if (ev.which == 13) { // Enter key
+				loadInquiries(<?=$INQUIRES_PER_PAGE ?>, 1, '<?=CheckSum(array($INQUIRES_PER_PAGE, 1))?>');
+			}
+		});
+
+		// Search filter name entry dialog.
+		// jQuery UI adds it dialog outside of our tab div, so when our tab gets
+		// reloaded, we might still have the dialog because it's placed in an area
+		// on the page that isn't reloaded. So we make a hack and move it back
+		// to inside our page.
+
+		var $filterNameInput = $('<div></div>').html('<input type="text" id="inquiries_search_filter_name_input" />');
+		var $filterNameDialog = $filterNameInput.
+			dialog(
+			{
+				'autoOpen' : false,
+				'title'    : '<?=$trans['inquiries_filter_name_title']?>',
+				'draggable': false,
+				'modal'    : true,
+				'buttons'  :
+				{
+					'<?=$trans['inquiries_save_sok']?>' : function() {
+						var name = $('#inquiries_search_filter_name_input').val();
+						saveSearchFilter(name);
+						$(this).dialog('close');
+					},
+					'<?=$trans['inquiries_filter_cancel_save']?>' : function() {
+						$(this).dialog('close');
+					}
+				}
+		});
+		// Move dialog back into our tab. 
+		$filterNameDialog.parent('.ui-dialog').appendTo('#main-column');
+
+		// Save filter button
+		$('#save_search_filter_btn').click(
+			function() {
+				$filterNameDialog.dialog('open');
+				return false;
+		});
+
+
+		// ===============================================
+		// = Setup inquiry reply dialog.
+
+
+		var $replyContent = $('#inq_replymsg_dlg_content');
+
+		// File upload button.
+		// TODO: Where should we attach this?
+		$('#btnReplyAttachment').css({"float" : "none", "width" : "90px"}).fileuploader({
+			"onComplete" : function(filename) {
+				var html = filename + '<span class="close-icon" onclick="deleteReplyAttachment()">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>'
+				$('#inq_replymsg_dlg_file').html(html);
+			},
+			"onError" : function(error) {
+				showStatusMessageBox("inquiries_reply_error_msg",error, true);
+			},
+			"onCancel" : function(control) {
+			},
+			"useExternProgressHandler" : false, 
+			"ButtonStateCancel"        : "Cancel Upload",
+			'FlashVars'                : "SavePath=<?=$SavePath?>",
+			'filters'                  : "All Files:*.*"
+		});
+
+		$("#btnReplyAttachment_swf").css({
+			"position" : "relative"
+		});
+		// End of file upload button code.
+
+		// Inquiry reply dialog.
+		$replyDialog = $replyContent.
+			dialog(
+			{
+				'autoOpen' : false,
+				'title'    : '<?=$trans['inquiries_replymsg_title']?>',
+				'draggable': false,
+				'modal'    : true,
+				'minWidth' : '200',
+				'minHeight': '300',
+				'beforeClose'    : function() {
+					// Clear entries so they aren't shown when we open dialog again.
+					$('#inquiries_reply_message').val('');
+					$('#inq_replymsg_dlg_file').text('');
+					$('#inquiries_reply_error_msg').hide();
+				}
+			});
+		// Move dialog back into our tab.
+		$replyDialog.parent('.ui-dialog').appendTo('#main-column');
+		// = Inquiry reply dialog setup done.
+		// ===============================================
+
+
+		// Disable click toggling setup by priside-common-script.js
+		// TODO: This shouldn't be neccessary! Remove that handler from priside-common-script.js!
+		$(document).off('click', '.serviceRequest');
+
+		getSearchFilters();
+
+	});
+
+
+//==============================================================================
+//=                                                                            = 
+//= INQUIRY FUNCTIONS                                                          =
+//=                                                                            = 
+//=   Functions mostly related to inquiries / service requests.                =
+//==============================================================================
+
+	/**
+	 * Loads and displays list of service inquiries.
+	 *
+	 * The load is made as an Ajax call so when this function returns the service
+	 * requests are likely not yet loaded.
+	 *
+	 * The list is split into several pages and the number of inquiries per page
+	 * is decided by the records parameter.
+	 *
+	 * The retrieved service inquiries will be filtered based on the contents of
+	 * the html elements txt_industry_selectedValue, txt_inq_services_divTarget,
+	 * txt_location_selectedValue and txt_inq_locations_divTarget. See the
+	 * function getCheckedAndSelected for more information on how this filter works.
+	 *
+	 * If the request fails an error message will be displayed in the
+	 * inquires_services_error_msg element.
+	 *
+	 * @param records  Number of service inquiries to display per page (integer).
+	 * @param page     Page number to display (integer).
+	 *                 First service inquiry displayed will be records*page.
+	 * @return         false
+	*/
+	function loadInquiries(records,page,checksum){
+		var classificationIds          = getCheckedCheckboxValuesAsString("classification_checkboxes_container");
+		var businessServiceCategoryIds = getCheckedAndSelected("txt_industry_selectedValue","txt_inq_services_divTarget");
+		var sweden_LanKommunerIds      = getCheckedAndSelected("txt_location_selectedValue","txt_inq_locations_divTarget");
+
+
+		$.ajax({
+			type : "POST",
+			url  : 'inquiries.php',
+			data : {
+				"ajaxRequest"                : "loadInquiries",
+				"classificationIds"          : classificationIds,
+				"businessServiceCategoryIds" : businessServiceCategoryIds,
+				"sweden_LanKommunerIds"      : sweden_LanKommunerIds,
+				"records"                    : records,
+				"page"                       : page,
+				"checksum"                   : checksum
+			},
+			success: function(data) {
+				//display data
+				$("#tableDataInquiriesServices").html(data);
+				//copy bottom navigation bar to top
+				$("#navBarTop").html($("#navBarBottom").html());
+			},
+			error: function(xhr){
+				// TODO: Showing error messages isn't working yet in Opera!
+				showStatusMessageBox("inquiries_services_error_msg",xhr.statusText, true);
+			}
+		});
+
+		return false;
+	}
+
+
+	/**
+	 * Replies to an inquiry.
+	 *
+	 * Will send an inquiry reply from current logged in user.
+	 * In future updates this function should also popup a dialog box allowing the
+	 * user to write a message and attach a file to the reply.
+	 *
+	 * The reply is made as an Ajax call so when this function returns the reply
+	 * might not yet have been completed.
+	 *
+	 * @param inquiryId  Database id of the inquiry to reply to.
+	 * @param creatorId  Database id of the inquiry creator.
+	 * @param userId     Database id of user replying.
+	 * @param checksum   Checksum of inquiryId, creatorId and userId.
+	 */
+	function replyToInquiry(inquiryId, creatorId, userId, checksum) {
+		$replyDialog.dialog('option', 'buttons',
+				{
+				'<?=$trans['inquiries_replymsg_send']?>' : function() {
+						var msg = $('#inquiries_reply_message').val();
+						var fileName = $('#inq_replymsg_dlg_file').text();
+						sendInquiryReply(this, inquiryId, creatorId, userId, checksum, msg, fileName);
+					},
+					'<?=$trans['inquiries_replymsg_cancel']?>' : function() {
+						$(this).dialog('close');
+					}
+				});
+
+		$replyDialog.dialog('open');
+		return;
+	}
+
+	/**
+	 * Sends an inquiry reply message.
+	 *
+	 * @param that      Object through which we can close the dialog.
+	 *                  The function needs to be able to call
+	 *                  $(that).dialog('close').
+	 * @param fileName  Original name of already uploaded file. If no file should
+	 *                  be sent, don't set this parameter or set it to null.
+	 */
+	function sendInquiryReply(that, inquiryId, creatorId, userId, checksum, message, fileName) {
+		var options = {
+			"ajaxRequest"                : "replyToInquiry",
+			"inquiryId"                  : inquiryId,
+			"creatorId"                  : creatorId,
+			"userId"                     : userId,
+			"checksum"                   : checksum,
+			"message"                    : message
+		};
+
+		// If a file was attached send its name.
+		if (undefined !== fileName && null !== fileName && fileName.length > 0) {
+			options['fileName'] = fileName;
+		}
+
+		$.ajax({
+			type : "POST",
+			url  : 'inquiries.php',
+			data : options,
+			success: function(data) {
+				// Remove old data from dialog box
+				$(that).dialog('close');
+				$('#inquiries_reply_message').val('');
+				$('#inq_replymsg_dlg_file').text('');
+				$('#inquiries_reply_error_msg').hide();
+				reloadInquiry(inquiryId, creatorId, userId, checksum);
+			},
+			error: function(xhr){
+				// TODO: Showing error messages isn't working yet in Opera!
+				showStatusMessageBox("inquiries_reply_error_msg", xhr.statusText, true);
+			}
+		});
+	}
+
+	/**
+	 * Deletes the file attached to the current inquiry reply.
+	 *
+	 * This only applies to replies that have not yet been sent.
+	 */
+	function deleteReplyAttachment() {
+		$.ajax({
+			type : "POST",
+			url  : 'inquiries.php',
+			data : {
+				"ajaxRequest"                : "deleteReplyAttachment"
+			},
+			success: function(data) {
+				$('#inq_replymsg_dlg_file').html(''); // Remove file info from DOM.
+			},
+			error: function(xhr){
+				// TODO: Showing error messages isn't working yet in Opera!
+				showStatusMessageBox("inquiries_reply_error_msg", xhr.statusText, true);
+			}
+		});
+	}
+	/**
+	 * Reloads an inquiry/request.
+	 *
+	 * The load is made as an Ajax call so when this function returns the inquiry
+	 * might not yet have been reloaded.
+	 *
+	 * requests are likely not yet loaded.
+	 * @param inquiryId  Database id of the inquiry to reply to.
+	 * @param creatorId  Database id of the inquiry creator.
+	 * @param userId     Database id of user replying.
+	 * @param checksum   Checksum of inquiryId, creatorId and userId.
+	 *
+	 * @return Nothing. If the call fails an error message will be shown in
+	 *                  inquiries_services_error_msg.
+	 */
+	function reloadInquiry(inquiryId, creatorId, userId, checksum) {
+		$.ajax({
+			type : "POST",
+			url  : 'inquiries.php',
+			data : {
+				"ajaxRequest"                : "reloadInquiry",
+				"inquiryId"                  : inquiryId,
+				"creatorId"                  : creatorId,
+				"checksum"                   : checksum
+			},
+			success: function(data) {
+				var $newContainer = $(data);
+
+				// Find the inquiry div we are to replace.
+				var $container = $('#serviceRequestContainer-' + inquiryId);
+				// See if it's placed on an odd or even row (so we can set or new one correctly).
+				var rowClass = 'even';
+				if ($container.hasClass('odd')) {
+					rowClass = 'odd';
+				}
+
+				$newContainer.removeClass('odd');
+				$newContainer.removeClass('even');
+				$newContainer.addClass(rowClass);
+
+				// Keep inquiry in same open/closed state
+				if ($("#requestTableRowExpand-" + inquiryId).is(":visible")) {
+					$newContainer.find("#requestTableRowExpand-" + inquiryId).show();
+				} else {
+					$newContainer.find("#requestTableRowExpand-" + inquiryId).hide();
+				}
+
+				// And finally replace the old inquiry with our updated one
+				$container.replaceWith($newContainer);
+			},
+			error: function(xhr){
+				// TODO: Showing error messages isn't working yet in Opera!
+				showStatusMessageBox("inquiries_services_error_msg", xhr.statusText, true);
+			}
+		});
+	}
+
+	/**
+	 * Deletes an inquiry from user's view (moves it to trash).
+	 *
+	 * This only affects the currently logged in user's view of the request.
+	 *
+	 * @param inquiryId  Database id of the inquiry to delete.
+	 * @param checksum   Server calculated checksum of inquiryId and current user id.
+	 *
+	 * @return Nothing.
+	 */
+	function deleteInquiryRow(inquiryId, checksum) {
+		$.ajax({
+			type : "POST",
+			url  : 'inquiries.php',
+			data : {
+				"ajaxRequest"                : "deleteInquiry",
+				"inquiryId"                  : inquiryId,
+				"checksum"                   : checksum
+			},
+			success: function(data) {
+				<?php
+					// When entering the Inquiries page we won't have specified a page yet.
+					$page = isset($page) ? $page : 1;
+				?>
+				loadInquiries(<?=$INQUIRES_PER_PAGE ?>, <?=$page?>,'<?=CheckSum(array($INQUIRES_PER_PAGE, 1))?>');
+			},
+			error: function(xhr){
+				// TODO: Showing error messages isn't working yet in Opera!
+				showStatusMessageBox("inquiries_services_error_msg", xhr.statusText, true);
+			}
+		});
+	}
+
+
+	/**
+	* Returns a comma separated string of checkbox values.
+	*
+	* The returned values are those that have their checkbox checked.
+	*
+	* @param containerId  Unique CSS id of the container within which to search
+	*                     for checkboxes.
+	*/
+	function getCheckedCheckboxValuesAsString(containerId) {
+		var values = '';
+		var $checkboxes = $('#' + containerId).find(':checked');
+		var nCheckboxes = $checkboxes.length;
+		for (var i=0; i<nCheckboxes; i++) {
+			if (0 !== i) {
+				values += ',';
+			}
+			 values += $($checkboxes[i]).val();
+		}
+
+		return values;
+	}
+
+
+	/*
+	* Returns the ids of the selected items in the autocomplete component or filter checkboxes
+	*
+	* If any of the checkboxes is checked, the contents of the autocomplete component will be ignoredi
+	* and only those of the checked checkboxes returned.
+	*
+	* Params :
+	*	autocomplete : id of the hidden text of the autocomplete component
+	*	collapsable  : id of the div containing the checkboxes
+	* Returns :
+	*	selected ids as comma separated values
+	* Usage :
+	*	getCheckedAndSelected("txt_search_vad_selectedValue","txt_hierarchy_services_divTarget")
+	*	getCheckedAndSelected("txt_search_var_selectedValue","txt_hierarchy_locations_divTarget")
+	*/
+	function getCheckedAndSelected(autocomplete,collapsable){
+		var ids = new Array();
+		var id;
+		//get all checked items
+		$("#" + collapsable + " input:checkbox").each(function(){
+			if($(this).is(":checked")){
+				// Find database identifier (TODO: these should be stored in value-attribute but they're not)
+				// Attribute database id is at the end of the input's id attribute like this "..._id_parentId."
+				var elementId = $(this).attr("id"); // id of <input> tag.
+				var lastUnderscore = elementId.lastIndexOf('_');
+				var firstDigit = elementId.substring(0, lastUnderscore).lastIndexOf('_') + 1;
+				id = elementId.substring(firstDigit, lastUnderscore);
+				//make sure its not in the array
+				if($.inArray(id,ids) < 0){
+					ids.push(id);
+				}
+			}
+		});
+
+		// If we have checked items, ignore the autocomplete component.
+		if (ids.length == 0) {
+			id = $("#" + autocomplete).val();
+			//get the value of the autocomplete
+			if(id.length != 0){
+				//make sure it's not in the array.
+				if($.inArray(id,ids) < 0){
+					ids.push(id);
+				}
+			}
+		}
+		return ids.join(",");
+	}
+
+//==============================================================================
+//=                                                                            = 
+//= SEARCH FILTER FUNCTIONS                                                    =
+//=                                                                            = 
+//=   All functions related to inquiry search filters are placed here.         = 
+//==============================================================================
+
+//==============================================================================
+//======= Persistant storage access functions ==================================
+
+	/**
+	* Retrieves and displays all inquiry search filters for current user.
+	*/
+	function getSearchFilters() {
+		$.ajax({
+			type : "GET",
+			url  : 'inquiries.php',
+			data : {
+				"ajaxRequest"                : "loadSearchFilters",
+				"checksum"                   : '<?=CheckSum($_SESSION['User']['Id']);?>'
+			},
+			success: function(data) {
+				var $filterContainer = $('#search_filter_container');
+				var filters = $.parseJSON(data).filters;
+				var nFilters = filters.length;
+				var filtersHTML = '';
+				var i=0;
+				for (i = 0; i < nFilters; i++) {
+
+					filtersHTML += '<li style="list-style:none;">' +
+						'<span onclick="searchFilterClicked(event, ' + filters[i].Id + ', \'' + filters[i].Classification_Ids + '\'' +
+						', \'' + filters[i].ServiceCategory_Ids + '\'' +
+						', \'' + filters[i].Sweden_LanKommuner_Ids + '\')">' +
+						'<input type="radio" id="inq_search_filter_' + filters[i].Id +
+						'" name="inq_search_filter" value="' + filters[i].Id + '"/>' + 
+						'<label for="inq_search_filter_' + filters[i].Id + '">' + filters[i].Name + '</label>' +
+						'</span> <img id="inq_search_filter_remove_' + filters[i].Id + '" src="img/closeImage.png" class="clickable"' +
+						' title="<?=$trans['inquiries_delete_filter']?>"' +
+						' /></li>\n';
+
+					// Attach handler.
+					// When we do jQuery.html() our html entities will be decoded. This means
+					// that our encoded single quotes will be actual single quotes and
+					// cause problems for our JavaScript string parameters. So if we
+					// have JavaScript in what we set with .html() we can get bugs.
+					// If for instance the filter Name is "Mike's" and we try to pass this
+					// as a parameter by simply appending it to the string we pass to
+					// .html() the result will be
+					//   onClick="myCoolFunction(1, 'Mike's')"
+					// which of course gives an error due to us closing the second string!
+					// To make it easy for ourselves, we don't add the onclick in the
+					// actual element.
+					var filterDeleteImgSelector = '#inq_search_filter_remove_' + filters[i].Id;
+					$(document).off('click', filterDeleteImgSelector);
+					$(document).on('click', filterDeleteImgSelector, {'filterId':filters[i].Id, 'filterName':filters[i].Name}, function(ev) {
+						var filterId = ev.data.filterId;
+						var filterName = ev.data.filterName;
+						onDeleteSearchFilterClicked(filterId, filterName);
+					});
+				}
+				$filterContainer.html(filtersHTML);
+			},
+			error: function(xhr){
+				// TODO: Showing error messages isn't working yet in Opera!
+				showStatusMessageBox("inquiries_services_error_msg", xhr.statusText, true);
+			}
+		});
+	}
+
+
+	/**
+	* Saves inquiry search filter in the persistent storage.
+	*
+	* The filter values are taken from the current selections in the
+	* autocomplete_dropdowns txt_industry and txt_location.
+	*
+	* When search filter has been saved, the search filter list display is
+	* reloaded.
+	*
+	* @param filterName  Name to save filter under.
+	*                    If a filter with this name already exists, it will be
+	*                    overwritten.
+	*/
+	function saveSearchFilter(filterName) {
+		filterName = $.trim(filterName);
+		if (filterName.length < 1) {
+			return;
+		}
+
+		// Create a comma separated strings from filter "settings".
+		var classificationIds          = getCheckedCheckboxValuesAsString('classification_checkboxes_container');
+		var businessServiceCategoryIds = getCheckedAndSelected("txt_industry_selectedValue","txt_inq_services_divTarget");
+		var sweden_LanKommunerIds      = getCheckedAndSelected("txt_location_selectedValue","txt_inq_locations_divTarget");
+
+		$.ajax({
+			type : "POST",
+			url  : 'inquiries.php',
+			data : {
+				"ajaxRequest"                : "saveSearchFilter",
+				"filterName"                 : filterName,
+				"classificationIds"          : classificationIds,
+				"categoryIds"                : businessServiceCategoryIds,
+				"lanKommunerIds"             : sweden_LanKommunerIds,
+				"checksum"                   : '<?=CheckSum($_SESSION['User']['Id']);?>'
+			},
+			success: function(data) {
+				getSearchFilters(); // Reload filter list.
+			},
+			error: function(xhr){
+				// TODO: Showing error messages isn't working yet in Opera!
+				showStatusMessageBox("inquiries_services_error_msg", xhr.statusText, true);
+			}
+		});
+	}
+
+
+	/**
+	* Deletes a search filter from the database and view.
+	*
+	* @param filterId  Database id of filter to remove.
+	*                  If this id doesn't belong to the current user, the filter
+	*                  won't be deleted.
+	 */
+	function deleteSearchFilter(filterId) {
+		$.ajax({
+			type : "POST",
+			url  : 'inquiries.php',
+			data : {
+				"ajaxRequest"                : "deleteSearchFilter",
+				"filterId"                   : filterId,
+				"checksum"                   : '<?=CheckSum($_SESSION['User']['Id']);?>' // TODO: Add filter id to checksum
+			},
+			success: function(data) {
+				getSearchFilters(); // Update our filter list display.
+			},
+			error: function(xhr){
+				// TODO: Showing error messages isn't working yet in Opera!
+				showStatusMessageBox("inquiries_services_error_msg", xhr.statusText, true);
+			}
+		});
+	}
+
+//==============================================================================
+//======= UI callback functions ================================================
+
+	/**
+	* Shall be called when user clicks to delete a filter.
+	*
+	* Will open a delete confirmation dialog. If user confirms the delete, the
+	* filter will be deleted from the view and database.
+	*
+	* @param id   Database id of filter.
+	* @param name Name given to filter.
+	 */
+	function onDeleteSearchFilterClicked(id, name) {
+		// Dialog for confirming search filter deletion
+		// TODO: Handle multiple dialog instance "bug".
+		var $filterNameInput = $('<div></div>').html('<?=$trans['inquiries_delete_the_filter']?> <strong>' + name + '</strong>?');
+		var $filterNameDialog = $filterNameInput.
+			dialog(
+			{
+				'autoOpen' : false,
+				'title'    : '<?=$trans['inquiries_delete_filter']?>',
+				'draggable': false,
+				'modal'    : true,
+				'buttons'  :
+				{
+					'<?=$trans['inquiries_delete_filter']?>' : function() {
+						$(this).dialog('close');
+						deleteSearchFilter(id);
+					},
+					'<?=$trans['inquiries_filter_dont_delete']?>' : function() {
+						$(this).dialog('close');
+					}
+				}
+		});
+		$filterNameDialog.dialog('open');
+	}
+
+
+	/**
+	* Callback for when user has clicked on a search filter.
+	*
+	* @param event    The click event.
+	* @param filterId Database id of the filter that was clicked.
+	* @param serviceCategoryIds  String of comma separated service category ids
+	*                            that should be filtered upon.
+	 */
+	function searchFilterClicked(event, filterId, classificationIds, serviceCategoryIds, lanKommunerIds) {
+		// If user clicked the label we will get one event for the label and
+		// another when the checkbox is checked. So we ignore the label click.
+		if ($(event.target).is('label')) {
+			return;
+		}
+
+		// Set classification checkboxes.
+		var arrayIds = classificationIds.split(",");
+		console.log(arrayIds);
+		var $classificationCheckboxes = $('#classification_checkboxes_container').find(':checkbox');
+		console.log($classificationCheckboxes);
+		$classificationCheckboxes.each(function(index, element) {
+			console.log('Checking ' + $(element).val());
+			if (-1 === $.inArray( $(element).val(), arrayIds )) {
+				console.log('not found!');
+				$(element).attr('checked', false);
+			} else {
+				console.log('found!');
+				$(element).attr('checked', true);
+			}
+		});
+
+		// Set service categories checkboxes.
+		$("#txt_inq_services").autocomplete_dropdown('uncheckAll');
+		$("#txt_inq_services").autocomplete_dropdown('checkSelected', serviceCategoryIds);
+
+		// Set location checkboxes.
+		$("#txt_inq_locations").autocomplete_dropdown('uncheckAll');
+		$("#txt_inq_locations").autocomplete_dropdown('checkSelected', lanKommunerIds);
+
+		// Perform a search using the filter.
+		loadInquiries(<?=$INQUIRES_PER_PAGE ?>, <?=$page?>,'<?=CheckSum(array($INQUIRES_PER_PAGE, 1))?>');
+		return false;
+	}
+//==============================================================================
+//=                                                                            = 
+//= End of search filter functions                                             =
+//==============================================================================
+
+	/**
+	* Function for getting specific advertisement depending on the selected category and location.
+	 */
+	function GetInquiriesAd(){
+		$.ajax({
+			type : "GET",
+			url : "/libs/lib_ads.php",
+			data : {
+				"ajaxRequest" : "GetAd",
+				"CategoryId" : $("#hInqSelCategory").val(),
+				"LocationId" : $("#hInqSelLocation").val()
+			},
+			success: function(data){
+				var Ad = JSON.parse( data );
+				if(Ad.adImageSrc){
+					$("#gallery_image").attr( "src", Ad.adImageSrc);
+					$("#ImageLink").attr( "href", Ad.adUrl);
+				}
+			},
+			error: function(xhr){
+				showStatusMessageBox("search_affiliates_error_msg", xhr.statusText, true);
+			}
+		});
+	}
+	/**
+	* Function for getting specific advertisement depending on the selected category.
+	 */
+	function getInquiriesAdByCategory(categoryId){
+		$("#hInqSelCategory").val(categoryId);
+		GetInquiriesAd();
+	}
+	/**
+	* Function for getting specific advertisement depending on the selected location.
+	 */
+	function getInquiriesAdByLocation(locationId){
+		$("#hInqSelLocation").val(locationId);
+		GetInquiriesAd();
+	}
+</script>
+
+<style>
+.date { width:100px;}
+.inquiry { width:280px;}
+.municipality { width:100px;}
+
+.requestTableRowExpand {
+	line-height: 1.2em;
+	padding-left: 15px;
+	padding-right: 20px;
+	padding-bottom: 10px;
+}
+.info_note {
+	color: #444444;
+	font-style: italic;
+}
+
+#filter_search_toggle:hover {
+	cursor: pointer;
+}
+
+#inquiries_reply_message {
+	margin-bottom: 10px;
+}
+</style>
+
+<input type="hidden" id="hInqSelCategory" value="" />
+<input type="hidden" id="hInqSelLocation" value="" />
+
+<div id="main-column-2">
+	<h1 class="title"><?=$trans["inquiries_inquiries"];?></h1>
+
+	<!-- START: Status Message Box -->
+	<div id="inquiries_services_error_msg" class="status-msg-box" style="display:none">
+	<? if(!empty($ErrMsg)){?>
+		<script type="text/javascript">
+			showStatusMessageBox("inquiries_services_error_msg","<?=$ErrMsg?>", true);
+		</script>
+	<? }?>
+	<?if(!empty($OkMsg)){?>
+			<script type="text/javascript">
+				showStatusMessageBox("inquiries_services_error_msg","<?=$OkMsg?>", false);
+			</script>
+	<?php }?>
+	</div>
+	<!-- END: Status Message Box -->
+
+		<div class="clearfix container-small">
+			<div class="left">
+				<span class="txt12Bold"><?=$trans["inquiries_what_industry"];?></span>&nbsp;
+				<div class="combox">
+					<input type="text" id="txt_industry" />
+				</div>
+			</div>
+			<div class="left" style="margin-left:3em;">
+				<strong><?=$trans["inquiries_search_country"];?></strong>
+				<div class="combox">
+					<input type="text" id="txt_location" />
+				</div>
+			</div>
+			<div>
+				<a class="btn-orange" style="margin-top: 5px;" href="javascript:void(0)" onclick="loadInquiries(<?=$INQUIRES_PER_PAGE ?>, 1,'<?=CheckSum(array($INQUIRES_PER_PAGE, 1))?>');">
+					<span><h5><?=$trans["inquiries_search"];?></h5></span>
+				</a>
+			</div>
+		</div>
+		
+		
+		
+		<span id="filter_search_toggle"><img src="/img/arrow_right_small.png" width="8" height="8" /><?=$trans["inquiries_filter_search"];?></span>
+		<div id="filter_search_container" style="display:none;">
+			<div id="classification_checkboxes_container">
+				<div class="clearfix container-small">
+					<input type="checkbox" id="classification_checkbox_6" name="classification_checkbox_6" value="6" /><label for="classification_checkbox_6"><?=$trans["classification_id_map"][6];?></label>
+					<input type="checkbox" id="classification_checkbox_1" name="classification_checkbox_1" value="1" /><label for="classification_checkbox_1"><?=$trans["classification_id_map"][1];?></label>
+					<input type="checkbox" id="classification_checkbox_2" name="classification_checkbox_2" value="2" /><label for="classification_checkbox_2"><?=$trans["classification_id_map"][2];?></label>
+					<input type="checkbox" id="classification_checkbox_3" name="classification_checkbox_3" value="3" /><label for="classification_checkbox_3"><?=$trans["classification_id_map"][3];?></label>
+				</div>
+				<div class="clearfix container-small">
+					<input type="checkbox" id="classification_checkbox_4" name="classification_checkbox_4" value="4" /><label for="classification_checkbox_4"><?=$trans["classification_id_map"][4];?></label>
+					<input type="checkbox" id="classification_checkbox_5" name="classification_checkbox_5" value="5" /><label for="classification_checkbox_5"><?=$trans["classification_id_map"][5];?></label>
+				</div>
+			</div>
+			<div class="clearfix container-small">
+
+				<div class="left" style="width:400px;" style="background:red;">
+					<h3><?=$trans["inquiries_services"];?></h3>
+					<input type="text" id="txt_inq_services" />
+				</div>
+
+				<div class="left" style="width:200px;">
+					<h3><?=$trans["inquiries_counties_municipalities"];?></h3>
+					<input type="text" id="txt_inq_locations" />
+				</div>
+			</div>
+			<br />
+			<div class="clearfix container-small">
+				<a class="btn-orange" href="javascript:void(0)" onclick="loadInquiries(<?=$INQUIRES_PER_PAGE ?>, 1,'<?=CheckSum(array($INQUIRES_PER_PAGE, 1))?>');">
+					<span><h5><?=$trans["inquiries_filter"];?></h5></span>
+				</a>
+				<div class="left" style="margin-top:.8em; margin-left:1em;">
+					<a id="save_search_filter_btn" class="btn-violet" href="javascript:void(0)"><span><h5><?=$trans["inquiries_save_sok"];?></h5></span></a>
+				</div>
+				<div class="left" style="margin-top:1.4em; margin-left:1em;">
+					<img src="img/question_mark.png" />
+				</div>
+			</div>
+		</div> <!-- END: filter_search_container -->
+
+		<div class="container-small">
+			<div class="pagging-links">
+				<div id="navBarTop"></div>
+			</div>
+
+			<div class="requestsHeader">
+				<div class="serviceheadercontainer_top_left">
+					<div class="serviceheadercontainer_bottom_right">
+						<div class="serviceheadercontainer_top_right">
+							<div class="serviceheadercontainer_bottom_left">
+								<table>
+									<thead>
+										<th>
+											<td class="date"><?=$trans["inquiries_date"];?></td>
+											<td class="inquiry"><?=$trans["inquiries_inquiry"];?></td>
+											<td class="municipality"><?=$trans["inquiries_municipality"];?></td>
+											<td><?=$trans["inquiries_status"];?></td>
+											<td>&nbsp;</td>
+										</th>
+									</thead>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Rows -->
+			<div id="tableDataInquiriesServices">
+			</div>
+		</div>
+
+		<!-- Reply message dialog content -->
+		<div id="inq_replymsg_dlg_content" style="display:none;">
+			<textarea cols="30" rows="3" id="inquiries_reply_message"></textarea>
+			<h5><span><a id="btnReplyAttachment" class="btn-violet" href="javascript:void(0)">
+				<span class="btn-violet" style="color:white"><?=$trans['inquiries_replymsg_attach']?></span>
+			</a></h5>
+			<span id="inq_replymsg_dlg_file"></span>
+			<div id="inquiries_reply_error_msg" class="status-msg-box" style="display:none; margin-top: 10px;"></div>
+		</div>
+</div>
+<div id="sidebar-column">
+	<div class="info-pane">
+		<span class="help-user-tile" style="display:block;"><?=$trans["inquiries_help"];?></span>
+		<div class="help-user-title"><?=$trans["inquiries_inquiries"];?></div>
+		<div class="info-pane-content clearfix" style="margin-top: 45px;">
+			<div class="txt12" style="margin-top: 5px; margin-left: 50px; width: 240px;"><?=$trans["inquiries_inquiries_text"];?></div>
+			<div style="margin-top: 5px; width: 260px;">
+				<ul class="txt12">
+					<li class="list_request_replied"><?=$trans["inquiries_answered_req"];?></li>
+					<li class="list_request_not_replied"><?=$trans["inquiries_not_answered_ques"];?></li>
+					<li class="list_request_reply_icon"><?=$trans["inquiries_company_res"];?></li>
+				</ul>
+			</div>
+			<div style="margin-top: 5px; width: 260px;">
+				<div class="txt16Orange bold" style="margin-left: 50px; width: 100%;"><?=$trans["inquiries_saved_sok"];?></div>
+				<div class="txt12" style="margin-top: 5px; margin-left: 50px; width: 240px;"><?=$trans["inquiries_select_sok_you_want"];?>&nbsp;<?=$trans["inquiries_select_sok"];?></div>
+
+				<ul id="search_filter_container">
+					<li style="list-style:none;"><input type="checkbox" id="inquiries_malmo" name="inquiries_malmo" /><label for="inquiries_malmo"></label><?=$trans["inquiries_malmo"];?> <img src="img/closeImage.png" /></li>
+					<li style="list-style:none;"><input type="checkbox" id="inquiries_my_flter" name="inquiries_my_flter" /><label for="inquiries_my_flter"></label><?=$trans["inquiries_my_flter"];?> <img src="img/closeImage.png" /></li>
+					<li style="list-style:none;"><input type="checkbox" id="inquiries_office_services" name="inquiries_office_services" /><label for="inquiries_office_services"></label><?=$trans["inquiries_office_services"];?> <img src="img/closeImage.png" /></li>
+					<li style="list-style:none;"><input type="checkbox" id="inquiries_find_all" name="inquiries_find_all" /><label for="inquiries_find_all"></label><?=$trans["inquiries_find_all"];?> <img src="img/closeImage.png" /></li>
+					<li style="list-style:none;"><input type="checkbox" id="inquiries_other_flter" name="inquiries_other_flter" /><label for="inquiries_other_flter"></label><?=$trans["inquiries_other_flter"];?> <img src="img/closeImage.png" /></li>
+				</ul>
+
+			</div>
+		</div>
+		<? include( "inc_users_panel_client_banner.html" ); ?>
+	</div>
+
+</div>
+

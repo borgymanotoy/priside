@@ -1,0 +1,65 @@
+<script>
+function cancelAccount() {
+	$.ajax( {
+		type: 'POST',
+		url:  '/cancel_account.php',
+		data: { 'ajaxRequest'   : 'cancelAccount'},
+		success: function(data){
+			
+			alert(data)	
+			showStatusMessageBox("div_my_account_status_msgs", data, false);
+		},
+		error: function(xhr){
+			//showStatusMessageBox("div_modify_my_company_profile_status_msgs",xhr.statusText, true);
+		}
+	});
+}
+</script>
+<div id="main-column-2">
+		<!-- START: Status Message Box -->
+		<div id="div_my_account_status_msgs" class="status-msg-box" style="display: none;">
+			<?if(!empty($ErrMsg)){?> 
+				<script type="text/javascript">
+					showStatusMessageBox("div_my_account_status_msgs","<?=$ErrMsg?>", true);
+				</script>
+			<?}?> 
+			<?if(!empty($OkMsg)){?>
+				<script type="text/javascript">
+					showStatusMessageBox("div_my_account_status_msgs","<?=$OkMsg?>", false);
+				</script>
+			<?}?>
+		</div>
+		<!-- END -->
+		<?if (!IsAdmin()) {?>
+		<h1 class="title"><?=$trans["cancel_accnt_cancel_account"];?></h1>
+		<p><?=$trans["cancel_accnt_cancel_acc_text"];?></p>
+		
+		<h3><?=$trans["cancel_accnt_user_info"];?></h3>
+		
+		<div class="clearfix container-small">
+			<p><input type="checkbox" id="cancel_accnt_save_email_add_text" name="cancel_accnt_save_email_add_text" /><label for="cancel_accnt_save_email_add_text"><b><?=$trans["cancel_accnt_save_email_add_text"];?></b></label></p>	
+		</div>
+		<div style="height:10px;">&nbsp;</div>
+		<div class="clearfix container-small">
+			<a class="btn-orange" href="javascript:void(0);" onclick="cancelAccount();"><span><?=$trans["cancel_accnt_close_acc"];?></span></a>
+		</div>
+		<? } else {?>
+		<h1 class="title"><?=$trans["cancel_accnt_cancel_contract"];?></h1>
+		
+		<p><?=$trans["cancel_accnt_cancel_contract_text"];?></p>
+
+		<p><?=$trans["cancel_accnt_uppsag"];?></p>
+		<? } ?>
+</div>
+
+<div id="sidebar-column">
+	<div class="info-pane">
+		<span class="help-user-tile" style="display:block;"><?=$trans["cancel_accnt_cancel_help"];?></span>
+		<div class="help-user-title"><?=$trans["cancel_accnt_cancel_account"];?></div>
+		<div class="info-pane-content clearfix" style="margin-top: 45px;">
+			<div class="txt12" style="margin-top: 5px; margin-left: 50px; width: 240px;"><?=$trans["cancel_accnt_cancel_acc_text_side_bar"];?></div>
+		</div>
+		<? include( "inc_users_panel_client_banner.html" ); ?>
+	</div>
+</div>
+

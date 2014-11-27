@@ -1,0 +1,422 @@
+<?php
+// If variable $inquiryId is set, the page will be used for editing and old
+// request instead of creating a new.
+
+require_once( $_SERVER['DOCUMENT_ROOT']."/libs/combobox.php" );
+?>
+
+<!--inc_new_request.html-->
+<script type="text/javascript">
+	<?=include( $_SERVER['DOCUMENT_ROOT']."/jscommon/common_js.php" );?>
+	//this variable will track the id of the attachments
+	var attachmentId = 1;
+	
+	$(document).ready(function(){
+		$("#txt_new_req_services").autocomplete_dropdown({"table" : "BusinessServiceCategory", "onChange" : function(CategoryId){getNewRequestAdByCategory(CategoryId);}}).css({"width":"180px"});
+		$("#txt_new_req_location").autocomplete_dropdown({"table" : "Sweden_LanKommuner", "onChange" : function(LocationId){getNewRequestAdByLocation(LocationId);}}).css({"width":"180px"});
+		
+		$("#btnNewRequestAttachment").css({"position" : "absolute","width" : "90px"}).fileuploader({
+			"onComplete" : function(filename){
+				$.ajax({
+					type : "POST",
+					url  : 'new_request.php',
+					data : {
+						"ajaxRequest" : "renameUploadedFile",
+						"fileId"      : attachmentId
+					},
+					success: function(data) {
+						//NO ERRORS
+					},
+					error: function(xhr){
+						// TODO: Showing error messages isn't working yet in Opera!
+						showStatusMessageBox("new_request_error_msg", xhr.statusText, true);
+					}
+				});
+				$("#filesForUpload").append('<li filenameInServer="inquiryAttachment_' + attachmentId + '">' + filename +'<span class="close-icon" onclick="deleteFile(this)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br></li>');
+				attachmentId++;
+			},
+			"onError" : function(error) {
+				showStatusMessageBox("new_request_error_msg",error, true);
+			},
+			"onCancel" : function(control) {
+			},
+			"useExternProgressHandler" : false, 
+			"ButtonStateCancel"        : "Cancel Upload",
+			'FlashVars'                : "SavePath=<?=$SavePath?>",
+			'filters'                  : "All Files:*.*"
+		});
+
+		$("#btnNewRequestAttachment_swf").css({
+			"position" : "relative"
+		});
+		
+		$("#descr_textarea").focus(function(){
+			if($(this).val().length == 0 || $(this).val() == "<?=$trans["new_request_mission_text"];?>"){
+				$(this).val("");
+			}
+		}).blur(function(){
+			if($(this).val().length == 0){
+				$(this).val("<?=$trans["new_request_mission_text"];?>");
+			}
+		});
+		
+		// === EDIT REQUEST HANDLING
+		// If $editInquiryId is set, then user wants to edit an existing
+		// inquiry/request.
+		// Permission for this has already been checked and the values of the
+		// old inquiry are stored in $oldInquiryValues oldInquiryValues.
+
+		<?php
+		if (isset($editInquiryId)) {
+		?>
+			$("#txt_new_req_services").autocomplete_dropdown('setSelection', <?=$oldInquiryValues['BusinessServiceCategory_Id']?>);
+			$("#txt_new_req_location").autocomplete_dropdown('setSelection', <?=$oldInquiryValues['Sweden_LanKommuner_Id']?>);
+
+			// We do .html() to replace html entities with their corresponding characters.
+			// We do json_encode to handle newlines etc that otherwise would break our JavaScript.
+			$('#descr_textarea').html(<?=json_encode($oldInquiryValues['Description'])?>);
+
+			selectComboboxItem('request_whom', <?=$oldInquiryValues['ServiceIsFor']?>);
+			selectComboboxItem('request_when', '<?=$oldInquiryValues['ServiceNeededWhen']?>');
+
+			// Show the previously uploaded files.
+			var $container = $('#filesAlreadyUploaded');
+			var html = '';
+			<?php
+				$nOldFiles = count($oldInquiryValues['Files']);
+				for ($i = 0; $i < $nOldFiles; $i++) {
+					$file = $oldInquiryValues['Files'][$i];
+					?>
+
+					html += '<span id="fileAlreadyUploaded-<?=$file['File_Id']?>" style="margin-right:10px;"><?=$file['File_Name']?>';
+					html += '<span class="close-icon" title="<?=$trans['new_request_file_delete_hover']?>" onclick="onDeleteSavedFileClicked(';
+					html += <?=$file['File_Id']?> + ", '<?=$file['File_Name']?>'";
+					html += ')">';
+					html += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>';
+
+				<?php
+				}
+			?>
+			$container.append(html);
+		<?php
+		}
+		?>
+		// === END: EDIT REQUEST HANDLING
+	});
+	
+	
+	//this function, directly deletes the file from the server
+	function deleteFile(object){
+		$.ajax({
+			type : "POST",
+			url  : 'new_request.php',
+			data : {
+				"ajaxRequest" : "deleteUploadedFile",
+				"filename"    : $(object).parent().attr("filenameInServer").replace(/\s/g, "")
+			},
+			success: function(data) {
+				$(object).parent().remove();
+				//NO ERRORS
+			},
+			error: function(xhr){
+				// TODO: Showing error messages isn't working yet in Opera!
+				showStatusMessageBox("new_request_error_msg", xhr.statusText, true);
+			}
+		});
+	}
+	
+	/**
+	 * Deletes a file previously attached to current request.
+	 *
+	 * Differs from deleteFile in that it also handles files that were not
+	 * uploaded in this "edit request" session.
+	 *
+	 * When the file is successfully deleted from the server its entry will also
+	 * be removed from the DOM.
+	 *
+	 * @param  fileId     Database id of the file to be deleted.
+	 */
+	function deleteSavedFile(fileId){
+		$.ajax({
+			type : "POST",
+			url  : 'new_request.php',
+			data : {
+				"ajaxRequest" : "deleteSavedFile",
+				"fileId"    : fileId
+			},
+			success: function(data) {
+				$('#fileAlreadyUploaded-' + fileId).remove();
+			},
+			error: function(xhr){
+				// TODO: Showing error messages isn't working yet in Opera!
+				showStatusMessageBox("new_request_error_msg", xhr.statusText, true);
+			}
+		});
+	}
+
+	//get all the list of files
+	function getUploadedFiles(){
+		var files = new Array();
+		$("#filesForUpload li").each(function(){
+			files.push($(this).attr("filenameInServer") + ":" + $(this).text().replace(/\s/g, ""))
+		});
+		return files.join(",");
+	}
+
+	/**
+	* Shall be called when user clicks to delete an old file.
+	*
+	* Will open a delete confirmation dialog. If user confirms the delete, the
+	* file will be deleted from the view and database.
+	*
+	* @param id   Database id of file.
+	* @param name Name of the file.
+	 */
+	function onDeleteSavedFileClicked(id, name) {
+		// TODO: Handle multiple dialog instance "bug".
+		var $dialogText = $('<div></div>').html('<?=$trans['new_request_fd_descr']?> <strong>' + name + '</strong>?');
+		var $deleteDialog = $dialogText.
+			dialog(
+			{
+				'autoOpen' : false,
+				'title'    : '<?=$trans['new_request_fd_title']?>',
+				'draggable': false,
+				'modal'    : true,
+				'buttons'  :
+				{
+					'<?=$trans['new_request_fd_btn_delete']?>' : function() {
+						$(this).dialog('close');
+						deleteSavedFile(id);
+					},
+					'<?=$trans['new_request_fd_btn_cancel']?>' : function() {
+						$(this).dialog('close');
+					}
+				}
+		});
+		$deleteDialog.dialog('open');
+	}
+
+	/**
+	 * Submits a new service request.
+	 *
+	 * Submit is made using Ajax so result of submit is likely not available when
+	 * this function returns. The result will be handled in internal callback
+	 * functions of this function.
+	 *
+	 * @param requestId  If defined and not null, the request with the given id
+	 *                   will be updated instead of a new request created.
+	 */
+	function submitRequest(requestId) {
+		// TODO: It's easier to fetch this than what we're doing here.
+		//       They're all form element values... Just set proper names
+		//       on the elements!
+		var category = $("#txt_new_req_services_selectedValue").val();
+		var loc = $("#txt_new_req_location_selectedValue").val();
+		var description = $("#descr_textarea").val();
+		var whomId = $("#combobox_request_whom_value").val();
+		var whenId = $("#combobox_request_when_value").val();
+
+		var requestData = {
+				"ajaxRequest"               : "createNewRequest",
+				"categoryId"                : category,
+				"locationId"                : loc,
+				"description"               : description,
+				"whomId"                    : whomId,
+				"whenId"                    : whenId,
+				"uploadedFiles"             : getUploadedFiles()
+		};
+
+		if (undefined !== requestId && null != requestId) {
+			requestData["ajaxRequest"] = "editRequest";
+			requestData["requestId"] = requestId;
+		}
+
+		$.ajax({
+			type : "POST",
+			url  : 'new_request.php',
+			data : requestData,
+			success: function(data) {
+				<?php if (isset($editInquiryId) ) : ?>
+				showStatusMessageBox("new_request_error_msg",' <?=$trans['new_request_edited']?>', false);
+				<?php else : ?>
+				showStatusMessageBox("new_request_error_msg",' <?=$trans['new_request_created']?>', false);
+				<?php endif; ?>
+				// TODO: Clear form using proper form methods.
+				/*
+				$("#txt_new_req_services_selectedValue").val('');
+				$("#txt_new_req_location_selectedValue").val('');
+				$("#descr_textarea").val('');
+				$("#combobox_request_whom_value").val('');
+				$("#combobox_request_when_value").val('');
+				*/
+				//just reload the entire tab
+				setTimeout(function(){
+					loadTabAjax('subtab5Inquiries', 'new_request.php');
+				},1000);
+			},
+			error: function(xhr){
+				// TODO: Showing error messages isn't working yet in Opera!
+				showStatusMessageBox("new_request_error_msg", xhr.statusText, true);
+			}
+		});
+
+		return false;
+	}
+
+	/**
+	* Function for getting specific advertisement depending on the selected category and location.
+	 */
+	function GetNewRequestAd(){
+		$.ajax({
+			type : "GET",
+			url : "/libs/lib_ads.php",
+			data : {
+				"ajaxRequest" : "GetAd",
+				"CategoryId" : $("#hNewRequestSelCategory").val(),
+				"LocationId" : $("#hNewRequestSelLocation").val()
+			},
+			success: function(data){
+				var Ad = JSON.parse( data );
+				if(Ad.adImageSrc){
+					$("#gallery_image").attr( "src", Ad.adImageSrc);
+					$("#ImageLink").attr( "href", Ad.adUrl);
+				}
+			},
+			error: function(xhr){
+				showStatusMessageBox("search_affiliates_error_msg", xhr.statusText, true);
+			}
+		});
+	}
+	/**
+	* Function for getting specific advertisement depending on the selected category.
+	 */
+	function getNewRequestAdByCategory(categoryId){
+		$("#hNewRequestSelCategory").val(categoryId);
+		GetNewRequestAd();
+	}
+	/**
+	* Function for getting specific advertisement depending on the selected location.
+	 */
+	function getNewRequestAdByLocation(locationId){
+		$("#hNewRequestSelLocation").val(locationId);
+		GetNewRequestAd();
+	}
+</script>
+
+<style type="text/css">
+	.close-icon {
+		background-image: url("../css/images/ui-icons_222222_256x240.png");
+		background-position: -96px -128px;
+		height: 16px;
+		width: 16px;
+	    cursor:default;
+	}	
+</style>
+
+<input type="hidden" id="hNewRequestSelCategory" value="" />
+<input type="hidden" id="hNewRequestSelLocation" value="" />
+
+<div id="main-column-2">
+	<h1 class="title"><?php print isset($editInquiryId) ? $trans["new_request_edit_req"] : $trans["new_request_new_req"];?></h1>
+		
+	<!-- Status Message Box -->
+	<div id="new_request_error_msg" class="status-msg-box" style="display:none"></div>
+
+	<div class="clearfix container-small">
+		<div class="left">
+			<span style="margin-left: 5px;"><?=$trans["new_request_what_industry"];?></span>
+			<div class="combox">
+				<input type="text" id="txt_new_req_services" />
+			</div>
+		</div>
+		<div class="left" style="margin-left:3em;">
+			<span style="margin-left: 5px;"><?=$trans["new_request_search_country"];?></span>
+			<div class="combox">
+				<input type="text" id="txt_new_req_location" />
+			</div>
+		</div>
+		
+	</div>
+
+
+   <label for="text-area" style="margin-left: 5px;"><?=$trans["new_request_mission"];?> *</label><br />
+		<div class="textarea_top_left">
+		   <div class="textarea_bottom_right">
+			   <div class="textarea_top_right">
+				   <div class="textarea_bottom_left">
+						<textarea id="descr_textarea" style="resize: vertical; border: 0; margin: 5px;" rows="10" cols="71"><?=$trans["new_request_mission_text"];?></textarea>
+						
+					</div>
+				</div>
+			</div>
+		</div>	
+		<div class="clearfix container-small">
+			<div class="left" style="margin-top:.8em; margin-left:1em;">
+				<a id="btnNewRequestAttachment" class="btn-violet" href="javascript:void(0)"><span><h5><?=$trans["new_request_attach_file"];?></h5></span></a>
+			</div>
+			<div class="left" style="margin-top:1.4em; margin-left:1em;">
+				<img src="img/question_mark.png" />
+			</div>
+		</div>	
+		<div class="clearfix container-small">
+			<ul class="files-upload">
+				<li style="font-weight:bold"><img src="img/clip.png">&nbsp;<?=$trans["new_request_attachments"];?>:</li>
+
+				<div id="filesAlreadyUploaded" style="padding-left:12px">
+				</div>
+				<div id="filesForUpload" style="padding-left:12px">
+					<!-- this is the html 
+						<li>Planritning.pdf<span class="close-icon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></li><br>
+						<li>foto.jpg<span class="close-icon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></li><br>
+					!-->
+				</div>
+			</ul>
+		</div>
+		
+		<div class="clearfix container-small">
+			<div class="left">
+				<div class="combobox-container left">
+					<?php
+						natcasesort($trans['classification_id_map']);
+						WriteCombobox('request_whom', $trans["new_request_whom"], $trans['classification_id_map'], null);
+					?>
+				</div>
+			</div>
+			<div class="combobox-container right">
+				<?= WriteCombobox('request_when', $trans["new_request_when"], $trans['servicerequesttime'], null)?>
+			</div>
+
+		</div>
+		<div class="clearfix container-small">
+			<input type="checkbox" id="new_request_mediate" name="new_request_mediate" /><label for="new_request_mediate"><b><?=$trans["new_request_mediate"];?></b></label><br />
+			<input type="checkbox" id="new_request_invite_entre" name="new_request_invite_entre" /><label for="new_request_invite_entre"><b><?=$trans["new_request_invite_entre"];?></b></label><br />
+		</div>
+		<div class="clearfix container-small">
+			<div class="right">
+				<a class="btn-orange" href="javascript:void(0)"
+					<?php
+					if (isset($editInquiryId)) {
+						print 'onclick="submitRequest('.$editInquiryId.')">';
+					}
+					else {
+						print 'onclick="submitRequest(null)">';
+					}
+					?>
+					<span><?=$trans["new_request_request"];?></span></a>
+			</div>
+		</div>
+		<div style="height: 80px;"></div> <!-- CASF -->
+		
+</div>
+
+<div id="sidebar-column">
+	<div class="info-pane">
+		<span class="help-user-tile" style="display:block;"><?=$trans["new_request_help"];?></span>
+		<div class="help-user-title"><?php print isset($editInquiryId) ? $trans["new_request_edit_req"] : $trans["new_request_new_req"];?></div>
+		<div class="info-pane-content clearfix" style="margin-top: 45px;">
+			<div class="txt12" style="margin-top: 5px; margin-left: 50px; width: 240px;"><?php print isset($editInquiryId) ? $trans["new_request_edit_req_text"] : $trans["new_request_new_req_text"];?></div>
+		</div>
+		<? include( "inc_users_panel_client_banner.html" ); ?>
+	</div>
+</div>
+

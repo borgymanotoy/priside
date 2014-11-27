@@ -1,0 +1,465 @@
+@import url("css/reset.css");
+
+/* Start: BASE CSS */
+
+/* =html */
+html { background : #ccc;}
+
+/* =body */
+body { font : 76%/160% Arial, sans-serif; color : #000; padding:0; margin:0; border:0;}
+
+/* links */
+a {color: #3b2767;text-decoration: underline;}
+a:link {font-weight:bold;}
+a:focus {outline: 0;}
+a:visited {}
+a:hover {color: #000;text-decoration: none;}
+
+/* =h1 - h5 */
+h1, h2, h3, h4, h5, h6 { margin:0 0 15px 0; font-weight: bold; }
+h1 { font-size: 2.4em; }
+h2 { font-size: 1.8em; }
+h3 { font-size: 1.2em; }
+h4 { font-size: 1.0em; }
+h5 { font-size: 1.0em; }
+
+/* =p */
+p { 
+	
+}
+
+/* End: BASE CSS */
+
+
+/* =utility */
+
+/*utility tools*/				
+/* slightly enhanced, universal clearfix hack */
+.clearfix:after { visibility: hidden; display: block; font-size: 0; content: " "; clear: both; height: 0; }
+.clearfix { display: inline-block; }
+/* start commented backslash hack \*/
+* html .clearfix { height: 1%; }
+.clearfix { display: block; }
+/* close commented backslash hack */
+
+.wrapper {width: 1000px;margin: 0 auto; position: relative; height:100%}
+
+.hide {
+	display: none;
+	overflow : hidden;
+}
+
+
+/*= css buttons */
+					
+/* orange */
+a.btn-orange {
+	/* Sliding right image */    
+	background: transparent url('img/button_right_orange.png') no-repeat scroll top right; 
+	display: block;
+	float: left;
+	height: 40px; /* CHANGE THIS VALUE ACCORDING TO IMAGE HEIGHT */
+	margin-right: 3px;
+	padding-right: 23px; /* CHENGE THIS VALUE ACCORDING TO RIGHT IMAGE WIDTH */
+	padding-top: 0;
+	/* FONT PROPERTIES */
+	text-decoration: none;
+	color: #fff;
+}
+
+a.btn-orange span{    /* Background left image */ 
+	background: transparent url('img/button_left_orange.png') no-repeat;     display: block;
+	line-height: 35px; /* CHANGE THIS VALUE ACCORDING TO BUTTONG HEIGHT */
+	padding: 0 0 0 18px;
+} 
+
+/* violet & white */
+a.btn-violet {
+	background: transparent url('img/btn_right_violet.png') no-repeat scroll top right; 
+	color: #fff;
+}
+
+a.btn-white {
+	background: transparent url('img/btn_right_white.png') no-repeat scroll top right; 
+	color: #000;
+}
+
+a.btn-violet span {
+	background: transparent url('img/btn_left_violet.png') no-repeat;    
+}
+
+a.btn-white span {
+	background: transparent url('img/btn_left_white.png') no-repeat;    
+}
+a.btn-violet , a.btn-white{
+	/* Sliding right image */    
+	display: block;
+	float: left;
+	height: 25px; /* CHANGE THIS VALUE ACCORDING TO IMAGE HEIGHT */
+	margin-right: 0;
+	padding-right: 15px; /* CHENGE THIS VALUE ACCORDING TO RIGHT IMAGE WIDTH */
+	/* FONT PROPERTIES */
+	text-decoration: none;
+	
+}
+
+a.btn-violet span, a.btn-white span{    /* Background left image */ 
+	display: block;
+	line-height: 25px; /* CHANGE THIS VALUE ACCORDING TO BUTTONG HEIGHT */
+	padding: 0 0 0 16px;
+} 
+
+
+/* box-pane */
+.box-pane {
+	width:300px;
+	height:100%;
+	float:left;
+	margin: 0 .8em 1em .8em;
+	background : url(../img/yellow-orange-top.png) no-repeat;
+}
+
+.box-pane h2 { width: 300px; height : 44px; padding:10px 0 0 0; text-align:center; margin:0;  color: #fff; }
+.box-pane ul { margin : -10px 0 0 0; padding : 0 0 30px 30px; background : url(../img/body-box.png) no-repeat 0 100%; }
+
+/*= outer tabs */
+ol#outer-tabs {
+	height: 2em;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	padding-left:45px;
+	background:#ccc;
+}
+
+ol#outer-tabs a {
+	background: #bdf url(../img/tabs.png);
+	color: #705a8c;
+	display: block;
+	float: left;
+	height: 2em;
+	padding-left: 10px;
+	text-decoration: none;
+	position:relative;
+	top:2px;
+	font-weight:bold;
+}
+
+ol#outer-tabs a:hover {
+	background-color: #3af;
+	background-position: 0 -120px;
+}
+
+ol#outer-tabs a:hover span {
+	background-position: 100% -120px;
+}
+
+ol#outer-tabs li {
+	float: left;
+	margin: 0 2px 0 0;
+}
+
+ol#outer-tabs li.current a {
+	background-color: #48f;
+	background-position: 0 -60px;
+	color: #e66313;
+	font-weight: bold;
+	top:2px;
+}
+
+ol#outer-tabs li.current span {
+	background-position: 100% -60px;
+}
+
+ol#outer-tabs span {
+	background: url(../img/tabs.png) 100% 0;
+	display: block;
+	line-height: 2em;
+	padding-right: 10px;
+}
+
+
+
+/* =branding */
+#branding {height: 106px;width: 100%; background: #3b2767; margin-bottom:30px;}
+        /* =logo */
+        h1#logo {
+			font-size: 2.5em;
+			color: #fff;
+			font-style: italic;
+			height:106px; 
+			width:323px;
+			text-decoration: none; 
+			background: url('../img/branding.png') 100% 100% no-repeat; 
+			text-indent : -9999px;
+		}
+ 
+ 
+/* =main*/
+#main{
+	height: 100%;
+	width: 100%; 
+}
+
+#content {
+	width: 1000px;
+	background: url('../img/main_body.png') repeat-y;
+}
+
+#main-content {
+	height:100%;
+	width: 100%;
+	margin: 0 auto; 
+	background: url('../img/main_top.png') no-repeat;
+	width: 970px;
+	padding:.5em 1.3em .5em 1.4em;
+}
+
+#main-bottom-curve {
+	height:41px;
+	width: 100%;
+	margin: 0 auto; 
+	background: url('../img/main_bottom.png') no-repeat;
+}
+
+/*=footer*/
+#footer{
+	height: 100%;
+	width: 100%; 
+	margin-top:2em;
+	color:#ffffff;
+	font-weight:bold;
+}
+
+#content-footer {
+	width: 1000px;
+	background: url('../img/footer_body.png') repeat-y;
+}
+
+#main-content-footer {
+	height:100%;
+	width: 100%;
+	background: url('../img/footer_top.png') no-repeat;
+	width: 980px;
+	padding:0 5px 0 15px;
+}
+
+#main-bottom-footer {
+	height:29px;
+	width: 100%;
+	margin: 0 auto; 
+	background: url('../img/footer_bottom.png') no-repeat;
+}
+
+ul#company-info { 
+	list-style-type : none;
+	width : 980px;
+	padding : 1em;	
+	margin-left:2em;
+}
+
+ul#company-info:after { 
+	content : ".";
+	display : block;
+	height : 0;
+	clear : both;
+	visibility : hidden; 
+}
+
+ul#company-info li { 
+	float : left; 
+	width : 240px; 
+}
+
+ul#company-info ul { 
+	list-style-type : none; 
+	margin : 0; 
+	padding : 0; 
+}	/*background : url(../images/ul.png) no-repeat 0 100%; */
+
+#company-info h3 {
+	color:#f7c001;
+	margin : 0;
+	padding : 0;
+	font-size : 100%;
+}
+#main-content-footer p {
+	text-align:center;
+}
+
+/*=link*/
+#company-info a:link { color : #fff; text-decoration : none; }
+#company-info a:visited { color : #fff; text-decoration : none; }
+#company-info a:hover { color : #fff; text-decoration : underline; }
+#company-info a:active, a:focus { color : #fff; }
+
+
+#sidebar {
+ 
+}
+/*e66313 f5b603*/
+
+
+
+
+
+
+
+/*= service request table */						
+.requestsHeader {
+   display: block;
+   margin: 0px;
+   padding: 0px;
+   line-height: 100%;
+   color: #ffffff;
+   background-color: #412567;
+}
+
+
+/* Wraps each service request. */
+.serviceRequest {
+   display: block;
+   padding-right: 0px;
+   margin-top: 10px;
+   vertical-align: top;
+   color: #222222;
+   background-color: #f6f4f8 ;
+}
+
+.serviceRequest.even { background:#d9d3e1}
+.serviceRequest.odd { }
+
+/* ====== START: Box wrapping service table header ====== */
+.serviceheadercontainer_top_left {
+   background: url("../img/roundbox_border_lightblue.png") top left no-repeat;
+}
+
+.serviceheadercontainer_bottom_right {
+   background: url("../img/roundbox_border_lightblue.png") bottom right no-repeat;
+}
+
+.serviceheadercontainer_top_right {
+   background: url("../img/roundbox_border_lightblue_tr.png") top right no-repeat;
+}
+
+/* If paddings inside the box are desired they shall be set in this class. */
+.serviceheadercontainer_bottom_left {
+   padding: 1px;
+   padding-top: 5px;
+   padding-bottom: 5px;
+   background: url("../img/roundbox_border_lightblue_bl.png") bottom left no-repeat;
+}
+/* ====== END:   Box wrapping service table header ====== */
+
+/* ====== START: Box wrapping each service row ====== */
+.servicecontainer_top_left {
+   background: url("../img/roundbox_border_lightblue.png") top left no-repeat;
+}
+
+.servicecontainer_top_left:hover {
+   background: url("../img/roundbox_border.png") top left no-repeat;
+}
+
+.servicecontainer_bottom_right {
+   background: url("../img/roundbox_border_lightblue.png") bottom right no-repeat;
+}
+.servicecontainer_bottom_right:hover {
+   background: url("../img/roundbox_border.png") bottom right no-repeat;
+}
+.servicecontainer_top_right {
+   background: url("../img/roundbox_border_lightblue_tr.png") top right no-repeat;
+}
+.servicecontainer_top_right:hover {
+   background: url("../img/roundbox_border_tr.png") top right no-repeat;
+}
+
+/* If paddings inside the box are desired they shall be set in this class. */
+.servicecontainer_bottom_left {
+   padding: 1px;
+   padding-top: 5px;
+   padding-bottom: 5px;
+   background: url("../img/roundbox_border_lightblue_bl.png") bottom left no-repeat;
+}
+.servicecontainer_bottom_left:hover {
+   background: url("../img/roundbox_border_bl.png") bottom left no-repeat;
+}
+
+/* ====== END:   Box wrapping each service row ====== */
+
+.requestsHeader, .serviceRequest{
+	width:100%;
+}
+.requestsHeader table,  .serviceRequest table {
+	width:100%;
+}
+
+.requestsHeader table td,  .serviceRequest table td{
+	vertical-align:top;
+}
+
+.serviceRequest td > h3 {
+	padding:0;
+	margin:0;
+}
+
+
+/*=pagging links */
+.pagging-links {
+	padding:0; 
+	text-align:right;
+}
+
+.pagging-links a { color : #412567; text-decoration : none;}
+
+/* = top menu */
+ ul#menu {
+  font-family: Arial, Verdana;
+  font-size: .9em;
+  font-weight:bold;
+  margin: 0 0 0 420px;
+  padding: 0;
+  list-style: none;
+}
+ul#menu li {
+  display: block;
+  position: relative;
+  float: left;
+}
+ul#menu li ul { display: none; }
+ul#menu li a {
+  display: block;
+  text-decoration: none;
+  padding: 0 4px 0 4px;
+  background: #fff;
+  white-space: nowrap;
+}
+ul#menu li a:hover { color:#000;}
+ul#menu li:hover ul {
+  display: block;
+  position: absolute;
+  padding:0;
+  margin:0;
+}
+ul#menu li:hover li {
+  float: none;
+}
+ul#menu li:hover a { color: #E66313; }
+ul#menu li:hover li a { color: #000; }
+ul#menu li:hover li a:hover { background:#E66313; color: #000;  }
+.menu-selected:hover {
+	color: #000;
+	background:red;
+}
+#menu .menu-selected {
+	background:#E66313; 
+	color:#fff;
+}
+
+
+
+
+
+
+
+
+

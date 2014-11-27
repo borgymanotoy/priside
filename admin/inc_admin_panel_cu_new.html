@@ -1,0 +1,512 @@
+<div id="reload">
+<script type="text/javascript">
+	var requiredFieldsRegular    = ["firstNameAdminPanelCuNew","lastNameAdminPanelCuNew","emailAdminPanelCuNew","phoneAdminPanelCuNew"];
+	var requiredFieldsAdvertiser = ["spn_organizationAdminPanelCuNew","servicesAdminPanelCuNew","municipalitiesAdminPanelCuNew","nameAdminPanelCuNew","orgNumberAdminPanelCuNew","firstNameAdminPanelCuNew","lastNameAdminPanelCuNew","personNumberAdminPanelCuNew","emailAdminPanelCuNew","phoneAdminPanelCuNew","altPhoneAdminPanelCuNew","addressAdminPanelCuNew","postalAdminPanelCuNew","cityAdminPanelCuNew","accountManagerNameAdminPanelCuNew","noteAdminPanelCuNew"];
+	var requiredFieldsPremium    = ["spn_organizationAdminPanelCuNew","servicesAdminPanelCuNew","municipalitiesAdminPanelCuNew","nameAdminPanelCuNew","orgNumberAdminPanelCuNew","firstNameAdminPanelCuNew","lastNameAdminPanelCuNew","personNumberAdminPanelCuNew","emailAdminPanelCuNew","phoneAdminPanelCuNew","altPhoneAdminPanelCuNew","addressAdminPanelCuNew","postalAdminPanelCuNew","cityAdminPanelCuNew","accountManagerNameAdminPanelCuNew","noteAdminPanelCuNew"];
+	
+	$(document).ready(function(){
+		addRequiredFieldsMarker(3);	
+		//setup the upload plugin to handle the upload for audio recording
+		$("#uploadRecordingAdminPanelCuNew").css({"position" : "relative" ,"top" : "0px"}).fileuploader({
+			"onComplete" : function(filename){
+				$("#uploadedRecording").html('<a href="javascript:void(0)" style="text-decoration:none;">' + filename + '</a><span class="close-icon" style="cursor:default;" onclick="$(\'#uploadedRecording\').html(\'\')">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>');
+			},
+			"onError" : function(error){
+				$('#uploadedRecording').html('');
+				showStatusMessageBox("admin_panel_cu_new_error_msg",error, true);
+			},
+			"onCancel" : function(control){
+				$('#uploadedRecording').html('');
+			},
+			"useExternProgressHandler" : true, 
+			"ButtonStateCancel" : "<?=$trans["cu_new_cancel_upload"]?>",
+			'FlashVars'  : "SavePath=<?=$SavePathRecording?>",
+			'filters'       : "Audio Files:*.mp3;*.wav;*.wmv;*.aac;*.ogg"
+		});  
+		
+		//setup the upload plugin to handle the upload for contract
+		$("#uploadContractAdminPanelCuNew").css({"position" : "relative" ,"top" : "0px"}).fileuploader({
+			"onComplete" : function(filename){
+				$("#uploadedContract").html('<a href="javascript:void(0)" style="text-decoration:none;">' + filename + '</a><span class="close-icon" style="cursor:default;" onclick="$(\'#uploadedContract\').html(\'\')">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>');
+			},
+			"onError" : function(error){
+				$('#uploadedContract').html('');
+				showStatusMessageBox("admin_panel_cu_new_error_msg",error, true);
+			},
+			"onCancel" : function(control){
+				$('#uploadedContract').html('');
+			},
+			"useExternProgressHandler" : true, 
+			"ButtonStateCancel" : "<?=$trans["cu_new_cancel_upload"]?>",
+			'FlashVars'  : "SavePath=<?=$SavePathContract?>",
+			'filters'       : "Document Files:*.doc;*.docx;*.pdf"
+		});  
+	});
+	
+	//this function will append asterisks to the label
+	function addRequiredFieldsMarker(accountType){
+		var arrToCheck;
+		$("#organizationAdminPanelCuNew,#serviceMunicipalityAdminPanelCuNew,#fields_one,#fields_two,#sub-sidebar-column").find("label[for*='AdminPanelCuNew']").each(function(){
+			$(this).text($(this).text().replace(/\*/g, ""));
+			if(accountType == 3){
+				arrToCheck = requiredFieldsPremium
+			}
+			else if(accountType == 2){
+				arrToCheck = requiredFieldsAdvertiser
+			}
+			else if(accountType == 1){
+				arrToCheck = requiredFieldsRegular
+			}
+			if($.inArray($(this).attr("for"),arrToCheck) != -1){
+				$(this).text($(this).text() + " *");
+			}
+		});
+	}
+	
+	function setSelectedCustomerType(type, e){
+		if(!type){ 
+		return;
+		}
+		var selected_button = "btnCuNewSupplier";
+		if(type == "3")
+			selected_button = "btnCuNewSupplier";
+		else if(type == "2")
+			selected_button = "btnCuNewAdvertiser";
+		else if(type == "1")
+			selected_button = "btnCuNewConsumer";
+
+		if(e.ctrlKey && $("#"+selected_button).hasClass("btn-white")){
+			return;
+		}
+
+		if(!e.ctrlKey){
+			$(".cus-type-buttons").removeClass("btn-violet").addClass("btn-white");
+		}
+
+		$("#"+selected_button).removeClass("btn-white").addClass("btn-violet");
+		var types =  type;
+		if(e.ctrlKey){
+			types = $("#sel_user_type").val();
+			if(types.length > 0) 
+				types += ","+type;
+			else
+				types = type;
+		}
+		$("#accountType").val(types);
+		addRequiredFieldsMarker(types);
+	}
+	
+	function getSelectedClassification(){
+		return $("#classificationAdminPanelCuNew").val();
+	}
+	
+	function setSelectedClassification(value){
+		$("#classificationAdminPanelCuNew").val(value);
+	}
+	
+	function getSelectedServices(){
+		var services = new Array(); 
+		$("#divServicesAdminPanelCuNew :checkbox").each(function(){
+			if($(this).is(":checked")){
+				services.push($(this).val())
+			}
+		});
+		return services.join(",");
+	}
+	
+	function getSelectedMunicipalities(){
+		var municipality = new Array(); 
+		$("#divMunicipalitiesAdminPanelCuNew :checkbox").each(function(){
+			if($(this).is(":checked")){
+				municipality.push($(this).val())
+			}
+		});
+		return municipality.join(",");
+	}
+	
+	function validate(){
+		var errors = "";
+		
+		//required check if account type is PREMIUM
+		if($("#accountType").val() == 3){
+			//check if business classification was selected
+			if(getSelectedClassification().length == 0){
+				errors  += "<?=$trans["cu_new_no_organization_selected"]?><br/>";
+			}
+			
+			//check if at least 1 industry was selected
+			if(getSelectedServices().length == 0){
+				errors  += "<?=$trans["cu_new_no_service_selected"]?><br/>";
+			}
+			
+			//check if at least 1 municipality was selected
+			if(getSelectedMunicipalities().length == 0){
+				errors  += "<?=$trans["cu_new_no_municipality_selected"]?><br/>";
+			}	
+		}
+		
+		//traverse all the input elements in the div
+		//check if it has a value
+		$("#fields_one,#sub-sidebar-column").find(":input").each(function(){
+			if($(this).val().length == 0 && $("label[for='" + $(this).attr("id") + "']").text().indexOf("*") > -1){
+				var label = $("label[for='" + $(this).attr("id") + "']").text();
+				errors   += "<span style='color:#000000;font-weight:bold'>" + label + "</span> <?=$trans["cu_new_required_field"]?><br/>";
+			}
+			else{
+				//validate email address
+				if($(this).attr("id") == "emailAdminPanelCuNew"){
+					var reg = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
+					if(reg.test($(this).val()) == false) {
+					  errors  += "<span style='color:#000000;font-weight:bold'>" + $(this).val() + "</span> <?=$trans["cu_new_not_valid_email"]?><br/>";
+					}
+				}
+			}
+		});
+		
+		if(errors != ""){
+			showStatusMessageBox("admin_panel_cu_new_error_msg",errors, true);
+			return false;
+		}
+		return true;
+	}
+	
+	function save(){
+		if(!validate()){
+			return;
+		}
+		$.ajax({
+			type : "POST",
+			url  : 'admin_panel_cu_new.php',
+			data : {
+				"ajaxRequest"        : "createAccount",
+				"accountType"        : $("#accountType").val(),
+				"classification"     : getSelectedClassification(),
+				"serviceId"          : getSelectedServices(),
+				"municipalityId"     : getSelectedMunicipalities(),
+				"name"               : $("#nameAdminPanelCuNew").val(),
+				"orgNumber"          : $("#orgNumberAdminPanelCuNew").val(),
+				"firstName"          : $("#firstNameAdminPanelCuNew").val(),
+				"lastName"           : $("#lastNameAdminPanelCuNew").val(),
+				"personNumber"       : $("#personNumberAdminPanelCuNew").val(),
+				"email"              : $("#emailAdminPanelCuNew").val(),
+				"phone"              : $("#phoneAdminPanelCuNew").val(),
+				"altPhone"           : $("#altPhoneAdminPanelCuNew").val(),
+				"address"            : $("#addressAdminPanelCuNew").val(),
+				"postal"             : $("#postalAdminPanelCuNew").val(),
+				"city"               : $("#cityAdminPanelCuNew").val(),
+				"accountManagerName" : $("#accountManagerNameAdminPanelCuNew").val(),
+				"note"               : $("#noteAdminPanelCuNew").val(),
+				"recording"          : $("#uploadedRecording").find("a").text(),
+				"contract"           : $("#uploadedContract").find("a").text(),
+				"checksum"           : '<?=CheckSum($_SESSION["User"]["Id"])?>'
+			},
+			success: function(data) {
+				showStatusMessageBox("admin_panel_cu_new_error_msg",data, false);
+				setTimeout(function(){
+					loadTabAjax( 'cu_tab_new_user', 'admin_panel_cu_new.php' );
+					showHideCustomersUsersSubtabContent('new_user', true);
+				},1000);
+			},
+			error: function(xhr){
+				showStatusMessageBox("admin_panel_cu_new_error_msg",xhr.statusText, true);
+			}
+		});
+	}
+	/*
+	toggleServicesChildren(this)
+	function toggleServicesChildren(checkbox){
+		var currState = $(checkbox).is(':checked');
+		$(checkbox).parent().find("ul").children().each(function(){
+			$(this).find(":checkbox").attr("checked",currState)
+		});
+	}
+	*/
+</script>
+
+<!-- START: FREDRIK -->
+<style>
+	.inputBoxContainer {
+		width: 300px;
+	}
+
+	.inputBox {
+		display: inline-block;
+		width: 236px; /* Excluding padding. */
+		height: 28px;
+		padding-left: 8px;
+		padding-right: 8px;
+		border-style: none;
+		margin-bottom: 10px;
+		background: url("../img/input_box.png") no-repeat scroll 0 -60px transparent;
+	}
+
+	.inputLabel {
+		font-weight: bold;
+		margin-left: 10px;
+	}
+
+	.left {
+		float: left;
+	}
+
+	.right {
+		float: right;
+	}
+	
+	ul {
+		list-style :none;
+	}
+	
+	.close-icon {
+		background-image: url("../css/images/ui-icons_222222_256x240.png");
+		background-position: -96px -128px;
+		height: 16px;
+		width: 16px;
+		
+	}	
+	
+	/*override screen.css*/
+	.collapsableListAdminPanelCuNew input[type=checkbox] {
+		display:none;
+	}
+	.collapsableListAdminPanelCuNew input[type=checkbox] + label{
+		background: transparent url(/img/checkboxes.png) no-repeat 0 -35px;
+		height: 16px;
+		/* width: 150px; */
+		padding-left: 0px;
+		padding-right: 0px;
+		min-width: 16px;
+		display:inline-block;
+		margin-top: 2px 2px;
+	}
+
+	.collapsableListAdminPanelCuNew input[type=checkbox]:checked + label
+	{
+		background: transparent url(/img/checkboxes.png) no-repeat 0 0px;
+		height: 16px;
+		/* width: 150px; */
+		padding-left: 0px;
+		padding-right: 0px;
+		min-width: 16px;
+		display:inline-block;
+		margin-top: 2px 2px;
+	}
+</style>
+<!--inc_admin_panel_cu_new.html-->
+<br>
+<div style="padding: 0px; width: 100%;" class="clearfix">
+	<!-- START: Status Message Box -->
+	<div id="admin_panel_cu_new_error_msg" class="status-msg-box" style="width:91%;display:none">
+	<?if(!empty($ErrMsg)){?> 
+		<script type="text/javascript">
+			showStatusMessageBox("admin_panel_cu_new_error_msg","<?=$ErrMsg?>", true);
+		</script>
+	<?}?> 
+	<?if(!empty($OkMsg)){?>
+			<script type="text/javascript">
+				showStatusMessageBox("admin_panel_cu_new_error_msg","<?=$OkMsg?>", false);
+			</script>
+	<?}?>
+	</div>
+	<!-- END -->
+</div>
+
+<div id="main-column">
+	<div class="clearfix" style="padding: 10px; width: 650px;">
+		<h1 class="title"><?=$trans["cu_new_title"];?></h1>
+		<!-- START: Divided main column div -->
+		<div class="clearfix container-small">
+			<div class="clearfix container-small">
+				<div class="left">
+					<span class="txt12Bold"><?=$trans["cu_new_account"];?>&nbsp;&nbsp;</span>
+				</div>
+				<div>
+					<img src="../img/question_mark.png" />
+				</div>
+			</div>
+			<div class="clearfix  left" style="width:300px">
+				<div class="clearfix">
+					<input type="hidden" id="accountType" value="3" />
+					<a id="btnCuNewSupplier" class="cus-type-buttons btn-violet txt12White" style="margin-left: 0px;" href="javascript:void(0);" onclick="setSelectedCustomerType(3, event);"><span><?=$trans["supplier"];?></span></a>
+					<a id="btnCuNewAdvertiser" class="cus-type-buttons btn-white txt12" style="margin-left: 10px;" href="javascript:void(0);" onclick="setSelectedCustomerType(2, event);"><span><?=$trans["advertiser"];?></span></a>
+					<a id="btnCuNewConsumer" class="cus-type-buttons btn-white txt12" style="margin-left: 10px;" href="javascript:void(0);" onclick="setSelectedCustomerType(1, event);"><span><?=$trans["consumer"];?></span></a>
+				</div>
+			</div>
+			
+			<div class="clearfix combobox-container right" style="margin-right:3em;" id="organizationAdminPanelCuNew">
+				<input type="hidden" id="default_organizationAdminPanelCuNew"  value="<?=$trans["cu_new_organization"];?>" />
+				<input type="hidden" id="classificationAdminPanelCuNew" value="" />
+				
+				<label id="spn_organizationAdminPanelCuNew" for="spn_organizationAdminPanelCuNew" class="cmb_sel_item_value italic" style="margin-left: 5px; width: 210px;"><?=$trans["cu_new_organization"];?></label>
+				<span class="site-color arrow-down-button" style="width: 25px; height: 18px; border-left: 2px solid #412467;" onclick=""></span>
+				<span class="combobox-arrow" style="margin-left: 8px;" onclick="showHideComboboxItems('div_org_itemsAdminPanelCuNew');"></span>
+				<div id="div_org_itemsAdminPanelCuNew" class="combox-search-container comboBox combo-list-container" style="height:0px auto">
+					<div id="divClose" align="right" onclick="closeListBox('div_org_itemsAdminPanelCuNew');"><img src="../img/closeImage.png" alt="Close"/></div>
+					<ul class="combobox-list"style="height:0px auto">
+						<?=GetClassication()?>
+					</ul>
+				</div>
+			</div>
+		</div>
+		
+		<div class="clearfix container-small" id="serviceMunicipalityAdminPanelCuNew">
+			<div class="clearfix left">
+				<div class="clearfix input-text" style="display:block;">
+					<label for="servicesAdminPanelCuNew"><?=$trans["cu_new_industry_caption"];?></label>
+				</div>
+				<div class="textarea_top_left collapsableListAdminPanelCuNew">
+				   <div class="textarea_bottom_right">
+					   <div class="textarea_top_right">
+						   <div class="textarea_bottom_left">
+								<div style="width:240px;height:170px;overflow-y:auto;resize:none" class="txt-area" id="divServicesAdminPanelCuNew">
+									<?=GetServices()?>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="clearfix  right" style="margin-right:4em;">
+				<div class="clearfix input-text" style="display:block;">
+					<label for="municipalitiesAdminPanelCuNew"><?=$trans["cu_new_municipality_caption"];?></label>
+				</div>
+				<div class="textarea_top_left collapsableListAdminPanelCuNew">
+				   <div class="textarea_bottom_right">
+					   <div class="textarea_top_right">
+						   <div class="textarea_bottom_left">
+								<div style="width:240px;height:170px;overflow-y:auto;resize:none" class="txt-area"id="divMunicipalitiesAdminPanelCuNew">
+									<?=getMunicipality()?>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div style="width: 600px; margin-top: 0px;" id="fields_one">
+			<!-- Row 1 -->
+			<div class="inputBoxContainer left">
+				<label for="nameAdminPanelCuNew" class="inputLabel"><?=$trans["cu_new_co_org"];?></label>
+				<input type="text" id="nameAdminPanelCuNew" name="nameAdminPanelCuNew" maxlength="30" value="<?=$Name;?>" class="inputBox required" />
+			</div>
+			
+			<div class="inputBoxContainer right">
+				<label for="orgNumberAdminPanelCuNew" class="inputLabel"><?=$trans["cu_new_corporate_caption"];?></label>
+				<input type="text" id="orgNumberAdminPanelCuNew" name="orgNumberAdminPanelCuNew" maxlength="40" value="<?=$OrgNumber;?>" class="inputBox" />
+			</div>
+
+			<!-- Row 2 -->
+			<div style="width: 300px; float: left;">
+				<label for="firstNameAdminPanelCuNew" class="inputLabel"><?=$trans["cu_new_first_name"];?></label>
+				<input type="text" id="firstNameAdminPanelCuNew" name="firstNameAdminPanelCuNew" maxlength="30" value="<?=$Name;?>" class="inputBox required" />
+			</div>
+			
+			<div style="width: 300px; float:right;">
+				<label for="lastNameAdminPanelCuNew" class="inputLabel"><?=$trans["cu_new_last_name"];?></label>
+				<input type="text" id="lastNameAdminPanelCuNew" name="lastNameAdminPanelCuNew" maxlength="40" value="<?=$OrgNumber;?>" class="inputBox personnummer" />
+			</div>
+
+			<!-- Row 3 -->
+			<div class="inputBoxContainer left">
+				<label for="personNumberAdminPanelCuNew" class="inputLabel"><?=$trans["cu_new_person_no"];?></label>
+				<input type="text" id="personNumberAdminPanelCuNew" name="personNumberAdminPanelCuNew" maxlength="30" value="<?=$Name;?>" class="inputBox required" />
+			</div>
+			
+			<div class="inputBoxContainer right">
+				<label for="emailAdminPanelCuNew" class="inputLabel"><?=$trans["cu_new_mail"];?></label>
+				<input type="text" id="emailAdminPanelCuNew" name="emailAdminPanelCuNew" maxlength="40" value="<?=$OrgNumber;?>" class="inputBox" />
+			</div>
+
+			<!-- Row 4 -->
+			<div style="width: 300px; float: left;">
+				<label for="phoneAdminPanelCuNew" class="inputLabel"><?=$trans["cu_new_telephone"];?></label>
+				<input type="text" id="phoneAdminPanelCuNew" name="phoneAdminPanelCuNew" maxlength="30" value="<?=$Name;?>" class="inputBox required" />
+			</div>
+			<div style="width: 300px; float:right;">
+				<label for="altPhoneAdminPanelCuNew" class="inputLabel"><?=$trans["cu_new_alt_telephone"];?></label>
+				<input type="text" id="altPhoneAdminPanelCuNew" name="altPhoneAdminPanelCuNew" maxlength="40" value="<?=$OrgNumber;?>" class="inputBox" />
+			</div>
+		</div>
+
+		<div style="width: 600px;" id="fields_two">
+			<div class="clearfix left" style="width: 300px;">
+				<div class="clearfix input-text" style="display:block;">
+					<label for="addressAdminPanelCuNew" class="inputLabel"><?=$trans["cu_new_address"];?></label>
+					<div><input type="text" id="addressAdminPanelCuNew" name="addressAdminPanelCuNew" maxlength="30" value="<?=$Address;?>" /></div>
+				</div>
+			</div>
+			<div class="clearfix" style="width: 300px; margin-left: 250px;">
+				<div class="clearfix right" style="width: 250px;">
+					<div class="clearfix" style="width: 80px; float: left;">
+						<label for="postalAdminPanelCuNew" class="inputLabel"><?=$trans["cu_new_zipcode"];?></label><br/>
+						<div class="textarea_top_left">
+							<div class="textarea_bottom_right">
+								<div class="textarea_top_right">
+									<div class="textarea_bottom_left">
+										<input type="text" id="postalAdminPanelCuNew" name="postalAdminPanelCuNew" value="<?=$Postal;?>" style="width: 70px; border:none; margin:5px 5px 5px 5px"/>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="clearfix" style="width: 120px; margin-left: 90px;">
+						<label for="cityAdminPanelCuNew" class="inputLabel"><?=$trans["cu_new_location"];?></label><br/>
+						<div class="textarea_top_left">
+							<div class="textarea_bottom_right">
+								<div class="textarea_top_right">
+									<div class="textarea_bottom_left">
+										<input type="text" id="cityAdminPanelCuNew" name="cityAdminPanelCuNew" value="<?=$City;?>" style="width: 150px; border:none; margin:5px 5px 5px 5px"/>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="clearfix container-small">
+			<div class="clearfix">
+				<a id="uploadRecordingAdminPanelCuNew" class="btn-violet txt12White" style="margin-left: 0px;" href="#"><span><?=$trans["cu_new_upload_audio"];?></span></a>
+				<span id="uploadedRecording" style="position:relative;margin-left:10px;top:2px;"></span>
+			</div>
+			
+			<div class="clearfix">&nbsp;&nbsp;&nbsp;</div>
+			
+			<div class="clearfix">
+				<a id="uploadContractAdminPanelCuNew" class="btn-violet txt12White" style="margin-left: 0px;" href="#"><span><?=$trans["cu_new_upload_contract"];?></span></a>
+				<span id="uploadedContract" style="position:relative;margin-left:10px;top:2px;"></span>
+			</div>
+			
+			<div class="clearfix" style="margin-top: 25px;">
+				<a class="btn-orange trebuchetWhite" href="javascript:void(0);" onclick="save()"><span><?=$trans["button_save"];?></span></a>
+				<a class="btn-orange trebuchetWhite" href="javascript:void(0);" style="margin-left: 10px"><span><?=$trans["cu_new_prnt_order_conf"];?></span></a>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="sub-sidebar-column">
+	<br><br><br>
+	<div class="help-sub-panel-location">
+		<div class="clearfix container-small">
+			<label for="accountManagerNameAdminPanelCuNew" class="inputLabel"><?=$trans["cu_new_sales_account_manager"];?></label>
+			<div class="clearfix input-text" style="display:block;">
+				<div><input type="text" id="accountManagerNameAdminPanelCuNew" name="accountManagerNameAdminPanelCuNew" maxlength="30" value="<?=$AccountManagerName;?>" /></div>
+			</div>
+			<br/>
+			<label for="noteAdminPanelCuNew" class="inputLabel"><?=$trans["cu_new_notes"];?></label><br/>
+			<div class="textarea_top_left">
+			   <div class="textarea_bottom_right">
+				   <div class="textarea_top_right">
+					   <div class="textarea_bottom_left">
+							<textarea class="txt-area" id="noteAdminPanelCuNew" name="noteAdminPanelCuNew" rows="15" cols="27" style="width:240px;height:325px"><?=$Note;?></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+</div>

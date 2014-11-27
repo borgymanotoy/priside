@@ -1,0 +1,242 @@
+<script type="text/javascript">
+	$(document).ready(function(){
+		$("#div_popup_contents").find("#inc_customer_info_page_company_name_header").html("<?=$row["Name"]?>");
+	});
+	
+	function updateBusiness(){
+		var accountManagerName  = $("#AccountManagerName").val(); 
+		var note                = $("#Note").val();
+		if(0 != accountManagerName.length && 0 != note.length){
+			$.ajax({
+				type : "POST",
+				url  : 'customer_info_general.php',
+				data : {
+					"ajaxRequest"        : "updateBusiness",
+					"accountId"          : '<?=$accountId?>',
+					"customerId"         : "<?=$row["Id"]?>",
+					"businessId"         : "<?=$row["Business_Id"]?>",
+					"accountManagerName" : accountManagerName,
+					"note"               : note,
+					"checksum"           : '<?=$checksum?>'
+				},
+				success: function(data) {
+					showStatusMessageBox("cu_inf_general_error_msg",data, false);
+				},
+				error: function(xhr){
+					showStatusMessageBox("cu_inf_general_error_msg",xhr.statusText, true);
+				}
+			});
+		}
+		else{
+			showStatusMessageBox("cu_inf_general_error_msg","<?=$trans["cust_nfo_gen_no_changes"]?>", false);
+		}
+	}
+	
+	function deleteAccount(){
+		var question = confirm("<?=$trans["cust_nfo_gen_confirm_delete"]?> this account(<?=$row['Name']?>)?")
+		if(question){
+			$.ajax({
+				type : "POST",
+				url  : 'customer_info_general.php',
+				data : {
+					"ajaxRequest" : "deleteAccount",
+					"accountId"   : '<?=$accountId?>',
+					"customerId"  : "<?=$row["Id"]?>",
+					"businessId"  : "<?=$row["Business_Id"]?>",
+					"checksum"    : '<?=$checksum?>'
+				},
+				success: function(data) {
+					$('.modal-profile').fadeOut("slow");
+					$('.modal-lightsout').fadeOut("slow");
+					loadCustomers(20,1,'<?=CheckSum("201");?>');
+				},
+				error: function(xhr){
+					showStatusMessageBox("cu_inf_general_error_msg",xhr.statusText, true);
+				}
+			});
+		}	
+	}
+	
+	function enableAccount(enable){
+		var question = null
+		if(enable){
+			question = confirm("<?=$trans["cust_nfo_gen_confirm_enable"]?> this account(<?=$row['Name']?>)?");
+		}
+		else{
+			question = confirm("<?=$trans["cust_nfo_gen_confirm_disable"]?> this account(<?=$row['Name']?>)?");
+		}
+		
+		if(question){
+			$.ajax({
+				type : "POST",
+				url  : 'customer_info_general.php',
+				data : {
+					"ajaxRequest" : enable ? "enableAccount" : "disableAccount",
+					"accountId"   : '<?=$accountId?>',
+					"customerId"  : "<?=$row["Id"]?>",
+					"businessId"  : "<?=$row["Business_Id"]?>",
+					"checksum"    : '<?=$checksum?>'
+				},
+				success: function(data) {
+					var status = enable ? '<?=$trans["cust_nfo_gen_active"]?>' : '<?=$trans["cust_nfo_gen_inactive"]?>';
+					var button = enable ? '<?=$trans["cust_nfo_gen_btn_disable"]?>' : '<?=$trans["cust_nfo_gen_btn_enable"]?>';
+					$("#btnEnableDisableBusiness").find("span").text(button);
+					$("#btnEnableDisableBusiness").attr("onclick","enableAccount(" + (!enable) + ")");
+					$("#cu_info_general_status").text(status);
+					showStatusMessageBox("cu_inf_general_error_msg",data, false);
+				},
+				error: function(xhr){
+					showStatusMessageBox("cu_inf_general_error_msg",xhr.statusText, true);
+				}
+			});
+		}	
+	}
+	
+	function changeAccountType(accountType){
+		if('<?=$row["Type"]?>' == accountType){
+			return;
+		}
+		
+		$.ajax({
+			type : "POST",
+			url  : 'customer_info_general.php',
+			data : {
+				"ajaxRequest" : "changeAccountType",
+				"accountId"   : '<?=$accountId?>',
+				"customerId"  : "<?=$row["Id"]?>",
+				"businessId"  : "<?=$row["Business_Id"]?>",
+				"accountType" : accountType,
+				"checksum"    : '<?=$checksum?>'
+			},
+			success: function(data) {
+				showStatusMessageBox("cu_inf_general_error_msg",data, false);
+				setTimeout(function(){
+					loadTabAjax( 'popup_tab1', 'customer_info_general.php');
+					showHidePopupTab('tab1', true);
+					loadCustomers(20,1,'<?=CheckSum("201");?>');					
+				},500);
+			},
+			error: function(xhr){
+				showStatusMessageBox("cu_inf_general_error_msg",xhr.statusText, true);
+			}
+		});
+	}
+</script>
+<div style="width:100%; height: 100%; padding: 10px 5px;">
+	<div style="padding: 0px; width: 100%;" class="clearfix">
+		<!-- START: Status Message Box -->
+		<div id="cu_inf_general_error_msg" class="status-msg-box" style="width:86%;display:none">
+		<?if(!empty($ErrMsg)){?> 
+			<script type="text/javascript">
+				showStatusMessageBox("cu_inf_general_error_msg","<?=$ErrMsg?>", true);
+			</script>
+		<?}?> 
+		<?if(!empty($OkMsg)){?>
+				<script type="text/javascript">
+					showStatusMessageBox("cu_inf_general_error_msg","<?=$OkMsg?>", false);
+				</script>
+		<?}?>
+		</div>
+		<!-- END -->
+	</div>
+	
+	<div class="clearfix" style="width: 280px; float: left; padding-top: 5px;">	
+		<div class="txt16Orange bold">
+			<?=$row["Name"]?>
+		</div>
+		<div style="width: 280px;">
+			<ol id="gen_list" style="list-style: none; padding-left: 0px;">
+				<li id="gen_itm_1" style="display: block;">
+					<span class="txt12Bold"><?=$trans["cust_nfo_gen_org_nr"];?>:</span>
+					<span style="margin-left: 10px;"><?=$row["OrgNumber"]?></span>
+				</li>
+				<li id="gen_itm_1" style="display: block;">
+					<span class="txt12Bold"><?=$trans["cust_nfo_gen_cust"];?>:</span>
+					<span style="margin-left: 10px;"><?=$row["Id"]?></span>
+				</li>
+				<li id="gen_itm_1" style="display: block;">
+					<span class="txt12Bold"><?=$trans["cust_nfo_gen_org"];?>:</span>
+					<span style="margin-left: 10px;"><?=ucwords($row["Classification"])?></span>
+				</li>
+				<li id="gen_itm_1" style="display: block;">
+					<span class="txt12Bold"><?=$trans["cust_nfo_gen_ind"];?>:</span>
+					<span style="margin-left: 10px;"><?=$row["Category"]?></span>
+				</li>
+				<li id="gen_itm_1" style="display: block;">
+					<span class="txt12Bold"><?=$trans["cust_nfo_gen_ans_inq"];?>:</span>
+					<span style="margin-left: 10px;">30</span>
+				</li>
+				<li id="gen_itm_1" style="display: block;">
+					<span class="txt12Bold"><?=$trans["cust_nfo_gen_cmplt_assgn"];?>:</span>
+					<span style="margin-left: 10px;">20</span>
+				</li>
+
+				<li id="gen_itm_1" style="display: block;">
+					<span class="txt12Bold"><?=$trans["cust_nfo_gen_stat"];?>:</span>
+					<span style="margin-left: 10px;" id="cu_info_general_status"><?=$row["Active"] ? $trans["cust_nfo_gen_active"] : $trans["cust_nfo_gen_inactive"]?></span>
+				</li>
+				<li id="gen_itm_1" style="display: block;">
+					<span class="txt12Bold"><?=$trans["cust_nfo_gen_reg"];?>:</span>
+					<span style="margin-left: 10px;"><?=$row["ActivatedDate"] == "0000-00-00 00:00:00" || $row["ActivatedDate"] == "" ? "" : date("Y-m-d",strtotime($row["ActivatedDate"]))?></span>
+				</li>
+				<li id="gen_itm_1" style="display: block;">
+					<span class="txt12Bold"><?=$trans["cust_nfo_gen_lst_sn"];?>:</span>
+					<span style="margin-left: 10px;"><?=date("Y-m-d",strtotime($row["LastLogin"]))?></span>
+				</li>
+
+				<li id="gen_itm_1" style="display: block;">
+					<span class="txt12Bold"><?=$trans["cust_nfo_gen_invcd"];?>:</span>
+					<span style="margin-left: 10px;"><?=($row["Date"] == "0000-00-00 00:00:00" || $row["Date"] == "") ? "" : date("Y-m-d",strtotime($row["Date"]))?></span>
+				</li>
+				<li id="gen_itm_1" style="display: block;">
+					<input type="checkbox" name="vehicle" value="paid" />&nbsp;<?=$trans["cust_nfo_gen_paid"];?>
+					&nbsp;&nbsp;
+					<input type="checkbox" name="vehicle" value="credited" />&nbsp;<?=$trans["cust_nfo_gen_crdtd"];?>
+				</li>
+				<li id="gen_itm_1" style="display: block;">
+					<span class="txt12Bold"><?=$trans["cust_nfo_gen_nxt_bill"];?>:</span>
+					<span style="margin-left: 10px;"><?=($row["NextBillDate"] == "0000-00-00 00:00:00" || $row["NextBillDate"] == "") ? "" : date("Y-m-d",strtotime($row["NextBillDate"]))?></span>
+				</li>
+			</ol>
+		</div>
+		<div style="width: 280px; height: 20px;">
+			<span class="txt12Bold"><?=$trans["cust_nfo_gen_accnt"];?>&nbsp;&nbsp;</span>
+			<div style="position: relative; top: -18px; left: 55px;"><img src="../img/question_mark.png" /></div>
+		</div>
+		<div style="width: 280px; height: 25px;">
+			<a class="<?=$row["Type"] == $trans["supplier"] ? "btn-violet  txt11White" : "btn-white txt11"?>" style="margin-left: 0px;" href="javascript: void(0);" onclick="changeAccountType('<?=$trans["supplier"]?>')"><span><?=$trans["supplier"];?></span></a>
+			<a class="<?=$row["Type"] == $trans["advertiser"] ? "btn-violet  txt11White" : "btn-white txt11"?>" style="margin-left: 5px;" href="javascript: void(0);" onclick="changeAccountType('<?=$trans["advertiser"]?>')"><span><?=$trans["advertiser"];?></span></a>
+			<a class="<?=$row["Type"] == $trans["consumer"] ? "btn-violet  txt11White" : "btn-white txt11"?>" style="margin-left: 5px;" href="javascript: void(0);" onclick="changeAccountType('<?=$trans["consumer"]?>')"><span><?=$trans["consumer"];?></span></a>
+		</div>
+		<div style="width: 280px; height: 40px; margin-top: 30px;">
+			<a class="btn-orange txt12White bold" style="margin-left: 0px;" href="javascript: void(0);" onclick="updateBusiness()"><span><?=$trans["button_save"];?></span></a>
+			<!--hide this buttons (Disable and Delete) when logged user is viewing his/her own record!-->
+			<?if($_SESSION["User"]["Id"] != $row["Id"]):?>
+				<a class="btn-orange txt12White bold" style="margin-left: 5px;" href="javascript: void(0);" onclick="deleteAccount()"><span><?=$trans["cust_nfo_gen_btn_delete"];?></span></a>
+				<?if($row["Active"]):?>
+					<a id="btnEnableDisableBusiness" class="btn-orange txt12White bold" style="margin-left: 5px;" href="javascript: void(0);" onclick="enableAccount(false)"><span><?=$trans["cust_nfo_gen_btn_disable"];?></span></a>
+				<?else:?>
+					<a id="btnEnableDisableBusiness" class="btn-orange txt12White bold" style="margin-left: 5px;" href="javascript: void(0);" onclick="enableAccount(true)"><span><?=$trans["cust_nfo_gen_btn_enable"];?></span></a>
+				<?endif?>
+			<?endif?>
+		</div>
+	</div>
+	<div class="clearfix" style="width: 280px; margin-left: 290px; padding: 5px 0px 0px 5px;">
+		<div class="clearfix">
+			<div class="input-text" style="display:block; margin-bottom: 5px;">
+				<span><?=$trans["cust_nfo_gen_sls_accnt_mgr"];?>&nbsp;*</span>
+				<div><input type="text" id="AccountManagerName" name="AccountManagerName" maxlength="30" value="<?=$row["AccountManagerName"]?>" /></div>
+			</div>
+			<span class="txt12Bold" style="margin-left: 10px; margin-top: 0px;"><?=$trans["cust_nfo_gen_nw_notes"];?>&nbsp;*</span><br/>
+			<div class="textarea_top_left">
+				<div class="textarea_bottom_right">
+					<div class="textarea_top_right">
+						<div class="textarea_bottom_left">
+							<textarea class="txt-area" id="Note" name="Note" rows="15" cols="29" style="width:240px"><?=$row["Note"]?></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
